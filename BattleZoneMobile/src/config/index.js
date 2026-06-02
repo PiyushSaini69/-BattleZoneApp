@@ -3,8 +3,8 @@
 const DEV_IP = '10.0.2.2'; // Change to local IP if testing on real device
 
 export const CONFIG = {
-  API_BASE_URL: `http://${DEV_IP}:5000/api/v1`,
-  SOCKET_URL: `http://${DEV_IP}:5000`,
+  API_BASE_URL: `http://${DEV_IP}:5050/api/v1`,
+  SOCKET_URL: `http://${DEV_IP}:5050`,
   DEFAULT_BANNER: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop',
   DEFAULT_AVATAR: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop',
 };
