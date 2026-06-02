@@ -1,0 +1,47 @@
+:root {
+  /* Common Brand Colors */
+  --color-brand-purple:  #7C3AED;
+  --color-brand-cyan:    #06B6D4;
+  --color-brand-orange:  #F97316;
+  --color-success:       #10B981;
+  --color-danger:        #EF4444;
+  --color-warning:       #F59E0B;
+
+  /* Light Theme Variables */
+  --color-bg-primary:    #F8FAFC;
+  --color-bg-secondary:  #FFFFFF;
+  --color-bg-tertiary:   #F1F5F9;
+  --color-text-primary:  #0F172A;
+  --color-text-secondary:#475569;
+  --color-text-muted:    #94A3B8;
+
+  /* Glassmorphism Light */
+  --glass-bg:            rgba(255, 255, 255, 0.45);
+  --glass-border:        rgba(0, 0, 0, 0.07);
+  --glass-blur:          blur(16px);
+  --glass-shadow:        0 8px 32px 0 rgba(31, 38, 135, 0.05);
+
+  --shadow-neon-purple:  0 0 15px rgba(124, 58, 237, 0.15);
+  --shadow-neon-cyan:    0 0 15px rgba(6, 182, 212, 0.15);
+  --shadow-neon-orange:  0 0 20px rgba(249, 115, 22, 0.15);
+}
+
+/* Dark Theme Variables */
+.dark {
+  --color-bg-primary:    #0B0F1A;
+  --color-bg-secondary:  #111827;
+  --color-bg-tertiary:   #1F2937;
+  --color-text-primary:  #FFFFFF;
+  --color-text-secondary:#9CA3AF;
+  --color-text-muted:    #4B5563;
+
+  /* Glassmorphism Dark */
+  --glass-bg:            rgba(255, 255, 255, 0.03);
+  --glass-border:        rgba(255, 255, 255, 0.06);
+  --glass-blur:          blur(16px);
+  --glass-shadow:        0 8px 32px 0 rgba(0, 0, 0, 0.35);
+
+  --shadow-neon-purple:  0 0 15px rgba(124, 58, 237, 0.4);
+  --shadow-neon-cyan:    0 0 15px rgba(6, 182, 212, 0.4);
+  --shadow-neon-orange:  0 0 20px rgba(249, 115, 22, 0.4);
+}
