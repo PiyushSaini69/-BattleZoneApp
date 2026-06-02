@@ -1,6 +1,6 @@
 // On Android emulator, the host machine is 10.0.2.2. On iOS simulator, it is localhost.
 // Replace with your local machine's IP (e.g. 192.168.1.5) if testing on a real device.
-const DEV_IP = '10.0.2.2'; // Change to local IP if testing on real device
+const DEV_IP = '192.168.1.20'; // Change to local IP if testing on real device
 
 export const CONFIG = {
   API_BASE_URL: `http://${DEV_IP}:5050/api/v1`,
