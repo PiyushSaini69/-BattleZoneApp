@@ -28,13 +28,6 @@ export default function Input({
         className={`flex-row items-center bg-slate-900 border rounded-xl px-4 py-3.5 ${
           isFocused ? 'border-[#7C3AED]' : error ? 'border-red-500' : 'border-slate-800'
         }`}
-        style={isFocused ? {
-          shadowColor: '#7C3AED',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.2,
-          shadowRadius: 6,
-          elevation: 4,
-        } : null}
       >
         <TextInput
           value={value}
