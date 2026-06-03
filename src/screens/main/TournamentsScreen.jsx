@@ -69,13 +69,7 @@ export default function TournamentsScreen({ navigation }) {
     const progress = Math.min((item.filledSlots / item.totalSlots) * 100, 100);
 
     return (
-      <GlassCard 
-        className="mb-5 overflow-hidden p-0"
-        style={{
-          borderColor: 'rgba(255, 255, 255, 0.05)',
-          backgroundColor: 'rgba(15, 23, 42, 0.6)',
-        }}
-      >
+      <GlassCard className="mb-5 overflow-hidden p-0">
         <Image 
           source={{ uri: getGameBanner(item.game) }}
           style={{ width: '100%', height: 110 }}
@@ -88,34 +82,33 @@ export default function TournamentsScreen({ navigation }) {
         </View>
 
         <View className="p-4">
-          <Text className="text-white text-base font-extrabold mb-1" numberOfLines={1}>
+          <Text className="text-slate-900 dark:text-white text-base font-extrabold mb-1" numberOfLines={1}>
             {item.title}
           </Text>
-          <Text className="text-slate-450 text-[10px] font-bold uppercase mb-3">
+          <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mb-3">
             {item.game.replace('_', ' ')} • {item.gameMode.replace('_', ' ')}
           </Text>
 
           <View className="mb-4">
             <View className="flex-row justify-between mb-1.5">
-              <Text className="text-slate-450 text-[10px] font-bold uppercase">Filled Slots</Text>
-              <Text className="text-white text-xs font-black">{item.filledSlots}/{item.totalSlots}</Text>
+              <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase">Filled Slots</Text>
+              <Text className="text-slate-950 dark:text-white text-xs font-black">{item.filledSlots}/{item.totalSlots}</Text>
             </View>
-            <View className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <View className="h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
               <View className="h-full bg-[#7C3AED] rounded-full" style={{ width: `${progress}%` }} />
             </View>
           </View>
 
           <View 
-            className="flex-row justify-between items-center border-t pt-3 mb-4"
-            style={{ borderTopColor: 'rgba(30, 41, 59, 0.8)' }}
+            className="flex-row justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-3 mb-4"
           >
             <View>
-              <Text className="text-slate-450 text-[8px] uppercase font-bold tracking-wider">Prize Pool</Text>
-              <Text className="text-emerald-400 text-base font-black">₹{item.prizePool}</Text>
+              <Text className="text-slate-550 dark:text-slate-400 text-[8px] uppercase font-bold tracking-wider">Prize Pool</Text>
+              <Text className="text-emerald-555 dark:text-emerald-400 text-base font-black">₹{item.prizePool}</Text>
             </View>
             <View className="items-end">
-              <Text className="text-slate-450 text-[8px] uppercase font-bold tracking-wider">Entry Fee</Text>
-              <Text className="text-white text-base font-black">
+              <Text className="text-slate-550 dark:text-slate-400 text-[8px] uppercase font-bold tracking-wider">Entry Fee</Text>
+              <Text className="text-slate-950 dark:text-white text-base font-black">
                 {item.entryFee === 0 ? 'FREE' : `₹${item.entryFee}`}
               </Text>
             </View>
@@ -127,15 +120,7 @@ export default function TournamentsScreen({ navigation }) {
             </View>
             <Pressable
               onPress={() => navigation.navigate('TournamentDetail', { slug: item.slug })}
-              className="bg-[#7C3AED] px-4 py-2.5 rounded-xl border"
-              style={{
-                borderColor: '#7C3AED',
-                shadowColor: '#7C3AED',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.2,
-                shadowRadius: 3,
-                elevation: 2,
-              }}
+              className="bg-[#7C3AED] px-4 py-2.5 rounded-xl border border-transparent"
             >
               <Text className="text-white font-bold text-[10px] uppercase tracking-wider">Details</Text>
             </Pressable>
@@ -146,8 +131,8 @@ export default function TournamentsScreen({ navigation }) {
   };
 
   return (
-    <View className="flex-1 bg-[#0B0F1A]">
-      <View className="py-3 border-b border-slate-900 bg-[#0B0F1A]">
+    <View className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]">
+      <View className="py-3 border-b border-slate-200 dark:border-slate-900 bg-slate-50 dark:bg-[#0B0F1A]">
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -160,10 +145,10 @@ export default function TournamentsScreen({ navigation }) {
               <Pressable
                 onPress={() => setSelectedGame(item.value)}
                 className={`mr-2.5 px-3 py-2 rounded-xl border ${
-                  isActive ? 'bg-[#7C3AED] border-purple-500' : 'bg-slate-900 border-slate-800'
+                  isActive ? 'bg-[#7C3AED] border-purple-500' : 'bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800'
                 }`}
               >
-                <Text className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-white' : 'text-slate-450'}`}>
+                <Text className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-white' : 'text-slate-600 dark:text-slate-400'}`}>
                   {item.label}
                 </Text>
               </Pressable>
@@ -182,7 +167,7 @@ export default function TournamentsScreen({ navigation }) {
         }
         ListEmptyComponent={
           <View className="py-20 items-center">
-            <Text className="text-slate-450 text-sm font-semibold">No tournaments active currently.</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-sm font-semibold">No tournaments active currently.</Text>
           </View>
         }
       />

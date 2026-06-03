@@ -5,8 +5,11 @@ import GlassCard from '../../components/ui/GlassCard';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import { ArrowLeft } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
 
 export default function CreateTournamentScreen({ navigation }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [title, setTitle] = useState('');
   const [game, setGame] = useState('bgmi'); // bgmi, free_fire, valorant, cod_mobile
   const [gameMode, setGameMode] = useState('battle_royale'); // battle_royale, clash_squad, lone_wolf, custom
@@ -56,23 +59,17 @@ export default function CreateTournamentScreen({ navigation }) {
   };
 
   return (
-    <View className="flex-1 bg-[#0B0F1A]">
-      <View className="bg-slate-950 p-4 border-b border-slate-900 flex-row items-center justify-between">
+    <View className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]">
+      <View className="bg-white dark:bg-slate-955 p-4 border-b border-slate-200 dark:border-slate-900 flex-row items-center justify-between">
         <Pressable onPress={() => navigation.goBack()} className="p-1">
-          <ArrowLeft size={20} color="#fff" />
+          <ArrowLeft size={20} color={isDark ? '#fff' : '#0F172A'} />
         </Pressable>
-        <Text className="text-white font-extrabold text-sm uppercase tracking-wide">Create Tournament</Text>
+        <Text className="text-slate-900 dark:text-white font-extrabold text-sm uppercase tracking-wide">Create Tournament</Text>
         <View className="w-6" />
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-        <GlassCard 
-          className="p-5 mb-6"
-          style={{
-            borderColor: 'rgba(255, 255, 255, 0.05)',
-            backgroundColor: 'rgba(15, 23, 42, 0.6)'
-          }}
-        >
+        <GlassCard className="p-5 mb-6">
           {error !== '' && (
             <View 
               className="border rounded-xl p-3.5 mb-4"
@@ -81,7 +78,7 @@ export default function CreateTournamentScreen({ navigation }) {
                 borderColor: 'rgba(239, 68, 68, 0.2)'
               }}
             >
-              <Text className="text-red-400 text-xs font-semibold text-center">{error}</Text>
+              <Text className="text-red-655 dark:text-red-400 text-xs font-semibold text-center">{error}</Text>
             </View>
           )}
 
@@ -93,7 +90,7 @@ export default function CreateTournamentScreen({ navigation }) {
           />
 
           <View className="mb-4">
-            <Text className="text-slate-455 text-xs font-bold mb-1.5 ml-1">Select Game Title</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold mb-1.5 ml-1">Select Game Title</Text>
             <View className="flex-row flex-wrap justify-between">
               {[
                 { label: 'BGMI', value: 'bgmi' },
@@ -105,11 +102,12 @@ export default function CreateTournamentScreen({ navigation }) {
                   key={g.value}
                   onPress={() => setGame(g.value)}
                   className={`px-3 py-2 rounded-lg border mb-2 w-[48%] items-center ${
-                    game === g.value ? 'border-purple-500' : 'bg-slate-900 border-slate-800'
+                    game === g.value 
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/20' 
+                      : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-850'
                   }`}
-                  style={game === g.value ? { backgroundColor: 'rgba(124, 58, 237, 0.2)' } : null}
                 >
-                  <Text className={`text-[9px] font-bold uppercase tracking-wider ${game === g.value ? 'text-purple-300' : 'text-slate-450'}`}>
+                  <Text className={`text-[9px] font-bold uppercase tracking-wider ${game === g.value ? 'text-[#7C3AED] dark:text-purple-300' : 'text-slate-500 dark:text-slate-450'}`}>
                     {g.label}
                   </Text>
                 </Pressable>
@@ -118,18 +116,19 @@ export default function CreateTournamentScreen({ navigation }) {
           </View>
 
           <View className="mb-4">
-            <Text className="text-slate-455 text-xs font-bold mb-1.5 ml-1">Team Arrangement</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold mb-1.5 ml-1">Team Arrangement</Text>
             <View className="flex-row justify-between">
               {['solo', 'duo', 'squad'].map((t) => (
                 <Pressable
                   key={t}
                   onPress={() => setTournamentType(t)}
                   className={`flex-1 mx-1 py-2 rounded-lg border items-center ${
-                    tournamentType === t ? 'border-purple-500' : 'bg-slate-900 border-slate-800'
+                    tournamentType === t 
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/20' 
+                      : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-850'
                   }`}
-                  style={tournamentType === t ? { backgroundColor: 'rgba(124, 58, 237, 0.2)' } : null}
                 >
-                  <Text className={`text-[9px] font-bold uppercase tracking-wider ${tournamentType === t ? 'text-purple-300' : 'text-slate-455'}`}>
+                  <Text className={`text-[9px] font-bold uppercase tracking-wider ${tournamentType === t ? 'text-[#7C3AED] dark:text-purple-300' : 'text-slate-500 dark:text-slate-455'}`}>
                     {t}
                   </Text>
                 </Pressable>
@@ -148,7 +147,7 @@ export default function CreateTournamentScreen({ navigation }) {
           <Input
             label="Prize Pool (₹)"
             value={prizePool}
-            onChangeText={prizePool}
+            onChangeText={setPrizePool}
             placeholder="1000"
             keyboardType="number-pad"
           />

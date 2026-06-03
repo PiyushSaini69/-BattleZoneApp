@@ -12,15 +12,18 @@ import TicketDetailScreen from '../screens/support/TicketDetailScreen';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import CreateTournamentScreen from '../screens/admin/CreateTournamentScreen';
 import { View, ActivityIndicator } from 'react-native';
+import { useColorScheme } from 'nativewind';
 
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
   const { user, loadingUser } = useContext(AuthContext);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   if (loadingUser) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#0B0F1A', justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, backgroundColor: isDark ? '#0B0F1A' : '#F8FAFC', justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#7C3AED" />
       </View>
     );

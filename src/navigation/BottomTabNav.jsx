@@ -7,9 +7,14 @@ import LeaderboardScreen from '../screens/main/LeaderboardScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import { Home, Trophy, Wallet as WalletIcon, Award, User } from 'lucide-react-native';
 
+import { useColorScheme } from 'nativewind';
+
 const Tab = createBottomTabNavigator();
 
 export default function BottomTabNav() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -30,12 +35,12 @@ export default function BottomTabNav() {
               return null;
           }
         },
-        tabBarActiveTintColor: '#C084FC',
-        tabBarInactiveTintColor: '#64748B',
+        tabBarActiveTintColor: isDark ? '#C084FC' : '#7C3AED',
+        tabBarInactiveTintColor: isDark ? '#64748B' : '#94A3B8',
         tabBarStyle: {
-          backgroundColor: '#090d16',
+          backgroundColor: isDark ? '#090d16' : '#ffffff',
           borderTopWidth: 1,
-          borderTopColor: '#1e293b',
+          borderTopColor: isDark ? '#1e293b' : '#e2e8f0',
           height: 60,
           paddingBottom: 8,
           paddingTop: 8,
@@ -47,14 +52,14 @@ export default function BottomTabNav() {
           letterSpacing: 0.5,
         },
         headerStyle: {
-          backgroundColor: '#0B0F1A',
+          backgroundColor: isDark ? '#0B0F1A' : '#f8fafc',
           borderBottomWidth: 1,
-          borderBottomColor: '#1e293b',
+          borderBottomColor: isDark ? '#1e293b' : '#e2e8f0',
           elevation: 0,
           shadowOpacity: 0,
         },
         headerTitleStyle: {
-          color: '#ffffff',
+          color: isDark ? '#ffffff' : '#0f172a',
           fontWeight: '900',
           fontSize: 16,
           textTransform: 'uppercase',

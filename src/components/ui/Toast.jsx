@@ -12,20 +12,22 @@ export default function Toast({ message, type = 'success', onClose }) {
 
   return (
     <View 
-      className={`absolute bottom-8 left-4 right-4 z-50 px-4 py-3.5 rounded-xl border flex-row items-center bg-slate-900/95 shadow-2xl ${
-        type === 'error' ? 'border-red-500/50' : 'border-purple-500/40'
+      className={`absolute bottom-8 left-4 right-4 z-50 px-4 py-3.5 rounded-xl border flex-row items-center bg-white/95 dark:bg-slate-900/95 shadow-2xl ${
+        type === 'error' 
+          ? 'border-red-200 dark:border-red-500/50' 
+          : 'border-purple-200 dark:border-purple-500/40'
       }`}
       style={{ elevation: 100 }}
     >
       <View className="mr-2">
         {type === 'error' ? (
-          <XCircle size={18} color="#F87171" />
+          <XCircle size={18} color={type === 'error' ? '#EF4444' : '#7C3AED'} />
         ) : (
-          <CheckCircle size={18} color="#C084FC" />
+          <CheckCircle size={18} color="#7C3AED" />
         )}
       </View>
       <Text className={`text-xs font-bold flex-1 ${
-        type === 'error' ? 'text-red-400' : 'text-purple-300'
+        type === 'error' ? 'text-red-600 dark:text-red-400' : 'text-purple-750 dark:text-purple-300'
       }`}>
         {message}
       </Text>

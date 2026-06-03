@@ -25,18 +25,18 @@ export default function Badge({ text, variant = 'info', className = '' }) {
     if (['success', 'danger', 'warning', 'info', 'purple', 'cyan'].includes(variant)) {
       return '';
     }
-    return 'bg-slate-800 border-slate-700';
+    return 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700';
   };
 
   const getTextColor = () => {
     switch (variant) {
-      case 'success': return 'text-emerald-400';
-      case 'danger': return 'text-red-400';
-      case 'warning': return 'text-amber-400';
-      case 'info': return 'text-blue-400';
-      case 'purple': return 'text-purple-400';
-      case 'cyan': return 'text-cyan-400';
-      default: return 'text-slate-300';
+      case 'success': return 'text-emerald-650 dark:text-emerald-400';
+      case 'danger': return 'text-red-650 dark:text-red-400';
+      case 'warning': return 'text-amber-600 dark:text-amber-400';
+      case 'info': return 'text-blue-600 dark:text-blue-400';
+      case 'purple': return 'text-purple-650 dark:text-purple-400';
+      case 'cyan': return 'text-cyan-600 dark:text-cyan-400';
+      default: return 'text-slate-600 dark:text-slate-300';
     }
   };
 

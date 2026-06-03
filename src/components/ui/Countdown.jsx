@@ -60,22 +60,22 @@ export default function Countdown({ targetDate, onExpire, className = '' }) {
     >
       <View className="items-center px-1.5">
         <Text className="text-[#7C3AED] font-bold text-base leading-none">{pad(timeLeft.days)}</Text>
-        <Text className="text-slate-400 text-[8px] uppercase tracking-wider mt-0.5">d</Text>
+        <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase tracking-wider mt-0.5">d</Text>
       </View>
       <Text className="font-bold text-base pb-1" style={{ color: 'rgba(192, 132, 252, 0.4)' }}>:</Text>
       <View className="items-center px-1.5">
         <Text className="text-[#7C3AED] font-bold text-base leading-none">{pad(timeLeft.hours)}</Text>
-        <Text className="text-slate-400 text-[8px] uppercase tracking-wider mt-0.5">h</Text>
+        <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase tracking-wider mt-0.5">h</Text>
       </View>
       <Text className="font-bold text-base pb-1" style={{ color: 'rgba(192, 132, 252, 0.4)' }}>:</Text>
       <View className="items-center px-1.5">
         <Text className="text-[#7C3AED] font-bold text-base leading-none">{pad(timeLeft.minutes)}</Text>
-        <Text className="text-slate-400 text-[8px] uppercase tracking-wider mt-0.5">m</Text>
+        <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase tracking-wider mt-0.5">m</Text>
       </View>
       <Text className="font-bold text-base pb-1" style={{ color: 'rgba(192, 132, 252, 0.4)' }}>:</Text>
       <View className="items-center px-1.5">
         <Text className="text-cyan-400 font-bold text-base leading-none">{pad(timeLeft.seconds)}</Text>
-        <Text className="text-slate-400 text-[8px] uppercase tracking-wider mt-0.5">s</Text>
+        <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase tracking-wider mt-0.5">s</Text>
       </View>
     </View>
   );

@@ -40,12 +40,12 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <ScrollView className="flex-1 bg-[#0B0F1A]" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}>
+    <ScrollView className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}>
       <View className="items-center mb-6 mt-8">
-        <Text className="text-4xl font-extrabold text-white tracking-widest text-center">
+        <Text className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-widest text-center">
           BATTLE<Text className="text-[#7C3AED]">ZONE</Text>
         </Text>
-        <Text className="text-slate-400 text-[10px] mt-2 text-center uppercase tracking-widest font-semibold">
+        <Text className="text-slate-500 dark:text-slate-400 text-[10px] mt-2 text-center uppercase tracking-widest font-semibold">
           Create Your Account
         </Text>
       </View>
@@ -59,7 +59,7 @@ export default function RegisterScreen({ navigation }) {
               borderColor: 'rgba(239, 68, 68, 0.2)',
             }}
           >
-            <Text className="text-red-400 text-xs font-semibold text-center">
+            <Text className="text-red-655 dark:text-red-400 text-xs font-semibold text-center">
               {localError || authError}
             </Text>
           </View>
@@ -112,7 +112,7 @@ export default function RegisterScreen({ navigation }) {
       </GlassCard>
 
       <View className="flex-row justify-center items-center py-4 mb-8">
-        <Text className="text-slate-400 text-sm">Already have an account? </Text>
+        <Text className="text-slate-650 dark:text-slate-400 text-sm">Already have an account? </Text>
         <Pressable onPress={() => navigation.navigate('Login')}>
           <Text className="text-[#7C3AED] font-bold text-sm">Sign In</Text>
         </Pressable>

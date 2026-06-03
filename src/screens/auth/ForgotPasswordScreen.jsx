@@ -62,9 +62,9 @@ export default function ForgotPasswordScreen({ navigation }) {
   };
 
   return (
-    <ScrollView className="flex-1 bg-[#0B0F1A]" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}>
+    <ScrollView className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}>
       <View className="items-center mb-8">
-        <Text className="text-3xl font-extrabold text-white tracking-widest text-center">
+        <Text className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-widest text-center">
           RESET <Text className="text-[#7C3AED]">PASSWORD</Text>
         </Text>
       </View>
@@ -78,13 +78,13 @@ export default function ForgotPasswordScreen({ navigation }) {
               borderColor: 'rgba(239, 68, 68, 0.2)',
             }}
           >
-            <Text className="text-red-400 text-xs font-semibold text-center">{error}</Text>
+            <Text className="text-red-600 dark:text-red-400 text-xs font-semibold text-center">{error}</Text>
           </View>
         )}
 
         {step === 1 ? (
           <>
-            <Text className="text-slate-400 text-xs mb-6 text-center leading-relaxed">
+            <Text className="text-slate-600 dark:text-slate-400 text-xs mb-6 text-center leading-relaxed">
               Enter your registered email address below. We will send you an OTP to verify your identity and reset your password.
             </Text>
             
@@ -105,8 +105,8 @@ export default function ForgotPasswordScreen({ navigation }) {
           </>
         ) : (
           <>
-            <Text className="text-slate-400 text-xs mb-6 text-center leading-relaxed">
-              We have sent an OTP to <Text className="text-white font-bold">{email}</Text>. Enter the OTP and your new password below.
+            <Text className="text-slate-600 dark:text-slate-400 text-xs mb-6 text-center leading-relaxed">
+              We have sent an OTP to <Text className="text-slate-900 dark:text-white font-bold">{email}</Text>. Enter the OTP and your new password below.
             </Text>
 
             <Input
@@ -136,7 +136,7 @@ export default function ForgotPasswordScreen({ navigation }) {
               onPress={() => setStep(1)}
               className="mt-4 self-center"
             >
-              <Text className="text-slate-400 font-semibold text-xs underline">Resend OTP / Back</Text>
+              <Text className="text-slate-600 dark:text-slate-400 font-semibold text-xs underline">Resend OTP / Back</Text>
             </Pressable>
           </>
         )}

@@ -4,8 +4,11 @@ import { request } from '../../services/api';
 import GlassCard from '../../components/ui/GlassCard';
 import Badge from '../../components/ui/Badge';
 import { Plus, ArrowLeft, Check, X } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
 
 export default function AdminDashboardScreen({ navigation }) {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [stats, setStats] = useState(null);
   const [withdrawals, setWithdrawals] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -81,23 +84,15 @@ export default function AdminDashboardScreen({ navigation }) {
   };
 
   return (
-    <View className="flex-1 bg-[#0B0F1A]">
-      <View className="bg-slate-950 p-4 border-b border-slate-900 flex-row items-center justify-between">
+    <View className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]">
+      <View className="bg-white dark:bg-slate-955 p-4 border-b border-slate-200 dark:border-slate-900 flex-row items-center justify-between">
         <Pressable onPress={() => navigation.goBack()} className="p-1">
-          <ArrowLeft size={20} color="#fff" />
+          <ArrowLeft size={20} color={isDark ? '#fff' : '#0F172A'} />
         </Pressable>
-        <Text className="text-white font-extrabold text-sm uppercase tracking-wide">Admin Control</Text>
+        <Text className="text-slate-900 dark:text-white font-extrabold text-sm uppercase tracking-wide">Admin Control</Text>
         <Pressable 
           onPress={() => navigation.navigate('CreateTournament')}
-          className="bg-red-600 w-8 h-8 rounded-lg items-center justify-center border"
-          style={{
-            borderColor: '#ef4444',
-            shadowColor: '#ef4444',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 3,
-            elevation: 2,
-          }}
+          className="bg-red-600 w-8 h-8 rounded-lg items-center justify-center border border-transparent"
         >
           <Plus size={16} color="#fff" />
         </Pressable>
@@ -109,57 +104,53 @@ export default function AdminDashboardScreen({ navigation }) {
         }
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
       >
-        <Text className="text-slate-450 text-[10px] font-bold uppercase tracking-wider mb-4">Platform Overview</Text>
+        <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-4">Platform Overview</Text>
         <View className="flex-row justify-between mb-6">
           <GlassCard className="w-[31%] p-3 items-center">
-            <Text className="text-white text-base font-black">{stats?.totalUsers || 0}</Text>
-            <Text className="text-slate-455 text-[8px] uppercase font-bold text-center mt-0.5">Users</Text>
+            <Text className="text-slate-900 dark:text-white text-base font-black">{stats?.totalUsers || 0}</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold text-center mt-0.5">Users</Text>
           </GlassCard>
 
           <GlassCard className="w-[31%] p-3 items-center">
-            <Text className="text-emerald-400 text-base font-black">₹{stats?.totalRevenue || 0}</Text>
-            <Text className="text-slate-450 text-[8px] uppercase font-bold text-center mt-0.5">Revenue</Text>
+            <Text className="text-emerald-600 dark:text-emerald-400 text-base font-black">₹{stats?.totalRevenue || 0}</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold text-center mt-0.5">Revenue</Text>
           </GlassCard>
 
           <GlassCard className="w-[31%] p-3 items-center">
-            <Text className="text-purple-400 text-base font-black">{stats?.totalTournaments || 0}</Text>
-            <Text className="text-slate-450 text-[8px] uppercase font-bold text-center mt-0.5">Games</Text>
+            <Text className="text-purple-650 dark:text-purple-400 text-base font-black">{stats?.totalTournaments || 0}</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold text-center mt-0.5">Games</Text>
           </GlassCard>
         </View>
 
-        <Text className="text-white font-extrabold text-sm uppercase tracking-wider mb-4">Pending Withdrawals ({withdrawals.filter(w => w.status === 'pending').length})</Text>
+        <Text className="text-slate-900 dark:text-white font-extrabold text-sm uppercase tracking-wider mb-4">Pending Withdrawals ({withdrawals.filter(w => w.status === 'pending').length})</Text>
         {withdrawals.filter(w => w.status === 'pending').length === 0 ? (
           <GlassCard className="py-10 items-center">
-            <Text className="text-slate-450 text-xs font-semibold">No pending withdrawals requests.</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold">No pending withdrawals requests.</Text>
           </GlassCard>
         ) : (
           withdrawals.filter(w => w.status === 'pending').map((w) => (
             <GlassCard 
               key={w._id} 
               className="mb-4 p-4 flex-row justify-between items-center"
-              style={{
-                backgroundColor: 'rgba(15, 23, 42, 0.4)',
-                borderColor: 'rgba(255, 255, 255, 0.05)',
-              }}
             >
               <View className="flex-1 mr-3">
-                <Text className="text-white font-bold text-sm">User: {w.userId?.username || 'Player'}</Text>
-                <Text className="text-slate-450 text-[9px] uppercase font-semibold mt-0.5">UPI: {w.upiId || 'Bank Account'}</Text>
-                <Text className="text-emerald-400 text-sm font-black mt-1">₹{w.amount}</Text>
+                <Text className="text-slate-900 dark:text-white font-bold text-sm">User: {w.userId?.username || 'Player'}</Text>
+                <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-semibold mt-0.5">UPI: {w.upiId || 'Bank Account'}</Text>
+                <Text className="text-emerald-600 dark:text-emerald-400 text-sm font-black mt-1">₹{w.amount}</Text>
               </View>
               
               <View className="flex-row space-x-2">
                 <Pressable 
                   onPress={() => handleReject(w._id)}
-                  style={{ backgroundColor: '#450a0a', borderColor: '#ef4444', borderWidth: 1, borderRadius: 10, padding: 8 }}
+                  style={{ backgroundColor: isDark ? '#450a0a' : '#fee2e2', borderColor: '#ef4444', borderWidth: 1, borderRadius: 10, padding: 8 }}
                 >
-                  <X size={16} color="#F87171" />
+                  <X size={16} color={isDark ? '#F87171' : '#EF4444'} />
                 </Pressable>
                 <Pressable 
                   onPress={() => handleApprove(w._id)}
-                  style={{ backgroundColor: '#064e3b', borderColor: '#10b981', borderWidth: 1, borderRadius: 10, padding: 8 }}
+                  style={{ backgroundColor: isDark ? '#064e3b' : '#d1fae5', borderColor: '#10b981', borderWidth: 1, borderRadius: 10, padding: 8 }}
                 >
-                  <Check size={16} color="#34D399" />
+                  <Check size={16} color={isDark ? '#34D399' : '#059669'} />
                 </Pressable>
               </View>
             </GlassCard>

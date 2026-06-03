@@ -5,9 +5,12 @@ import { request } from '../../services/api';
 import GlassCard from '../../components/ui/GlassCard';
 import Badge from '../../components/ui/Badge';
 import { Wallet, Plus, ArrowUpRight, History } from 'lucide-react-native';
+import { useColorScheme } from 'nativewind';
 
 export default function WalletScreen() {
   const { user } = useContext(AuthContext);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [wallet, setWallet] = useState({ depositBalance: 0, winningBalance: 0, bonusBalance: 0, totalBalance: 0 });
   const [transactions, setTransactions] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -134,9 +137,20 @@ export default function WalletScreen() {
     }
   };
 
+  const inputStyle = {
+    backgroundColor: isDark ? '#020617' : '#f1f5f9',
+    color: isDark ? '#ffffff' : '#0F172A',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 12,
+    fontWeight: 'bold',
+    borderWidth: 1,
+    borderColor: isDark ? '#1E293B' : '#cbd5e1'
+  };
+
   return (
     <ScrollView 
-      className="flex-1 bg-[#0B0F1A]"
+      className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]"
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" colors={["#7C3AED"]} />
       }
@@ -145,54 +159,51 @@ export default function WalletScreen() {
       <GlassCard 
         className="p-6 mb-6 items-center"
         style={{
-          backgroundColor: 'rgba(124, 58, 237, 0.15)',
-          borderColor: 'rgba(124, 58, 237, 0.2)',
+          backgroundColor: isDark ? 'rgba(124, 58, 237, 0.15)' : 'rgba(124, 58, 237, 0.08)',
+          borderColor: isDark ? 'rgba(124, 58, 237, 0.2)' : 'rgba(124, 58, 237, 0.15)',
         }}
       >
         <View 
           className="p-3 rounded-full mb-3"
-          style={{ backgroundColor: 'rgba(124, 58, 237, 0.1)' }}
+          style={{ backgroundColor: isDark ? 'rgba(124, 58, 237, 0.1)' : 'rgba(124, 58, 237, 0.05)' }}
         >
-          <Wallet size={28} color="#C084FC" />
+          <Wallet size={28} color={isDark ? '#C084FC' : '#7C3AED'} />
         </View>
-        <Text className="text-slate-450 text-[10px] font-bold uppercase tracking-wider">Total Balance</Text>
-        <Text className="text-white text-3xl font-black mt-1">₹{wallet.totalBalance.toFixed(2)}</Text>
+        <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">Total Balance</Text>
+        <Text className="text-slate-900 dark:text-white text-3xl font-black mt-1">₹{wallet.totalBalance.toFixed(2)}</Text>
         
         <View 
-          className="flex-row justify-between w-full border-t pt-4 mt-4"
-          style={{ borderTopColor: 'rgba(30, 41, 59, 0.8)' }}
+          className="flex-row justify-between w-full border-t border-slate-200 dark:border-slate-800 pt-4 mt-4"
         >
           <View 
-            className="items-center flex-1 border-r"
-            style={{ borderRightColor: 'rgba(30, 41, 59, 0.5)' }}
+            className="items-center flex-1 border-r border-slate-200 dark:border-slate-800"
           >
-            <Text className="text-emerald-400 font-bold text-sm">₹{wallet.depositBalance.toFixed(2)}</Text>
-            <Text className="text-slate-455 text-[8px] uppercase font-bold mt-0.5">Deposits</Text>
+            <Text className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">₹{wallet.depositBalance.toFixed(2)}</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold mt-0.5">Deposits</Text>
           </View>
           <View 
-            className="items-center flex-1 border-r"
-            style={{ borderRightColor: 'rgba(30, 41, 59, 0.5)' }}
+            className="items-center flex-1 border-r border-slate-200 dark:border-slate-800"
           >
-            <Text className="text-[#C084FC] font-bold text-sm">₹{wallet.winningBalance.toFixed(2)}</Text>
-            <Text className="text-slate-455 text-[8px] uppercase font-bold mt-0.5">Winnings</Text>
+            <Text className="text-purple-650 dark:text-[#C084FC] font-bold text-sm">₹{wallet.winningBalance.toFixed(2)}</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold mt-0.5">Winnings</Text>
           </View>
           <View className="items-center flex-1">
-            <Text className="text-cyan-400 font-bold text-sm">₹{wallet.bonusBalance.toFixed(2)}</Text>
-            <Text className="text-slate-455 text-[8px] uppercase font-bold mt-0.5">Bonus</Text>
+            <Text className="text-cyan-600 dark:text-cyan-400 font-bold text-sm">₹{wallet.bonusBalance.toFixed(2)}</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold mt-0.5">Bonus</Text>
           </View>
         </View>
       </GlassCard>
 
       <View className="mb-6 flex-row justify-between">
         <GlassCard className="w-[48%] p-4">
-          <Text className="text-white font-extrabold text-[10px] uppercase tracking-wider mb-3">Add Cash</Text>
+          <Text className="text-slate-900 dark:text-white font-extrabold text-[10px] uppercase tracking-wider mb-3">Add Cash</Text>
           <TextInput
             value={depositAmount}
             onChangeText={setDepositAmount}
             placeholder="₹ Amount"
-            placeholderTextColor="#475569"
+            placeholderTextColor={isDark ? "#475569" : "#94A3B8"}
             keyboardType="number-pad"
-            style={{ backgroundColor: '#020617', color: '#ffffff', borderRadius: 8, padding: 8, marginBottom: 12, fontWeight: 'bold', borderWidth: 1, borderColor: '#1E293B' }}
+            style={inputStyle}
           />
           <Pressable 
             onPress={handleDeposit}
@@ -205,21 +216,21 @@ export default function WalletScreen() {
         </GlassCard>
 
         <GlassCard className="w-[48%] p-4">
-          <Text className="text-white font-extrabold text-[10px] uppercase tracking-wider mb-3">Withdraw</Text>
+          <Text className="text-slate-900 dark:text-white font-extrabold text-[10px] uppercase tracking-wider mb-3">Withdraw</Text>
           <TextInput
             value={withdrawAmount}
             onChangeText={setWithdrawAmount}
             placeholder="₹ Amount"
-            placeholderTextColor="#475569"
+            placeholderTextColor={isDark ? "#475569" : "#94A3B8"}
             keyboardType="number-pad"
-            style={{ backgroundColor: '#020617', color: '#ffffff', borderRadius: 8, padding: 8, marginBottom: 12, fontWeight: 'bold', borderWidth: 1, borderColor: '#1E293B' }}
+            style={inputStyle}
           />
           <TextInput
             value={withdrawUpi}
             onChangeText={setWithdrawUpi}
             placeholder="UPI Address"
-            placeholderTextColor="#475569"
-            style={{ backgroundColor: '#020617', color: '#ffffff', borderRadius: 8, padding: 8, marginBottom: 12, fontSize: 10, borderWidth: 1, borderColor: '#1E293B' }}
+            placeholderTextColor={isDark ? "#475569" : "#94A3B8"}
+            style={{ ...inputStyle, fontSize: 10 }}
             autoCapitalize="none"
           />
           <Pressable 
@@ -234,40 +245,45 @@ export default function WalletScreen() {
       </View>
 
       <View className="mb-4 flex-row items-center">
-        <History size={16} color="#94A3B8" style={{ marginRight: 6 }} />
-        <Text className="text-white font-extrabold text-sm uppercase tracking-wider">Transaction History</Text>
+        <History size={16} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginRight: 6 }} />
+        <Text className="text-slate-900 dark:text-white font-extrabold text-sm uppercase tracking-wider">Transaction History</Text>
       </View>
 
       {transactions.length === 0 ? (
         <GlassCard className="py-8 items-center">
-          <Text className="text-slate-455 text-xs font-semibold">No transactions recorded yet.</Text>
+          <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold">No transactions recorded yet.</Text>
         </GlassCard>
       ) : (
         transactions.map((tx) => (
           <GlassCard 
             key={tx._id} 
             className="mb-3 py-3 px-4 flex-row justify-between items-center"
-            style={{ backgroundColor: 'rgba(15, 23, 42, 0.4)' }}
           >
             <View className="flex-1 mr-3">
               <View className="flex-row items-center mb-1">
                 <Badge text={tx.type.replace('_', ' ')} variant={getTxTypeBadgeColor(tx.type)} />
-                <Text className="text-slate-455 text-[9px] font-bold uppercase ml-2">
+                <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-bold uppercase ml-2">
                   {new Date(tx.createdAt).toLocaleDateString()}
                 </Text>
               </View>
-              <Text className="text-slate-455 text-[9px]" numberOfLines={1}>
+              <Text className="text-slate-500 dark:text-slate-400 text-[9px]" numberOfLines={1}>
                 {tx.description || `Transaction Ref: ${tx._id.slice(-6)}`}
               </Text>
             </View>
             <View className="items-end">
               <Text className={`text-base font-black ${
-                ['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) ? 'text-emerald-400' : 'text-white'
+                ['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) 
+                  ? 'text-emerald-600 dark:text-emerald-400' 
+                  : 'text-slate-900 dark:text-white'
               }`}>
                 {['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) ? '+' : '-'}₹{tx.amount}
               </Text>
               <Text className={`text-[8px] font-bold uppercase mt-0.5 ${
-                tx.status === 'completed' ? 'text-emerald-400' : tx.status === 'pending' ? 'text-amber-400' : 'text-red-400'
+                tx.status === 'completed' 
+                  ? 'text-emerald-600 dark:text-emerald-400' 
+                  : tx.status === 'pending' 
+                    ? 'text-amber-600 dark:text-amber-400' 
+                    : 'text-red-650 dark:text-red-400'
               }`}>
                 {tx.status}
               </Text>
@@ -282,30 +298,34 @@ export default function WalletScreen() {
           style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}
         >
           <GlassCard 
-            className="w-full max-w-sm p-6 bg-slate-950 border"
-            style={{ borderColor: 'rgba(124, 58, 237, 0.35)' }}
+            className="w-full max-w-sm p-6"
+            style={{ 
+              backgroundColor: isDark ? '#020617' : '#ffffff',
+              borderColor: isDark ? 'rgba(124, 58, 237, 0.35)' : 'rgba(124, 58, 237, 0.15)',
+              borderWidth: 1 
+            }}
           >
-            <Text className="text-slate-450 text-[10px] font-bold text-center uppercase tracking-widest mb-1">RAZORPAY</Text>
-            <Text className="text-[#C084FC] text-base font-black text-center mb-4">SECURE GATEWAY SIMULATOR</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold text-center uppercase tracking-widest mb-1">RAZORPAY</Text>
+            <Text className="text-[#7C3AED] dark:text-[#C084FC] text-base font-black text-center mb-4">SECURE GATEWAY SIMULATOR</Text>
             
-            <View className="bg-slate-900 rounded-xl p-4 mb-6">
-              <Text className="text-slate-450 text-[10px] font-bold text-center uppercase">Deposit Amount</Text>
-              <Text className="text-white text-3xl font-black text-center mt-1">₹{pendingTx?.amount}</Text>
-              <Text className="text-slate-500 text-[9px] text-center mt-3">
+            <View className="bg-slate-100 dark:bg-slate-900 rounded-xl p-4 mb-6">
+              <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold text-center uppercase">Deposit Amount</Text>
+              <Text className="text-slate-900 dark:text-white text-3xl font-black text-center mt-1">₹{pendingTx?.amount}</Text>
+              <Text className="text-slate-500 dark:text-slate-400 text-[9px] text-center mt-3">
                 Order ID: {pendingTx?.orderId}
               </Text>
             </View>
 
-            <Text className="text-slate-400 text-[10px] text-center mb-6 leading-relaxed">
+            <Text className="text-slate-650 dark:text-slate-400 text-[10px] text-center mb-6 leading-relaxed">
               This is a sandbox mock payment container. Confirming below simulates a successful API bank verification.
             </Text>
 
             <View className="flex-row justify-between">
               <Pressable 
                 onPress={() => completeMockDeposit('fail')}
-                style={{ flex: 1, marginRight: 8, backgroundColor: '#450a0a', borderColor: '#ef4444', borderWidth: 1, borderRadius: 12, paddingVertical: 12 }}
+                style={{ flex: 1, marginRight: 8, backgroundColor: isDark ? '#450a0a' : '#fee2e2', borderColor: '#ef4444', borderWidth: 1, borderRadius: 12, paddingVertical: 12 }}
               >
-                <Text className="text-red-400 text-center font-bold text-xs uppercase tracking-wide">Decline</Text>
+                <Text className="text-red-600 dark:text-red-400 text-center font-bold text-xs uppercase tracking-wide">Decline</Text>
               </Pressable>
               <Pressable 
                 onPress={() => completeMockDeposit('success')}
