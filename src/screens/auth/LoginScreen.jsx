@@ -1,16 +1,57 @@
 import React, { useState, useContext } from 'react';
-import { ScrollView, View, Text, Pressable } from 'react-native';
+import { ScrollView, View, Text, Pressable, Modal, Image, ActivityIndicator } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import GlassCard from '../../components/ui/GlassCard';
 
+const MOCK_GAMERS = [
+  {
+    id: "g1",
+    googleId: "1122334455",
+    name: "Ninja (Tyler Blevins)",
+    email: "ninja@battlezone.gg",
+    avatar: "https://api.dicebear.com/7.x/pixel-art/svg?seed=ninja",
+    title: "Fortnite Esports Legend",
+    color: "#3B82F6"
+  },
+  {
+    id: "g2",
+    googleId: "2233445566",
+    name: "Shroud (Michael Grzesiek)",
+    email: "shroud@battlezone.gg",
+    avatar: "https://api.dicebear.com/7.x/pixel-art/svg?seed=shroud",
+    title: "FPS Aim God & Valorant Pro",
+    color: "#475569"
+  },
+  {
+    id: "g3",
+    googleId: "3344556677",
+    name: "Valkyrae (Rachell)",
+    email: "valkyrae@battlezone.gg",
+    avatar: "https://api.dicebear.com/7.x/pixel-art/svg?seed=valkyrae",
+    title: "Esports Queen & Co-Owner",
+    color: "#F43F5E"
+  },
+  {
+    id: "g4",
+    googleId: "4455667788",
+    name: "S1mple (Oleksandr)",
+    email: "s1mple@battlezone.gg",
+    avatar: "https://api.dicebear.com/7.x/pixel-art/svg?seed=s1mple",
+    title: "CS:GO GOAT & MVP Champion",
+    color: "#F59E0B"
+  }
+];
+
 export default function LoginScreen({ navigation }) {
-  const { login, authError, setAuthError } = useContext(AuthContext);
+  const { login, googleLogin, authError, setAuthError } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [showGamerChooser, setShowGamerChooser] = useState(false);
 
   const handleLoginSubmit = async () => {
     setLocalError('');
@@ -28,6 +69,29 @@ export default function LoginScreen({ navigation }) {
       console.log('Login error details:', err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSelectMockGamer = async (gamer) => {
+    setShowGamerChooser(false);
+    setGoogleLoading(true);
+    setLocalError('');
+    setAuthError('');
+
+    try {
+      await googleLogin(
+        `mock_google_token_${gamer.googleId}_${gamer.email}_${gamer.name}`,
+        {
+          googleId: gamer.googleId,
+          email: gamer.email,
+          name: gamer.name,
+          avatar: gamer.avatar
+        }
+      );
+    } catch (err) {
+      console.log('Google login error details:', err.message);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -97,14 +161,99 @@ export default function LoginScreen({ navigation }) {
           onPress={handleLoginSubmit}
           loading={loading}
         />
+
+        {/* Google Login Divider and Button */}
+        <View className="relative my-5 items-center justify-center flex-row">
+          <View className="w-full border-t border-slate-200 dark:border-white/10 absolute"></View>
+          <Text className="px-3 text-[9px] font-bold uppercase tracking-widest bg-slate-50 dark:bg-[#111827] text-slate-400 z-10">
+            OR SECURE CONNECT
+          </Text>
+        </View>
+
+        <Pressable
+          onPress={() => setShowGamerChooser(true)}
+          disabled={googleLoading}
+          className="w-full py-3 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl flex-row items-center justify-center transition"
+          style={({ pressed }) => [
+            {
+              backgroundColor: pressed ? 'rgba(0,0,0,0.05)' : 'transparent',
+            }
+          ]}
+        >
+          {googleLoading ? (
+            <ActivityIndicator size="small" color="#7C3AED" />
+          ) : (
+            <View className="flex-row items-center justify-center">
+              <View className="mr-2 border border-red-500/20 bg-red-500/10 w-5 h-5 rounded-full items-center justify-center">
+                <Text className="text-red-500 font-bold text-[10px]">G</Text>
+              </View>
+              <Text className="text-slate-700 dark:text-white font-bold text-xs uppercase tracking-wider">
+                Continue with Google
+              </Text>
+            </View>
+          )}
+        </Pressable>
       </GlassCard>
 
       <View className="flex-row justify-center items-center py-4">
-        <Text className="text-slate-650 dark:text-slate-400 text-sm">Don't have an account? </Text>
+        <Text className="text-slate-655 dark:text-slate-400 text-sm">Don't have an account? </Text>
         <Pressable onPress={() => navigation.navigate('Register')}>
           <Text className="text-[#7C3AED] font-bold text-sm">Sign Up</Text>
         </Pressable>
       </View>
+
+      {/* Mock Google Account Chooser Modal */}
+      <Modal
+        visible={showGamerChooser}
+        transparent={true}
+        animationType="slide"
+        statusBarTranslucent={true}
+        onRequestClose={() => setShowGamerChooser(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <View className="bg-white dark:bg-[#0B0F1A] border border-slate-200 dark:border-white/10 rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-lg font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                Google Dev Accounts
+              </Text>
+              <Pressable onPress={() => setShowGamerChooser(false)} className="p-1">
+                <Text className="text-slate-400 font-bold text-xs uppercase">Close</Text>
+              </Pressable>
+            </View>
+
+            <Text className="text-slate-500 dark:text-slate-400 text-xs mb-5 leading-relaxed">
+              Choose one of these simulated esports profiles to instantly test Google authentication & onboarding on mobile:
+            </Text>
+
+            <View className="gap-3">
+              {MOCK_GAMERS.map((gamer) => (
+                <Pressable
+                  key={gamer.id}
+                  onPress={() => handleSelectMockGamer(gamer)}
+                  className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-3 flex-row items-center"
+                  style={({ pressed }) => [
+                    {
+                      backgroundColor: pressed ? 'rgba(124, 58, 237, 0.1)' : undefined,
+                    }
+                  ]}
+                >
+                  <Image
+                    source={{ uri: gamer.avatar }}
+                    className="w-10 h-10 rounded-full bg-slate-200 dark:bg-black/20 mr-3"
+                  />
+                  <View className="flex-1">
+                    <Text className="font-bold text-xs text-slate-900 dark:text-white">{gamer.name}</Text>
+                    <Text className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{gamer.email}</Text>
+                    <Text className="text-[9px] uppercase tracking-wide font-semibold mt-1" style={{ color: gamer.color }}>
+                      {gamer.title}
+                    </Text>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }

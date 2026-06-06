@@ -83,6 +83,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleLogin = async (credential, profile) => {
+    setAuthError('');
+    try {
+      const res = await request('/auth/google-login', {
+        method: 'POST',
+        body: JSON.stringify({ credential, profile })
+      });
+      
+      if (res.success) {
+        await saveTokens(res.data.accessToken, res.data.refreshToken);
+        setUser(res.data.user);
+        initiateSocketConnection(res.data.user.id);
+        return res.data.user;
+      }
+    } catch (err) {
+      setAuthError(err.message);
+      throw err;
+    }
+  };
+
   const logout = async () => {
     await clearTokens();
     disconnectSocket();
@@ -122,6 +142,7 @@ export const AuthProvider = ({ children }) => {
       register,
       verifyEmailOtp,
       resendVerificationOtp,
+      googleLogin,
       logout,
       verifySession
     }}>
