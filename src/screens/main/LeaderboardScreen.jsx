@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
+import { View, Text, FlatList, Pressable, RefreshControl, useColorScheme as useRNColorScheme } from 'react-native';
 import { request } from '../../services/api';
 import GlassCard from '../../components/ui/GlassCard';
 import { Trophy, Award } from 'lucide-react-native';
@@ -8,7 +8,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 export default function LeaderboardScreen() {
   const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const systemScheme = useRNColorScheme();
+  const isDark = colorScheme === 'system' ? systemScheme === 'dark' : colorScheme === 'dark';
   const [leaderboard, setLeaderboard] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [period, setPeriod] = useState('alltime'); // daily, weekly, monthly, alltime
@@ -89,25 +90,25 @@ export default function LeaderboardScreen() {
             {rank === 1 ? (
               <Trophy size={14} color="#000" />
             ) : (
-              <Text className={`font-black text-xs ${isTopThree ? 'text-black' : 'text-slate-300'}`}>
+              <Text className={`font-black text-xs ${isTopThree ? 'text-black' : 'text-slate-700 dark:text-slate-300'}`}>
                 {rank}
               </Text>
             )}
           </View>
 
           <View>
-            <Text className="text-white font-extrabold text-sm">{item.username}</Text>
-            <Text className="text-slate-400 text-[9px] uppercase font-bold tracking-wide mt-0.5">
+            <Text className="text-slate-900 dark:text-white font-extrabold text-sm">{item.username}</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-bold tracking-wide mt-0.5">
               Ranked #{rank}
             </Text>
           </View>
         </View>
 
         <View className="items-end">
-          <Text className="text-violet-400 text-base font-black">
+          <Text className="text-violet-600 dark:text-violet-400 text-base font-black">
             {metric === 'earnings' ? `₹${item.earnings}` : metric === 'kills' ? `${item.kills} Kills` : `${item.points} pts`}
           </Text>
-          <Text className="text-slate-400 text-[8px] uppercase font-bold tracking-wider mt-0.5">{metric}</Text>
+          <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold tracking-wider mt-0.5">{metric}</Text>
         </View>
       </GlassCard>
     );
@@ -115,10 +116,10 @@ export default function LeaderboardScreen() {
 
   return (
     <LinearGradient
-      colors={['#060A13', '#0D1321']}
+      colors={isDark ? ['#060A13', '#0D1321'] : ['#F8FAFC', '#E2E8F0']}
       className="flex-1"
     >
-      <View className="p-4 border-b border-slate-900 bg-transparent">
+      <View className="p-4 border-b border-slate-200 dark:border-slate-900 bg-transparent">
         <View className="flex-row justify-between mb-3">
           {periodFilters.map((p) => (
             <Pressable
@@ -127,7 +128,7 @@ export default function LeaderboardScreen() {
               className={`flex-1 mx-1 py-2.5 rounded-xl border items-center ${
                 period === p.value 
                   ? 'bg-violet-600 border-violet-500' 
-                  : 'bg-slate-950/60 border-slate-900'
+                  : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-900'
               }`}
               style={period === p.value ? {
                 shadowColor: '#8B5CF6',
@@ -137,7 +138,7 @@ export default function LeaderboardScreen() {
                 elevation: 3,
               } : {}}
             >
-              <Text className={`text-[9px] font-black uppercase tracking-wider ${period === p.value ? 'text-white' : 'text-slate-400'}`}>
+              <Text className={`text-[9px] font-black uppercase tracking-wider ${period === p.value ? 'text-white' : 'text-slate-500 dark:text-slate-400'}`}>
                 {p.label}
               </Text>
             </Pressable>
@@ -151,11 +152,11 @@ export default function LeaderboardScreen() {
               onPress={() => setMetric(m.value)}
               className={`flex-1 mx-1 py-2 rounded-xl border items-center ${
                 metric === m.value 
-                  ? 'bg-cyan-500/10 border-cyan-500/40' 
-                  : 'bg-slate-950/60 border-slate-900'
+                  ? 'bg-cyan-50 dark:bg-cyan-500/10 border-cyan-200 dark:border-cyan-500/40' 
+                  : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-900'
               }`}
             >
-              <Text className={`text-[8px] font-black uppercase tracking-widest ${metric === m.value ? 'text-cyan-400' : 'text-slate-400'}`}>
+              <Text className={`text-[8px] font-black uppercase tracking-widest ${metric === m.value ? 'text-cyan-600 dark:text-cyan-400' : 'text-slate-500 dark:text-slate-400'}`}>
                 {m.label}
               </Text>
             </Pressable>
@@ -172,22 +173,22 @@ export default function LeaderboardScreen() {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh} 
-            tintColor="#00E5FF" 
-            colors={["#00E5FF"]} 
-            progressBackgroundColor="#0A0E1A"
+            tintColor={isDark ? "#00E5FF" : "#7C3AED"} 
+            colors={[isDark ? "#00E5FF" : "#7C3AED"]} 
+            progressBackgroundColor={isDark ? "#0A0E1A" : "#FFFFFF"}
           />
         }
         ListHeaderComponent={
           leaderboard.length > 0 ? (
             <View className="mb-4 flex-row items-center px-1">
               <Award size={16} color="#94A3B8" style={{ marginRight: 6 }} />
-              <Text className="text-white font-extrabold text-xs uppercase tracking-widest">Top Warriors Ranked</Text>
+              <Text className="text-slate-900 dark:text-white font-extrabold text-xs uppercase tracking-widest">Top Warriors Ranked</Text>
             </View>
           ) : null
         }
         ListEmptyComponent={
           <View className="py-20 items-center">
-            <Text className="text-slate-400 text-xs font-semibold">No ranks computed for this period.</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold">No ranks computed for this period.</Text>
           </View>
         }
       />

@@ -14,6 +14,7 @@ import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import CreateTournamentScreen from '../screens/admin/CreateTournamentScreen';
 import TermsScreen from '../screens/support/TermsScreen';
 import PrivacyScreen from '../screens/support/PrivacyScreen';
+import NotificationScreen from '../screens/main/NotificationScreen';
 import { ActivityIndicator } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -59,6 +60,7 @@ export default function AppNavigator() {
           
           <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
           <Stack.Screen name="CreateTournament" component={CreateTournamentScreen} />
+          <Stack.Screen name="Notification" component={NotificationScreen} />
         </>
       )}
       <Stack.Screen name="Terms" component={TermsScreen} />

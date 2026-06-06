@@ -208,17 +208,16 @@ export default function LoginScreen({ navigation }) {
           >
             {!isKeyboardVisible && <View className="flex-1" />}
         {/* Left-aligned Welcome Header */}
-        <View className="mb-6 mt-4 px-1 self-start">
+        <View className="mb-4 mt-2 px-1 self-start">
           <Text 
-            className="text-3xl font-black text-violet-650 dark:text-violet-400 leading-tight uppercase tracking-wider"
+            className="text-xl font-black text-violet-650 dark:text-violet-400 uppercase tracking-widest"
             style={{
               textShadowColor: 'rgba(139, 92, 246, 0.35)',
               textShadowOffset: { width: 0, height: 0 },
-              textShadowRadius: 8,
+              textShadowRadius: 6,
             }}
           >
-            Welcome to,{"\n"}
-            Login
+            Welcome to Login
           </Text>
         </View>
 

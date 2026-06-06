@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { ScrollView, View, Text, TextInput, Pressable, RefreshControl, Alert, Modal, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, TextInput, Pressable, RefreshControl, Alert, Modal, ActivityIndicator, useColorScheme as useRNColorScheme } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { request } from '../../services/api';
 import GlassCard from '../../components/ui/GlassCard';
@@ -11,7 +11,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 export default function WalletScreen() {
   const { user } = useContext(AuthContext);
   const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const systemScheme = useRNColorScheme();
+  const isDark = colorScheme === 'system' ? systemScheme === 'dark' : colorScheme === 'dark';
   const [wallet, setWallet] = useState({ depositBalance: 0, winningBalance: 0, bonusBalance: 0, totalBalance: 0 });
   const [transactions, setTransactions] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -139,21 +140,21 @@ export default function WalletScreen() {
   };
 
   const inputStyle = {
-    backgroundColor: '#0A0E1A',
-    color: '#ffffff',
+    backgroundColor: isDark ? '#0A0E1A' : '#FFFFFF',
+    color: isDark ? '#ffffff' : '#0F172A',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 12,
     fontWeight: 'bold',
     borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.2)',
+    borderColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(124, 58, 237, 0.3)',
     fontSize: 12
   };
 
   return (
     <LinearGradient
-      colors={['#060A13', '#0D1321']}
+      colors={isDark ? ['#060A13', '#0D1321'] : ['#F8FAFC', '#E2E8F0']}
       className="flex-1"
     >
       <ScrollView 
@@ -162,9 +163,9 @@ export default function WalletScreen() {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh} 
-            tintColor="#00E5FF" 
-            colors={["#00E5FF"]} 
-            progressBackgroundColor="#0A0E1A"
+            tintColor={isDark ? "#00E5FF" : "#7C3AED"} 
+            colors={[isDark ? "#00E5FF" : "#7C3AED"]} 
+            progressBackgroundColor={isDark ? "#0A0E1A" : "#FFFFFF"}
           />
         }
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
@@ -174,46 +175,46 @@ export default function WalletScreen() {
           glowColor="cyan"
         >
           <View 
-            className="p-3 rounded-full mb-3 bg-[#0A0E1A]"
+            className="p-3 rounded-full mb-3 bg-slate-100 dark:bg-[#0A0E1A]"
             style={{
-              borderColor: 'rgba(0, 229, 255, 0.3)',
+              borderColor: isDark ? 'rgba(0, 229, 255, 0.3)' : 'rgba(0, 229, 255, 0.5)',
               borderWidth: 1,
               shadowColor: '#00E5FF',
               shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.3,
+              shadowOpacity: isDark ? 0.3 : 0.15,
               shadowRadius: 5,
             }}
           >
-            <Wallet size={28} color="#00E5FF" />
+            <Wallet size={28} color={isDark ? "#00E5FF" : "#0891B2"} />
           </View>
-          <Text className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest">Total Balance</Text>
-          <Text className="text-white text-3xl font-black mt-1">₹{wallet.totalBalance.toFixed(2)}</Text>
+          <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-widest">Total Balance</Text>
+          <Text className="text-slate-900 dark:text-white text-3xl font-black mt-1">₹{wallet.totalBalance.toFixed(2)}</Text>
           
           <View 
-            className="flex-row justify-between w-full border-t border-slate-800/60 pt-4 mt-5"
+            className="flex-row justify-between w-full border-t border-slate-200 dark:border-slate-800/60 pt-4 mt-5"
           >
             <View 
-              className="items-center flex-1 border-r border-slate-800/60"
+              className="items-center flex-1 border-r border-slate-200 dark:border-slate-800/60"
             >
-              <Text className="text-emerald-400 font-extrabold text-sm">₹{wallet.depositBalance.toFixed(2)}</Text>
-              <Text className="text-slate-400 text-[8px] uppercase font-bold tracking-wider mt-0.5">Deposits</Text>
+              <Text className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">₹{wallet.depositBalance.toFixed(2)}</Text>
+              <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold tracking-wider mt-0.5">Deposits</Text>
             </View>
             <View 
-              className="items-center flex-1 border-r border-slate-800/60"
+              className="items-center flex-1 border-r border-slate-200 dark:border-slate-800/60"
             >
-              <Text className="text-violet-400 font-extrabold text-sm">₹{wallet.winningBalance.toFixed(2)}</Text>
-              <Text className="text-slate-400 text-[8px] uppercase font-bold tracking-wider mt-0.5">Winnings</Text>
+              <Text className="text-violet-650 dark:text-violet-400 font-extrabold text-sm">₹{wallet.winningBalance.toFixed(2)}</Text>
+              <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold tracking-wider mt-0.5">Winnings</Text>
             </View>
             <View className="items-center flex-1">
-              <Text className="text-cyan-400 font-extrabold text-sm">₹{wallet.bonusBalance.toFixed(2)}</Text>
-              <Text className="text-slate-400 text-[8px] uppercase font-bold tracking-wider mt-0.5">Bonus</Text>
+              <Text className="text-cyan-600 dark:text-cyan-400 font-extrabold text-sm">₹{wallet.bonusBalance.toFixed(2)}</Text>
+              <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold tracking-wider mt-0.5">Bonus</Text>
             </View>
           </View>
         </GlassCard>
 
         <View className="mb-6 flex-row justify-between">
           <GlassCard className="w-[48%] p-4" glowColor="purple">
-            <Text className="text-white font-extrabold text-[10px] uppercase tracking-wider mb-3 px-0.5">Add Cash</Text>
+            <Text className="text-slate-900 dark:text-white font-extrabold text-[10px] uppercase tracking-wider mb-3 px-0.5">Add Cash</Text>
             <TextInput
               value={depositAmount}
               onChangeText={setDepositAmount}
@@ -241,7 +242,7 @@ export default function WalletScreen() {
           </GlassCard>
 
           <GlassCard className="w-[48%] p-4" glowColor="purple">
-            <Text className="text-white font-extrabold text-[10px] uppercase tracking-wider mb-3 px-0.5">Withdraw</Text>
+            <Text className="text-slate-900 dark:text-white font-extrabold text-[10px] uppercase tracking-wider mb-3 px-0.5">Withdraw</Text>
             <TextInput
               value={withdrawAmount}
               onChangeText={setWithdrawAmount}
@@ -279,12 +280,12 @@ export default function WalletScreen() {
 
         <View className="mb-4 flex-row items-center px-1">
           <History size={16} color="#94A3B8" style={{ marginRight: 6 }} />
-          <Text className="text-white font-extrabold text-xs uppercase tracking-widest">Transaction History</Text>
+          <Text className="text-slate-900 dark:text-white font-extrabold text-xs uppercase tracking-widest">Transaction History</Text>
         </View>
 
         {transactions.length === 0 ? (
           <GlassCard className="py-8 items-center">
-            <Text className="text-slate-400 text-xs font-semibold">No transactions recorded yet.</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold">No transactions recorded yet.</Text>
           </GlassCard>
         ) : (
           transactions.map((tx) => (
@@ -296,28 +297,28 @@ export default function WalletScreen() {
               <View className="flex-1 mr-3">
                 <View className="flex-row items-center mb-1">
                   <Badge text={tx.type.replace('_', ' ')} variant={getTxTypeBadgeColor(tx.type)} />
-                  <Text className="text-slate-400 text-[9px] font-bold uppercase ml-2">
+                  <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-bold uppercase ml-2">
                     {new Date(tx.createdAt).toLocaleDateString()}
                   </Text>
                 </View>
-                <Text className="text-slate-400 text-[9px]" numberOfLines={1}>
+                <Text className="text-slate-500 dark:text-slate-400 text-[9px]" numberOfLines={1}>
                   {tx.description || `Transaction Ref: ${tx._id.slice(-6)}`}
                 </Text>
               </View>
               <View className="items-end">
                 <Text className={`text-base font-black ${
                   ['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) 
-                    ? 'text-emerald-400' 
-                    : 'text-white'
+                    ? 'text-emerald-600 dark:text-emerald-400' 
+                    : 'text-slate-900 dark:text-white'
                 }`}>
                   {['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) ? '+' : '-'}₹{tx.amount}
                 </Text>
                 <Text className={`text-[8px] font-extrabold uppercase mt-0.5 ${
                   tx.status === 'completed' 
-                    ? 'text-emerald-400' 
+                    ? 'text-emerald-600 dark:text-emerald-400' 
                     : tx.status === 'pending' 
-                      ? 'text-amber-400' 
-                      : 'text-rose-400'
+                      ? 'text-amber-500 dark:text-amber-400' 
+                      : 'text-rose-500 dark:text-rose-450'
                 }`}>
                   {tx.status}
                 </Text>
@@ -332,21 +333,21 @@ export default function WalletScreen() {
             style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
           >
             <GlassCard 
-              className="w-full max-w-sm p-6 bg-[#060A13]"
+              className="w-full max-w-sm p-6 bg-white dark:bg-[#060A13]"
               glowColor="purple"
             >
               <Text className="text-slate-500 text-[10px] font-extrabold text-center uppercase tracking-widest mb-1">RAZORPAY</Text>
-              <Text className="text-[#C084FC] text-base font-black text-center mb-4 uppercase tracking-wider">GATEWAY SIMULATOR</Text>
+              <Text className="text-violet-600 dark:text-[#C084FC] text-base font-black text-center mb-4 uppercase tracking-wider">GATEWAY SIMULATOR</Text>
               
-              <View className="bg-slate-950 rounded-xl p-4 mb-6 border border-slate-900">
+              <View className="bg-slate-100 dark:bg-slate-950 rounded-xl p-4 mb-6 border border-slate-200 dark:border-slate-900">
                 <Text className="text-slate-500 text-[10px] font-extrabold text-center uppercase tracking-wider">Deposit Amount</Text>
-                <Text className="text-white text-3xl font-black text-center mt-1">₹{pendingTx?.amount}</Text>
+                <Text className="text-slate-900 dark:text-white text-3xl font-black text-center mt-1">₹{pendingTx?.amount}</Text>
                 <Text className="text-slate-500 text-[9px] text-center mt-3">
                   Order ID: {pendingTx?.orderId}
                 </Text>
               </View>
 
-              <Text className="text-slate-400 text-[10px] text-center mb-6 leading-relaxed px-2">
+              <Text className="text-slate-600 dark:text-slate-400 text-[10px] text-center mb-6 leading-relaxed px-2">
                 This is a sandbox mock payment container. Confirming below simulates a successful API bank verification.
               </Text>
 

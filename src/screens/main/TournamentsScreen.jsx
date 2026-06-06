@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, FlatList, Pressable, RefreshControl, Image } from 'react-native';
+import { View, Text, FlatList, Pressable, RefreshControl, Image, useColorScheme as useRNColorScheme } from 'react-native';
 import { request } from '../../services/api';
 import { SocketContext } from '../../context/SocketContext';
 import GlassCard from '../../components/ui/GlassCard';
@@ -7,11 +7,16 @@ import Badge from '../../components/ui/Badge';
 import Countdown from '../../components/ui/Countdown';
 import { CONFIG } from '../../config';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useColorScheme } from 'nativewind';
 
 export default function TournamentsScreen({ navigation }) {
   const socket = useContext(SocketContext);
   const [tournaments, setTournaments] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+
+  const { colorScheme } = useColorScheme();
+  const systemScheme = useRNColorScheme();
+  const isDark = colorScheme === 'system' ? systemScheme === 'dark' : colorScheme === 'dark';
 
   const fetchTournaments = async () => {
     try {
@@ -69,7 +74,7 @@ export default function TournamentsScreen({ navigation }) {
             resizeMode="cover"
           />
           <LinearGradient
-            colors={['transparent', 'rgba(10, 14, 26, 0.95)']}
+            colors={isDark ? ['transparent', 'rgba(10, 14, 26, 0.95)'] : ['transparent', 'rgba(255, 255, 255, 0.95)']}
             style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 60 }}
           />
           <View className="absolute top-3 right-3 flex-row gap-1.5">
@@ -78,20 +83,20 @@ export default function TournamentsScreen({ navigation }) {
           </View>
         </View>
 
-        <View className="p-4 bg-[#0A0F1A]/95">
-          <Text className="text-white text-base font-extrabold mb-1" numberOfLines={1}>
+        <View className="p-4 bg-white/95 dark:bg-[#0A0F1A]/95">
+          <Text className="text-slate-900 dark:text-white text-base font-extrabold mb-1" numberOfLines={1}>
             {item.title}
           </Text>
-          <Text className="text-slate-400 text-[10px] font-bold uppercase mb-3">
+          <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mb-3">
             {item.game.replace('_', ' ')} • {item.gameMode.replace('_', ' ')}
           </Text>
 
           <View className="mb-4">
             <View className="flex-row justify-between mb-1.5">
-              <Text className="text-slate-400 text-[9px] font-bold uppercase tracking-wide">Slots Filled</Text>
-              <Text className="text-white text-xs font-black">{item.filledSlots}/{item.totalSlots}</Text>
+              <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-bold uppercase tracking-wide">Slots Filled</Text>
+              <Text className="text-slate-900 dark:text-white text-xs font-black">{item.filledSlots}/{item.totalSlots}</Text>
             </View>
-            <View className="h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-900">
+            <View className="h-2 bg-slate-200 dark:bg-slate-950 rounded-full overflow-hidden border border-slate-300 dark:border-slate-900">
               <LinearGradient
                 colors={['#8B5CF6', '#00E5FF']}
                 start={{ x: 0, y: 0 }}
@@ -103,15 +108,15 @@ export default function TournamentsScreen({ navigation }) {
           </View>
 
           <View 
-            className="flex-row justify-between items-center border-t border-slate-800/60 pt-3.5 mb-4"
+            className="flex-row justify-between items-center border-t border-slate-200 dark:border-slate-800/60 pt-3.5 mb-4"
           >
             <View>
-              <Text className="text-slate-400 text-[8px] uppercase font-bold tracking-widest">Prize Pool</Text>
-              <Text className="text-[#00E5FF] text-base font-black">₹{item.prizePool}</Text>
+              <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold tracking-widest">Prize Pool</Text>
+              <Text className="text-cyan-600 dark:text-[#00E5FF] text-base font-black">₹{item.prizePool}</Text>
             </View>
             <View className="items-end">
-              <Text className="text-slate-400 text-[8px] uppercase font-bold tracking-widest">Entry Fee</Text>
-              <Text className="text-white text-base font-black">
+              <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold tracking-widest">Entry Fee</Text>
+              <Text className="text-slate-900 dark:text-white text-base font-black">
                 {item.entryFee === 0 ? 'FREE' : `₹${item.entryFee}`}
               </Text>
             </View>
@@ -127,9 +132,9 @@ export default function TournamentsScreen({ navigation }) {
               style={({ pressed }) => [
                 {
                   opacity: pressed ? 0.8 : 1,
-                  shadowColor: '#00E5FF',
+                  shadowColor: isDark ? '#00E5FF' : '#0891B2',
                   shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.3,
+                  shadowOpacity: isDark ? 0.3 : 0.15,
                   shadowRadius: 4,
                   elevation: 3
                 }
@@ -145,7 +150,7 @@ export default function TournamentsScreen({ navigation }) {
 
   return (
     <LinearGradient
-      colors={['#060A13', '#0D1321']}
+      colors={isDark ? ['#060A13', '#0D1321'] : ['#F8FAFC', '#E2E8F0']}
       className="flex-1"
     >
       <FlatList
@@ -157,14 +162,14 @@ export default function TournamentsScreen({ navigation }) {
           <RefreshControl 
             refreshing={refreshing} 
             onRefresh={onRefresh} 
-            tintColor="#00E5FF" 
-            colors={["#00E5FF"]} 
-            progressBackgroundColor="#0A0E1A"
+            tintColor={isDark ? "#00E5FF" : "#7C3AED"} 
+            colors={[isDark ? "#00E5FF" : "#7C3AED"]} 
+            progressBackgroundColor={isDark ? "#0A0E1A" : "#FFFFFF"}
           />
         }
         ListEmptyComponent={
           <View className="py-20 items-center">
-            <Text className="text-slate-400 text-sm font-semibold">No tournaments active currently.</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-sm font-semibold">No tournaments active currently.</Text>
           </View>
         }
       />
