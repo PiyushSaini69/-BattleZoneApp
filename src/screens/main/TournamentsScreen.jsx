@@ -5,6 +5,7 @@ import { SocketContext } from '../../context/SocketContext';
 import GlassCard from '../../components/ui/GlassCard';
 import Badge from '../../components/ui/Badge';
 import Countdown from '../../components/ui/Countdown';
+import Header from '../../components/ui/Header';
 import { CONFIG } from '../../config';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useColorScheme } from 'nativewind';
@@ -153,11 +154,14 @@ export default function TournamentsScreen({ navigation }) {
       colors={isDark ? ['#060A13', '#0D1321'] : ['#F8FAFC', '#E2E8F0']}
       className="flex-1"
     >
+      <View className="px-4">
+        <Header navigation={navigation} />
+      </View>
       <FlatList
         data={tournaments}
         keyExtractor={(item) => item._id}
         renderItem={renderItem}
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
         refreshControl={
           <RefreshControl 
             refreshing={refreshing} 

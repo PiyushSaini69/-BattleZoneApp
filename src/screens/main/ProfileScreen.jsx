@@ -1,23 +1,51 @@
-// Cache bust comment: 2026-06-03T21:30:00
 import React, { useState, useEffect, useContext } from 'react';
-import { ScrollView, View, Text, Pressable, Alert, useColorScheme as useRNColorScheme } from 'react-native';
+import { ScrollView, View, Text, Pressable, Alert, Switch, Modal, useColorScheme as useRNColorScheme } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { request } from '../../services/api';
-import GlassCard from '../../components/ui/GlassCard';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import Badge from '../../components/ui/Badge';
-import { Shield, HelpCircle, LogOut, CheckCircle2, Sun, Moon, Monitor, Swords, Trophy, Award } from 'lucide-react-native';
+import Header from '../../components/ui/Header';
+import { 
+  User, Wallet, BarChart3, Trophy, Bell, Headphones, HelpCircle, 
+  LogOut, ChevronRight, Shield, CheckCircle2, Settings
+} from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle, Text as SvgText } from 'react-native-svg';
+
+// GoldCoin component for stats display
+const GoldCoin = ({ size = 18 }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24">
+    <Circle cx="12" cy="12" r="10" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5" />
+    <Circle cx="12" cy="12" r="7" fill="none" stroke="#FEF08A" strokeWidth="1" strokeDasharray="2 1" />
+    <SvgText
+      x="12"
+      y="15.5"
+      fontSize="10"
+      fontWeight="900"
+      fill="#FEF08A"
+      textAnchor="middle"
+    >
+      C
+    </SvgText>
+  </Svg>
+);
 
 export default function ProfileScreen({ navigation }) {
   const { user, setUser, logout } = useContext(AuthContext);
+  const { colorScheme, setColorScheme } = useColorScheme();
+  const systemScheme = useRNColorScheme();
+  const isDark = colorScheme === 'system' ? systemScheme === 'dark' : colorScheme === 'dark';
   
   const [freeFire, setFreeFire] = useState('');
-  
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [importanceNotice, setImportanceNotice] = useState(true);
+
+  // Modals state
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
 
   useEffect(() => {
     if (user && user.gameUIDs) {
@@ -53,10 +81,7 @@ export default function ProfileScreen({ navigation }) {
       { text: 'Disconnect', style: 'destructive', onPress: logout }
     ]);
   };
-  
-  const { colorScheme, setColorScheme } = useColorScheme();
-  const systemScheme = useRNColorScheme();
-  const isDark = colorScheme === 'system' ? systemScheme === 'dark' : colorScheme === 'dark';
+
   const isAdmin = user && ['admin', 'superadmin', 'moderator'].includes(user.role);
   const stats = user?.stats || { tournamentsPlayed: 0, tournamentsWon: 0, totalKills: 0, points: 0 };
 
@@ -65,13 +90,19 @@ export default function ProfileScreen({ navigation }) {
       colors={isDark ? ['#060A13', '#0D1321'] : ['#F8FAFC', '#E2E8F0']}
       className="flex-1"
     >
+      <View className="px-4">
+        <Header navigation={navigation} />
+      </View>
       <ScrollView 
-        className="flex-1" 
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
       >
-        <GlassCard className="items-center p-6 mb-6 mt-4" glowColor="purple">
+
+        {/* Avatar Section */}
+        <View className="items-center mb-6">
           <View 
-            className="w-20 h-20 rounded-full border-2 justify-center items-center mb-3 bg-slate-100 dark:bg-[#0A0E1A]"
+            className="w-20 h-20 rounded-full border-2 justify-center items-center bg-slate-100 dark:bg-[#0A0E1A]"
             style={{ 
               borderColor: isDark ? '#00E5FF' : '#7C3AED',
               shadowColor: isDark ? '#00E5FF' : '#7C3AED',
@@ -86,194 +117,315 @@ export default function ProfileScreen({ navigation }) {
             </Text>
           </View>
 
-          <View className="flex-row items-center mb-1">
-            <Text className="text-slate-900 dark:text-white text-lg font-black mr-2 uppercase tracking-wide">{user?.username}</Text>
-            <Badge text={user?.role || 'user'} variant={isAdmin ? 'danger' : 'purple'} />
-          </View>
-          <Text className="text-slate-500 dark:text-slate-400 text-xs mb-3">{user?.email}</Text>
-
-          <View 
-            className="flex-row space-x-6 border-t pt-4 w-full border-slate-200 dark:border-slate-800/60"
-          >
-            <View className="flex-1 items-center">
-              <Text className="text-slate-900 dark:text-white text-sm font-black uppercase tracking-wider">{user?.referralCode || 'N/A'}</Text>
-              <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-bold tracking-wider mt-0.5">Referral Code</Text>
-            </View>
-            <View className="flex-1 items-center border-l border-slate-200 dark:border-slate-800/60">
-              <Text className="text-slate-900 dark:text-white text-sm font-black">{user?.referralCount || 0}</Text>
-              <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-bold tracking-wider mt-0.5">Referred Users</Text>
-            </View>
-          </View>
-        </GlassCard>
-
-        <View className="flex-row flex-wrap justify-between mb-4">
-          <GlassCard className="w-[48%] mb-4 p-3.5 items-center" glowColor="purple">
-            <Swords size={22} color="#A855F7" />
-            <Text className="text-slate-900 dark:text-white text-lg font-black mt-1.5">{stats.tournamentsPlayed}</Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-extrabold tracking-wider mt-0.5">Played</Text>
-          </GlassCard>
-
-          <GlassCard className="w-[48%] mb-4 p-3.5 items-center" glowColor="emerald">
-            <Trophy size={22} color="#10B981" />
-            <Text className="text-slate-900 dark:text-white text-lg font-black mt-1.5">{stats.tournamentsWon}</Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-extrabold tracking-wider mt-0.5">Won</Text>
-          </GlassCard>
-
-          <GlassCard className="w-[48%] p-3.5 items-center" glowColor="red">
-            <Award size={22} color="#EF4444" />
-            <Text className="text-slate-900 dark:text-white text-lg font-black mt-1.5">{stats.totalKills}</Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-extrabold tracking-wider mt-0.5">Total Kills</Text>
-          </GlassCard>
-
-          <GlassCard className="w-[48%] p-3.5 items-center" glowColor="cyan">
-            <Trophy size={22} color={isDark ? "#00E5FF" : "#0891B2"} />
-            <Text className="text-slate-900 dark:text-white text-lg font-black mt-1.5">{stats.points}</Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-extrabold tracking-wider mt-0.5">Points</Text>
-          </GlassCard>
+          <Text className="text-slate-950 dark:text-white text-lg font-black mt-2.5 uppercase tracking-wide">
+            {user ? (user.displayName || user.username) : 'Warrior'}
+          </Text>
+          <Text className="text-emerald-500 text-xs font-black mt-0.5">Kyc Verified</Text>
         </View>
 
-        {isAdmin && (
-          <GlassCard 
-            className="p-4 mb-6 flex-row justify-between items-center"
-            glowColor="red"
-          >
-            <View className="flex-row items-center flex-1 mr-3">
-              <Shield size={20} color="#EF4444" style={{ marginRight: 8 }} />
-              <View className="flex-1">
-                <Text className="text-slate-900 dark:text-white font-extrabold text-xs uppercase tracking-wide">ADMINISTRATOR CONTROL</Text>
-                <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold mt-0.5">Manage Withdrawals & Games</Text>
-              </View>
-            </View>
-            <Pressable 
-              onPress={() => navigation.navigate('AdminTab')}
-              className="bg-red-600 rounded-xl px-4 py-2 border border-red-500"
-              style={({ pressed }) => [{
-                opacity: pressed ? 0.8 : 1,
-                shadowColor: '#ef4444',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.4,
-                shadowRadius: 4,
-                elevation: 2
-              }]}
-            >
-              <Text className="text-white font-extrabold text-xs uppercase tracking-wider">Enter</Text>
-            </Pressable>
-          </GlassCard>
-        )}
+        {/* Stats Column Card */}
+        <View className="bg-white dark:bg-slate-900 rounded-2xl py-4 px-3 flex-row items-center justify-between shadow-sm border border-slate-200/50 dark:border-slate-800/60 mb-5">
+          <View className="flex-1 items-center">
+            <Text className="text-sky-600 dark:text-sky-400 text-lg font-black">{stats.tournamentsPlayed}</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold mt-1 uppercase tracking-wide">Matches Played</Text>
+          </View>
 
-        <GlassCard className="p-5 mb-6" glowColor="purple">
-          <Text className="text-slate-900 dark:text-white font-extrabold text-[10px] uppercase tracking-wider mb-4 px-0.5">Setup Gaming UIDs</Text>
-          
-          {successMsg !== '' && (
-            <View 
-              className="border rounded-xl p-3.5 mb-4 flex-row items-center"
-              style={{
-                backgroundColor: 'rgba(52, 211, 153, 0.08)',
-                borderColor: 'rgba(52, 211, 153, 0.35)',
-              }}
-            >
-              <CheckCircle2 size={16} color="#34D399" style={{ marginRight: 6 }} />
-              <Text className="text-emerald-400 text-xs font-bold">{successMsg}</Text>
+          <View className="w-[1px] h-9 bg-slate-200 dark:bg-slate-800" />
+
+          <View className="flex-1 items-center">
+            <Text className="text-sky-600 dark:text-sky-400 text-lg font-black">{stats.totalKills}</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold mt-1 uppercase tracking-wide">Total Kills</Text>
+          </View>
+
+          <View className="w-[1px] h-9 bg-slate-200 dark:bg-slate-800" />
+
+          <View className="flex-1 items-center">
+            <View className="flex-row items-center">
+              <GoldCoin size={15} />
+              <Text className="text-sky-600 dark:text-sky-400 text-lg font-black ml-1.5">{stats.points}</Text>
             </View>
+            <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold mt-1 uppercase tracking-wide">PlayCoin Won</Text>
+          </View>
+        </View>
+
+        {/* Menu Options List */}
+        <View>
+          {/* My Profile */}
+          <Pressable
+            onPress={() => setShowProfileModal(true)}
+            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View className="flex-row items-center">
+              <User size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">My Profile</Text>
+            </View>
+            <ChevronRight size={16} color="#94A3B8" />
+          </Pressable>
+
+          {/* My Wallet */}
+          <Pressable
+            onPress={() => navigation.navigate('WalletTab')}
+            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View className="flex-row items-center">
+              <Wallet size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">My Wallet</Text>
+            </View>
+            <ChevronRight size={16} color="#94A3B8" />
+          </Pressable>
+
+          {/* My Statistics */}
+          <Pressable
+            onPress={() => setShowStatsModal(true)}
+            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View className="flex-row items-center">
+              <BarChart3 size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">My Statistics</Text>
+            </View>
+            <ChevronRight size={16} color="#94A3B8" />
+          </Pressable>
+
+          {/* Top Players */}
+          <Pressable
+            onPress={() => navigation.navigate('LeaderboardTab')}
+            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View className="flex-row items-center">
+              <Trophy size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">Top Players</Text>
+            </View>
+            <ChevronRight size={16} color="#94A3B8" />
+          </Pressable>
+
+          {/* Notifications */}
+          <Pressable
+            onPress={() => navigation.navigate('Notification')}
+            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View className="flex-row items-center">
+              <Bell size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">Notifications</Text>
+            </View>
+            <ChevronRight size={16} color="#94A3B8" />
+          </Pressable>
+
+          {/* Contact Us */}
+          <Pressable
+            onPress={() => navigation.navigate('Support')}
+            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View className="flex-row items-center">
+              <Headphones size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">Contact Us</Text>
+            </View>
+            <ChevronRight size={16} color="#94A3B8" />
+          </Pressable>
+
+          {/* Importance Notice */}
+          <View
+            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
+          >
+            <View className="flex-row items-center">
+              <Bell size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">Importance Notice</Text>
+            </View>
+            <Switch
+              value={importanceNotice}
+              onValueChange={setImportanceNotice}
+              trackColor={{ false: '#E2E8F0', true: '#BAE6FD' }}
+              thumbColor={importanceNotice ? '#0EA5E9' : '#F1F5F9'}
+            />
+          </View>
+
+          {/* App Interface Theme */}
+          <Pressable
+            onPress={() => setShowThemeModal(true)}
+            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View className="flex-row items-center">
+              <Settings size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">App Theme</Text>
+            </View>
+            <View className="flex-row items-center">
+              <Text className="text-slate-400 text-xs font-black mr-1 uppercase">{colorScheme}</Text>
+              <ChevronRight size={16} color="#94A3B8" />
+            </View>
+          </Pressable>
+
+          {/* FAQ */}
+          <Pressable
+            onPress={() => navigation.navigate('Terms')}
+            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View className="flex-row items-center">
+              <HelpCircle size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">FAQ</Text>
+            </View>
+            <ChevronRight size={16} color="#94A3B8" />
+          </Pressable>
+
+          {/* Admin Panel Control */}
+          {isAdmin && (
+            <Pressable
+              onPress={() => navigation.navigate('AdminTab')}
+              className="bg-rose-50 dark:bg-rose-950/20 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-rose-100 dark:border-rose-950/30"
+              style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+            >
+              <View className="flex-row items-center">
+                <Shield size={18} color="#F43F5E" />
+                <Text className="text-rose-700 dark:text-rose-300 text-sm font-black ml-3.5">Admin Control</Text>
+              </View>
+              <ChevronRight size={16} color="#F43F5E" />
+            </Pressable>
           )}
 
-          <Input
-            label="Free Fire Player ID / UID"
-            value={freeFire}
-            onChangeText={setFreeFire}
-            placeholder="E.g., 901844781"
-          />
+          {/* Disconnect Session */}
+          <Pressable
+            onPress={handleLogoutPress}
+            className="bg-rose-50 dark:bg-rose-950/20 rounded-2xl p-4 flex-row justify-between items-center mb-6 shadow-sm border border-rose-100 dark:border-rose-950/30"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View className="flex-row items-center">
+              <LogOut size={18} color="#F43F5E" />
+              <Text className="text-rose-700 dark:text-rose-300 text-sm font-black ml-3.5">Disconnect Session</Text>
+            </View>
+            <ChevronRight size={16} color="#F43F5E" />
+          </Pressable>
+        </View>
+      </ScrollView>
 
-          <Button
-            title="Save Gaming UIDs"
-            onPress={handleUpdateUIDs}
-            loading={loading}
-            className="mt-2"
-          />
-        </GlassCard>
+      {/* Edit Profile Modal */}
+      <Modal visible={showProfileModal} animationType="slide" transparent>
+        <View className="flex-1 justify-end" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <View className="bg-white dark:bg-slate-900 rounded-t-3xl p-6 border-t border-slate-200 dark:border-slate-800 shadow-xl">
+            <View className="flex-row justify-between items-center mb-5">
+              <Text className="text-slate-900 dark:text-white text-base font-black uppercase tracking-wider">Edit Profile</Text>
+              <Pressable 
+                onPress={() => setShowProfileModal(false)}
+                className="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full"
+              >
+                <Text className="text-slate-500 dark:text-slate-400 font-extrabold text-[10px] uppercase">Close</Text>
+              </Pressable>
+            </View>
 
-        <GlassCard className="p-5 mb-6" glowColor="purple">
-          <Text className="text-slate-900 dark:text-white font-extrabold text-[10px] uppercase tracking-wider mb-4 px-0.5">App Interface Theme</Text>
-          <View className="flex-row justify-between bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-900 rounded-xl p-1">
-            <Pressable 
-              onPress={() => setColorScheme('light')}
-              className={`flex-1 flex-row justify-center items-center py-2.5 rounded-lg ${
-                colorScheme === 'light' ? 'bg-slate-200/80 dark:bg-slate-800 shadow-sm' : ''
-              }`}
-            >
-              <Sun size={15} color={colorScheme === 'light' ? '#7C3AED' : '#4B5563'} style={{ marginRight: 6 }} />
-              <Text className={`text-xs font-extrabold uppercase ${colorScheme === 'light' ? 'text-[#7C3AED]' : 'text-slate-400 dark:text-slate-500'}`}>Light</Text>
-            </Pressable>
+            {successMsg !== '' && (
+              <View className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3.5 mb-4">
+                <Text className="text-emerald-600 dark:text-emerald-400 text-xs font-bold">{successMsg}</Text>
+              </View>
+            )}
 
-            <Pressable 
-              onPress={() => setColorScheme('dark')}
-              className={`flex-1 flex-row justify-center items-center py-2.5 rounded-lg ${
-                colorScheme === 'dark' ? 'bg-slate-200/80 dark:bg-slate-800 shadow-sm' : ''
-              }`}
-              style={colorScheme === 'dark' ? {
-                shadowColor: '#C084FC',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 2
-              } : {}}
-            >
-              <Moon size={15} color={colorScheme === 'dark' ? '#C084FC' : '#4B5563'} style={{ marginRight: 6 }} />
-              <Text className={`text-xs font-extrabold uppercase ${colorScheme === 'dark' ? 'text-[#C084FC]' : 'text-slate-400 dark:text-slate-500'}`}>Dark</Text>
-            </Pressable>
+            <Input
+              label="Free Fire Player ID / UID"
+              value={freeFire}
+              onChangeText={setFreeFire}
+              placeholder="E.g., 901844781"
+            />
 
-            <Pressable 
-              onPress={() => setColorScheme('system')}
-              className={`flex-1 flex-row justify-center items-center py-2.5 rounded-lg ${
-                colorScheme === 'system' ? 'bg-slate-200/80 dark:bg-slate-800 shadow-sm' : ''
-              }`}
-              style={colorScheme === 'system' ? {
-                shadowColor: isDark ? '#00E5FF' : '#0891B2',
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 2
-              } : {}}
-            >
-              <Monitor size={15} color={colorScheme === 'system' ? (isDark ? '#00E5FF' : '#0891B2') : '#4B5563'} style={{ marginRight: 6 }} />
-              <Text className={`text-xs font-extrabold uppercase ${colorScheme === 'system' ? (isDark ? 'text-[#00E5FF]' : 'text-[#0891B2]') : 'text-slate-400 dark:text-slate-500'}`}>System</Text>
-            </Pressable>
+            <Button
+              title="Save Gaming UIDs"
+              onPress={handleUpdateUIDs}
+              loading={loading}
+              className="mt-4 w-full"
+            />
           </View>
-        </GlassCard>
+        </View>
+      </Modal>
 
-        <GlassCard className="p-4 mb-6 flex-row justify-between items-center" glowColor="purple">
-          <View className="flex-row items-center flex-1 mr-3">
-            <HelpCircle size={20} color={isDark ? "#00E5FF" : "#0891B2"} style={{ marginRight: 8 }} />
-            <View className="flex-1">
-              <Text className="text-slate-900 dark:text-white font-extrabold text-xs uppercase tracking-wide">HELP & TICKET SUPPORT</Text>
-              <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold mt-0.5">Report bugs or payment errors</Text>
+      {/* Statistics Modal */}
+      <Modal visible={showStatsModal} animationType="slide" transparent>
+        <View className="flex-1 justify-end" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <View className="bg-white dark:bg-slate-900 rounded-t-3xl p-6 border-t border-slate-200 dark:border-slate-800 shadow-xl">
+            <View className="flex-row justify-between items-center mb-5">
+              <Text className="text-slate-900 dark:text-white text-base font-black uppercase tracking-wider">My Statistics & Referrals</Text>
+              <Pressable 
+                onPress={() => setShowStatsModal(false)}
+                className="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full"
+              >
+                <Text className="text-slate-500 dark:text-slate-400 font-extrabold text-[10px] uppercase">Close</Text>
+              </Pressable>
+            </View>
+
+            <View className="bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-900 rounded-2xl p-4">
+              <View className="flex-row justify-between items-center border-b border-slate-100 dark:border-slate-900 pb-3 mb-3">
+                <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold">Matches Played</Text>
+                <Text className="text-slate-900 dark:text-white text-xs font-black">{stats.tournamentsPlayed}</Text>
+              </View>
+              <View className="flex-row justify-between items-center border-b border-slate-100 dark:border-slate-900 pb-3 mb-3">
+                <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold">Tournaments Won</Text>
+                <Text className="text-slate-900 dark:text-white text-xs font-black">{stats.tournamentsWon}</Text>
+              </View>
+              <View className="flex-row justify-between items-center border-b border-slate-100 dark:border-slate-900 pb-3 mb-3">
+                <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold">Total Kills</Text>
+                <Text className="text-slate-900 dark:text-white text-xs font-black">{stats.totalKills}</Text>
+              </View>
+              <View className="flex-row justify-between items-center border-b border-slate-100 dark:border-slate-900 pb-3 mb-3">
+                <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold">PlayCoin Earned</Text>
+                <Text className="text-slate-900 dark:text-white text-xs font-black">{stats.points}</Text>
+              </View>
+              <View className="flex-row justify-between items-center border-b border-slate-100 dark:border-slate-900 pb-3 mb-3">
+                <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold">Referral Code</Text>
+                <Text className="text-sky-600 dark:text-sky-400 text-xs font-black uppercase">{user?.referralCode || 'N/A'}</Text>
+              </View>
+              <View className="flex-row justify-between items-center">
+                <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold">Referred Users</Text>
+                <Text className="text-slate-900 dark:text-white text-xs font-black">{user?.referralCount || 0}</Text>
+              </View>
             </View>
           </View>
-          <Pressable 
-            onPress={() => navigation.navigate('Support')}
-            className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2"
-            style={({ pressed }) => [{
-              opacity: pressed ? 0.8 : 1,
-              borderColor: isDark ? 'rgba(0, 229, 255, 0.3)' : 'rgba(8, 145, 178, 0.3)',
-            }]}
-          >
-            <Text className="text-cyan-650 dark:text-cyan-400 font-extrabold text-xs uppercase tracking-wider">Open</Text>
-          </Pressable>
-        </GlassCard>
+        </View>
+      </Modal>
 
-        <Pressable 
-          onPress={handleLogoutPress}
-          className="border rounded-xl py-3.5 flex-row justify-center items-center mb-8"
-          style={({ pressed }) => [{
-            opacity: pressed ? 0.85 : 1,
-            borderColor: 'rgba(244, 63, 94, 0.4)',
-            backgroundColor: 'rgba(244, 63, 94, 0.08)',
-          }]}
-        >
-          <LogOut size={16} color="#F43F5E" style={{ marginRight: 6 }} />
-          <Text className="text-rose-450 dark:text-rose-400 font-extrabold text-xs uppercase tracking-wider">Disconnect Session</Text>
-        </Pressable>
-      </ScrollView>
+      {/* App Theme Modal */}
+      <Modal visible={showThemeModal} animationType="slide" transparent>
+        <View className="flex-1 justify-end" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <View className="bg-white dark:bg-slate-900 rounded-t-3xl p-6 border-t border-slate-200 dark:border-slate-800 shadow-xl">
+            <View className="flex-row justify-between items-center mb-5">
+              <Text className="text-slate-900 dark:text-white text-base font-black uppercase tracking-wider">Select Theme</Text>
+              <Pressable 
+                onPress={() => setShowThemeModal(false)}
+                className="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full"
+              >
+                <Text className="text-slate-500 dark:text-slate-400 font-extrabold text-[10px] uppercase">Close</Text>
+              </Pressable>
+            </View>
+
+            <View className="space-y-3">
+              <Pressable 
+                onPress={() => { setColorScheme('light'); setShowThemeModal(false); }}
+                className="p-4 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex-row items-center justify-between mb-3"
+              >
+                <Text className="text-slate-700 dark:text-slate-200 text-xs font-black">LIGHT MODE</Text>
+                {colorScheme === 'light' && <CheckCircle2 size={16} color="#0EA5E9" />}
+              </Pressable>
+
+              <Pressable 
+                onPress={() => { setColorScheme('dark'); setShowThemeModal(false); }}
+                className="p-4 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex-row items-center justify-between mb-3"
+              >
+                <Text className="text-slate-700 dark:text-slate-200 text-xs font-black">DARK MODE</Text>
+                {colorScheme === 'dark' && <CheckCircle2 size={16} color="#0EA5E9" />}
+              </Pressable>
+
+              <Pressable 
+                onPress={() => { setColorScheme('system'); setShowThemeModal(false); }}
+                className="p-4 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex-row items-center justify-between"
+              >
+                <Text className="text-slate-700 dark:text-slate-200 text-xs font-black">SYSTEM DEFAULT</Text>
+                {colorScheme === 'system' && <CheckCircle2 size={16} color="#0EA5E9" />}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }

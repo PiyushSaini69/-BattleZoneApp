@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Pressable, RefreshControl, useColorScheme as useRNColorScheme } from 'react-native';
 import { request } from '../../services/api';
 import GlassCard from '../../components/ui/GlassCard';
+import Header from '../../components/ui/Header';
 import { Trophy, Award } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function LeaderboardScreen() {
+export default function LeaderboardScreen({ navigation }) {
   const { colorScheme } = useColorScheme();
   const systemScheme = useRNColorScheme();
   const isDark = colorScheme === 'system' ? systemScheme === 'dark' : colorScheme === 'dark';
@@ -119,7 +120,10 @@ export default function LeaderboardScreen() {
       colors={isDark ? ['#060A13', '#0D1321'] : ['#F8FAFC', '#E2E8F0']}
       className="flex-1"
     >
-      <View className="p-4 border-b border-slate-200 dark:border-slate-900 bg-transparent">
+      <View className="px-4">
+        <Header navigation={navigation} />
+      </View>
+      <View className="px-4 pb-3 border-b border-slate-200 dark:border-slate-900 bg-transparent">
         <View className="flex-row justify-between mb-3">
           {periodFilters.map((p) => (
             <Pressable

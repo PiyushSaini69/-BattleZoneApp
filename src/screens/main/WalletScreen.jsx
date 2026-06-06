@@ -1,14 +1,34 @@
 import React, { useState, useEffect, useContext } from 'react';
+// Header import for consistent top bar
 import { ScrollView, View, Text, TextInput, Pressable, RefreshControl, Alert, Modal, ActivityIndicator, useColorScheme as useRNColorScheme } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { request } from '../../services/api';
 import GlassCard from '../../components/ui/GlassCard';
 import Badge from '../../components/ui/Badge';
 import { Wallet, Plus, ArrowUpRight, History } from 'lucide-react-native';
+import Header from '../../components/ui/Header';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 
-export default function WalletScreen() {
+const GoldCoin = ({ size = 18 }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24">
+    <Circle cx="12" cy="12" r="10" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5" />
+    <Circle cx="12" cy="12" r="7" fill="none" stroke="#FEF08A" strokeWidth="1" strokeDasharray="2 1" />
+    <SvgText
+      x="12"
+      y="15.5"
+      fontSize="10"
+      fontWeight="900"
+      fill="#FEF08A"
+      textAnchor="middle"
+    >
+      C
+    </SvgText>
+  </Svg>
+);
+
+export default function WalletScreen({ navigation }) {
   const { user } = useContext(AuthContext);
   const { colorScheme } = useColorScheme();
   const systemScheme = useRNColorScheme();
@@ -49,7 +69,7 @@ export default function WalletScreen() {
   const handleDeposit = async () => {
     const amount = parseFloat(depositAmount);
     if (isNaN(amount) || amount < 10) {
-      Alert.alert('Invalid Amount ⚠️', 'Minimum deposit is ₹10.');
+      Alert.alert('Invalid Amount ⚠️', 'Minimum deposit is 10 Coins.');
       return;
     }
 
@@ -87,7 +107,7 @@ export default function WalletScreen() {
         })
       });
       if (res.success) {
-        Alert.alert('Success 🎉', `₹${pendingTx.amount} deposited successfully!`);
+        Alert.alert('Success 🎉', `${pendingTx.amount} Coins deposited successfully!`);
         await loadWalletData();
       }
     } catch (err) {
@@ -98,7 +118,7 @@ export default function WalletScreen() {
   const handleWithdrawal = async () => {
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount < 100) {
-      Alert.alert('Invalid Amount ⚠️', 'Minimum withdrawal is ₹100.');
+      Alert.alert('Invalid Amount ⚠️', 'Minimum withdrawal is 100 Coins.');
       return;
     }
     if (!withdrawUpi || !withdrawUpi.includes('@')) {
@@ -157,6 +177,9 @@ export default function WalletScreen() {
       colors={isDark ? ['#060A13', '#0D1321'] : ['#F8FAFC', '#E2E8F0']}
       className="flex-1"
     >
+      <View className="px-4">
+        <Header navigation={navigation} />
+      </View>
       <ScrollView 
         className="flex-1"
         refreshControl={
@@ -168,8 +191,9 @@ export default function WalletScreen() {
             progressBackgroundColor={isDark ? "#0A0E1A" : "#FFFFFF"}
           />
         }
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
       >
+
         <GlassCard 
           className="p-6 mb-6 items-center"
           glowColor="cyan"
@@ -188,7 +212,10 @@ export default function WalletScreen() {
             <Wallet size={28} color={isDark ? "#00E5FF" : "#0891B2"} />
           </View>
           <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-widest">Total Balance</Text>
-          <Text className="text-slate-900 dark:text-white text-3xl font-black mt-1">₹{wallet.totalBalance.toFixed(2)}</Text>
+          <View className="flex-row items-center mt-1">
+            <GoldCoin size={24} />
+            <Text className="text-slate-900 dark:text-white text-3xl font-black ml-2">{wallet.totalBalance.toFixed(2)}</Text>
+          </View>
           
           <View 
             className="flex-row justify-between w-full border-t border-slate-200 dark:border-slate-800/60 pt-4 mt-5"
@@ -196,17 +223,26 @@ export default function WalletScreen() {
             <View 
               className="items-center flex-1 border-r border-slate-200 dark:border-slate-800/60"
             >
-              <Text className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">₹{wallet.depositBalance.toFixed(2)}</Text>
-              <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold tracking-wider mt-0.5">Deposits</Text>
+              <View className="flex-row items-center">
+                <GoldCoin size={12} />
+                <Text className="text-emerald-600 dark:text-emerald-400 font-extrabold text-sm ml-1">{wallet.depositBalance.toFixed(2)}</Text>
+              </View>
+              <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold tracking-wider mt-0.5">Deposited</Text>
             </View>
             <View 
               className="items-center flex-1 border-r border-slate-200 dark:border-slate-800/60"
             >
-              <Text className="text-violet-650 dark:text-violet-400 font-extrabold text-sm">₹{wallet.winningBalance.toFixed(2)}</Text>
+              <View className="flex-row items-center">
+                <GoldCoin size={12} />
+                <Text className="text-violet-650 dark:text-violet-400 font-extrabold text-sm ml-1">{wallet.winningBalance.toFixed(2)}</Text>
+              </View>
               <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold tracking-wider mt-0.5">Winnings</Text>
             </View>
             <View className="items-center flex-1">
-              <Text className="text-cyan-600 dark:text-cyan-400 font-extrabold text-sm">₹{wallet.bonusBalance.toFixed(2)}</Text>
+              <View className="flex-row items-center">
+                <GoldCoin size={12} />
+                <Text className="text-cyan-600 dark:text-cyan-400 font-extrabold text-sm ml-1">{wallet.bonusBalance.toFixed(2)}</Text>
+              </View>
               <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold tracking-wider mt-0.5">Bonus</Text>
             </View>
           </View>
@@ -218,7 +254,7 @@ export default function WalletScreen() {
             <TextInput
               value={depositAmount}
               onChangeText={setDepositAmount}
-              placeholder="₹ Amount"
+              placeholder="Coins Amount"
               placeholderTextColor="#475569"
               keyboardType="number-pad"
               style={inputStyle}
@@ -246,7 +282,7 @@ export default function WalletScreen() {
             <TextInput
               value={withdrawAmount}
               onChangeText={setWithdrawAmount}
-              placeholder="₹ Amount"
+              placeholder="Coins Amount"
               placeholderTextColor="#475569"
               keyboardType="number-pad"
               style={inputStyle}
@@ -306,13 +342,23 @@ export default function WalletScreen() {
                 </Text>
               </View>
               <View className="items-end">
-                <Text className={`text-base font-black ${
-                  ['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) 
-                    ? 'text-emerald-600 dark:text-emerald-400' 
-                    : 'text-slate-900 dark:text-white'
-                }`}>
-                  {['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) ? '+' : '-'}₹{tx.amount}
-                </Text>
+                <View className="flex-row items-center">
+                  <Text className={`text-base font-black mr-1 ${
+                    ['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) 
+                      ? 'text-emerald-600 dark:text-emerald-400' 
+                      : 'text-slate-900 dark:text-white'
+                  }`}>
+                    {['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) ? '+' : '-'}
+                  </Text>
+                  <GoldCoin size={14} />
+                  <Text className={`text-base font-black ml-1 ${
+                    ['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) 
+                      ? 'text-emerald-600 dark:text-emerald-400' 
+                      : 'text-slate-900 dark:text-white'
+                  }`}>
+                    {tx.amount}
+                  </Text>
+                </View>
                 <Text className={`text-[8px] font-extrabold uppercase mt-0.5 ${
                   tx.status === 'completed' 
                     ? 'text-emerald-600 dark:text-emerald-400' 
@@ -341,7 +387,10 @@ export default function WalletScreen() {
               
               <View className="bg-slate-100 dark:bg-slate-950 rounded-xl p-4 mb-6 border border-slate-200 dark:border-slate-900">
                 <Text className="text-slate-500 text-[10px] font-extrabold text-center uppercase tracking-wider">Deposit Amount</Text>
-                <Text className="text-slate-900 dark:text-white text-3xl font-black text-center mt-1">₹{pendingTx?.amount}</Text>
+                <View className="flex-row items-center justify-center mt-1">
+                  <GoldCoin size={24} />
+                  <Text className="text-slate-900 dark:text-white text-3xl font-black ml-2">{pendingTx?.amount}</Text>
+                </View>
                 <Text className="text-slate-500 text-[9px] text-center mt-3">
                   Order ID: {pendingTx?.orderId}
                 </Text>

@@ -22,6 +22,7 @@ export default function BottomTabNav() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
+        headerShown: false,
         tabBarIcon: ({ focused, color }) => {
           const iconSize = 20;
           let iconComponent;
