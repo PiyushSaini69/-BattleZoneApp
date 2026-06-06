@@ -129,7 +129,7 @@ export default function VerifyEmailScreen({ route, navigation }) {
               borderColor: 'rgba(239, 68, 68, 0.2)',
             }}
           >
-            <Text className="text-red-655 dark:text-red-400 text-xs font-semibold text-center">
+            <Text className="text-red-600 dark:text-red-400 text-xs font-semibold text-center">
               {localError || authError}
             </Text>
           </View>
@@ -143,7 +143,7 @@ export default function VerifyEmailScreen({ route, navigation }) {
               borderColor: 'rgba(16, 185, 129, 0.2)',
             }}
           >
-            <Text className="text-emerald-650 dark:text-emerald-400 text-xs font-semibold text-center">
+            <Text className="text-emerald-600 dark:text-emerald-400 text-xs font-semibold text-center">
               {successMsg}
             </Text>
           </View>

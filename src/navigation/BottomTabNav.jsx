@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import { Image } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/main/HomeScreen';
 import TournamentsScreen from '../screens/main/TournamentsScreen';
 import WalletScreen from '../screens/main/WalletScreen';
 import LeaderboardScreen from '../screens/main/LeaderboardScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
-import { Home, Trophy, Wallet as WalletIcon, Award, User } from 'lucide-react-native';
+import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
+import { Home, Trophy, Wallet as WalletIcon, Award, User, Shield } from 'lucide-react-native';
+import { AuthContext } from '../context/AuthContext';
 
 import { useColorScheme } from 'nativewind';
 
@@ -14,6 +17,8 @@ const Tab = createBottomTabNavigator();
 export default function BottomTabNav() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const { user } = useContext(AuthContext);
+  const isAdmin = user && ['admin', 'superadmin', 'moderator'].includes(user.role);
 
   return (
     <Tab.Navigator
@@ -31,6 +36,8 @@ export default function BottomTabNav() {
               return <Award size={iconSize} color={color} />;
             case 'ProfileTab':
               return <User size={iconSize} color={color} />;
+            case 'AdminTab':
+              return <Shield size={iconSize} color={color} />;
             default:
               return null;
           }
@@ -41,8 +48,8 @@ export default function BottomTabNav() {
           backgroundColor: isDark ? '#090d16' : '#ffffff',
           borderTopWidth: 1,
           borderTopColor: isDark ? '#1e293b' : '#e2e8f0',
-          height: 60,
-          paddingBottom: 8,
+          height: 68,
+          paddingBottom: 12,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
@@ -93,6 +100,13 @@ export default function BottomTabNav() {
         component={ProfileScreen} 
         options={{ title: 'Profile', headerTitle: 'Warrior Profile' }} 
       />
+      {isAdmin && (
+        <Tab.Screen 
+          name="AdminTab" 
+          component={AdminDashboardScreen} 
+          options={{ title: 'Admin', headerTitle: 'Admin Panel', headerShown: false }} 
+        />
+      )}
     </Tab.Navigator>
   );
 }

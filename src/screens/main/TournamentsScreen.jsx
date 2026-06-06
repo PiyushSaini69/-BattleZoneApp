@@ -11,19 +11,10 @@ export default function TournamentsScreen({ navigation }) {
   const socket = useContext(SocketContext);
   const [tournaments, setTournaments] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedGame, setSelectedGame] = useState('');
 
-  const gameFilters = [
-    { label: 'All Games', value: '' },
-    { label: 'BGMI', value: 'bgmi' },
-    { label: 'Free Fire', value: 'free_fire' },
-    { label: 'Valorant', value: 'valorant' },
-    { label: 'COD Mobile', value: 'cod_mobile' },
-  ];
-
-  const fetchTournaments = async (game = '') => {
+  const fetchTournaments = async () => {
     try {
-      const res = await request(`/tournaments?game=${game}`);
+      const res = await request(`/tournaments?game=free_fire`);
       if (res.success) {
         setTournaments(res.data.tournaments);
       }
@@ -33,8 +24,8 @@ export default function TournamentsScreen({ navigation }) {
   };
 
   useEffect(() => {
-    fetchTournaments(selectedGame);
-  }, [selectedGame]);
+    fetchTournaments();
+  }, []);
 
   useEffect(() => {
     if (socket) {
@@ -51,7 +42,7 @@ export default function TournamentsScreen({ navigation }) {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchTournaments(selectedGame);
+    await fetchTournaments();
     setRefreshing(false);
   };
 
@@ -132,36 +123,12 @@ export default function TournamentsScreen({ navigation }) {
 
   return (
     <View className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]">
-      <View className="py-3 border-b border-slate-200 dark:border-slate-900 bg-slate-50 dark:bg-[#0B0F1A]">
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={gameFilters}
-          keyExtractor={(item) => item.value}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-          renderItem={({ item }) => {
-            const isActive = selectedGame === item.value;
-            return (
-              <Pressable
-                onPress={() => setSelectedGame(item.value)}
-                className={`mr-2.5 px-3 py-2 rounded-xl border ${
-                  isActive ? 'bg-[#7C3AED] border-purple-500' : 'bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800'
-                }`}
-              >
-                <Text className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-white' : 'text-slate-600 dark:text-slate-400'}`}>
-                  {item.label}
-                </Text>
-              </Pressable>
-            );
-          }}
-        />
-      </View>
 
       <FlatList
         data={tournaments}
         keyExtractor={(item) => item._id}
         renderItem={renderItem}
-        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" colors={["#7C3AED"]} />
         }

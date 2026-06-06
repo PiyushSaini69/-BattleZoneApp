@@ -30,11 +30,11 @@ export default function Badge({ text, variant = 'info', className = '' }) {
 
   const getTextColor = () => {
     switch (variant) {
-      case 'success': return 'text-emerald-650 dark:text-emerald-400';
-      case 'danger': return 'text-red-650 dark:text-red-400';
+      case 'success': return 'text-emerald-600 dark:text-emerald-400';
+      case 'danger': return 'text-red-600 dark:text-red-400';
       case 'warning': return 'text-amber-600 dark:text-amber-400';
       case 'info': return 'text-blue-600 dark:text-blue-400';
-      case 'purple': return 'text-purple-650 dark:text-purple-400';
+      case 'purple': return 'text-purple-600 dark:text-purple-400';
       case 'cyan': return 'text-cyan-600 dark:text-cyan-400';
       default: return 'text-slate-600 dark:text-slate-300';
     }

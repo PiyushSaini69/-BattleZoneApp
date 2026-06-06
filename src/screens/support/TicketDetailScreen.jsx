@@ -71,7 +71,7 @@ export default function TicketDetailScreen({ route, navigation }) {
           }`}
         >
           {!isSelf && (
-            <Text className="text-purple-650 dark:text-purple-400 font-extrabold text-[9px] uppercase mb-0.5">
+            <Text className="text-purple-600 dark:text-purple-400 font-extrabold text-[9px] uppercase mb-0.5">
               Support Staff
             </Text>
           )}

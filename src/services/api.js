@@ -71,7 +71,10 @@ export const request = async (endpoint, options = {}, onSessionExpired) => {
         }
       }
 
-      throw new Error(data.error?.message || data.message || 'API request failed');
+      const apiError = new Error(data.error?.message || data.message || 'API request failed');
+      apiError.details = data.error?.details || [];
+      apiError.code = data.error?.code || 'API_ERROR';
+      throw apiError;
     }
 
     return data;

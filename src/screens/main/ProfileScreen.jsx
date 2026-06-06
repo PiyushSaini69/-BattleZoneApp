@@ -13,20 +13,14 @@ import { useColorScheme } from 'nativewind';
 export default function ProfileScreen({ navigation }) {
   const { user, setUser, logout } = useContext(AuthContext);
   
-  const [bgmi, setBgmi] = useState('');
   const [freeFire, setFreeFire] = useState('');
-  const [valorant, setValorant] = useState('');
-  const [codMobile, setCodMobile] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
     if (user && user.gameUIDs) {
-      setBgmi(user.gameUIDs.bgmi || '');
       setFreeFire(user.gameUIDs.freeFire || '');
-      setValorant(user.gameUIDs.valorant || '');
-      setCodMobile(user.gameUIDs.codMobile || '');
     }
   }, [user]);
 
@@ -37,10 +31,7 @@ export default function ProfileScreen({ navigation }) {
       const res = await request('/user/game-uids', {
         method: 'PUT',
         body: JSON.stringify({
-          bgmi: bgmi || null,
           freeFire: freeFire || null,
-          valorant: valorant || null,
-          codMobile: codMobile || null,
         })
       });
       if (res.success) {
@@ -69,7 +60,7 @@ export default function ProfileScreen({ navigation }) {
   return (
     <ScrollView 
       className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]" 
-      contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+      contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
     >
       <GlassCard className="items-center p-6 mb-6 mt-4">
         <View 
@@ -117,7 +108,7 @@ export default function ProfileScreen({ navigation }) {
             </View>
           </View>
           <Pressable 
-            onPress={() => navigation.navigate('AdminDashboard')}
+            onPress={() => navigation.navigate('AdminTab')}
             style={{ backgroundColor: '#dc2626', borderColor: '#ef4444', borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8 }}
           >
             <Text className="text-white font-bold text-xs uppercase">Enter</Text>
@@ -142,31 +133,10 @@ export default function ProfileScreen({ navigation }) {
         )}
 
         <Input
-          label="BGMI Player ID / UID"
-          value={bgmi}
-          onChangeText={setBgmi}
-          placeholder="E.g., 556799014"
-        />
-
-        <Input
           label="Free Fire Player ID / UID"
           value={freeFire}
           onChangeText={setFreeFire}
           placeholder="E.g., 901844781"
-        />
-
-        <Input
-          label="Valorant Riot ID & Tag"
-          value={valorant}
-          onChangeText={setValorant}
-          placeholder="E.g., Gamer#IND"
-        />
-
-        <Input
-          label="COD Mobile Username"
-          value={codMobile}
-          onChangeText={setCodMobile}
-          placeholder="E.g., Slayer_Mobile"
         />
 
         <Button

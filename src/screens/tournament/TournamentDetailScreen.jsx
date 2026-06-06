@@ -78,7 +78,7 @@ export default function TournamentDetailScreen({ route, navigation }) {
       return;
     }
 
-    const prefill = user.gameUIDs ? (user.gameUIDs[tournament.game] || user.gameUIDs.freeFire || user.gameUIDs.bgmi || '') : '';
+    const prefill = user.gameUIDs ? (user.gameUIDs.freeFire || '') : '';
     setGameUID(prefill);
     setShowRegisterModal(true);
   };
@@ -222,7 +222,7 @@ export default function TournamentDetailScreen({ route, navigation }) {
         <GlassCard className="p-4 mb-6">
           <View className="flex-row justify-between mb-2">
             <Text className="text-slate-900 dark:text-white font-bold text-xs uppercase tracking-wider">Tournament Slots</Text>
-            <Text className="text-purple-650 dark:text-[#C084FC] font-extrabold text-xs">
+            <Text className="text-purple-600 dark:text-[#C084FC] font-extrabold text-xs">
               {tournament.filledSlots}/{tournament.totalSlots} Slots
             </Text>
           </View>

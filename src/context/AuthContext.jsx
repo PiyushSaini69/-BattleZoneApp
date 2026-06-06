@@ -9,6 +9,15 @@ export const AuthProvider = ({ children }) => {
   const [loadingUser, setLoadingUser] = useState(true);
   const [authError, setAuthError] = useState('');
 
+  const handleAuthError = (err) => {
+    if (err.details && Array.isArray(err.details) && err.details.length > 0) {
+      const errorMsg = err.details.map(d => `• ${d.message}`).join('\n');
+      setAuthError(errorMsg);
+    } else {
+      setAuthError(err.message);
+    }
+  };
+
   const login = async (email, password) => {
     setAuthError('');
     try {
@@ -24,7 +33,7 @@ export const AuthProvider = ({ children }) => {
         return res.data.user;
       }
     } catch (err) {
-      setAuthError(err.message);
+      handleAuthError(err);
       throw err;
     }
   };
@@ -44,7 +53,7 @@ export const AuthProvider = ({ children }) => {
       });
       return res;
     } catch (err) {
-      setAuthError(err.message);
+      handleAuthError(err);
       throw err;
     }
   };
@@ -64,7 +73,7 @@ export const AuthProvider = ({ children }) => {
         return res.data;
       }
     } catch (err) {
-      setAuthError(err.message);
+      handleAuthError(err);
       throw err;
     }
   };
@@ -78,7 +87,7 @@ export const AuthProvider = ({ children }) => {
       });
       return res;
     } catch (err) {
-      setAuthError(err.message);
+      handleAuthError(err);
       throw err;
     }
   };
@@ -98,7 +107,7 @@ export const AuthProvider = ({ children }) => {
         return res.data.user;
       }
     } catch (err) {
-      setAuthError(err.message);
+      handleAuthError(err);
       throw err;
     }
   };

@@ -110,7 +110,7 @@ export default function ForgotPasswordScreen({ navigation }) {
           </>
         ) : (
           <>
-            <Text className="text-slate-650 dark:text-slate-400 text-xs mb-6 text-center leading-relaxed">
+            <Text className="text-slate-600 dark:text-slate-400 text-xs mb-6 text-center leading-relaxed">
               We have sent a reset link containing a token to <Text className="text-slate-900 dark:text-white font-bold">{email}</Text>. Copy the token from that link and enter it below.
             </Text>
 

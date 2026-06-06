@@ -59,7 +59,7 @@ export default function Input({
         )}
       </View>
       {error && (
-        <Text className="text-red-650 dark:text-red-400 text-xs mt-1 ml-1.5 font-medium">
+        <Text className="text-red-600 dark:text-red-400 text-xs mt-1 ml-1.5 font-medium">
           {error}
         </Text>
       )}

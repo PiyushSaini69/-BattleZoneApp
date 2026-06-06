@@ -48,7 +48,7 @@ export default function HomeScreen({ navigation }) {
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" colors={["#7C3AED"]} />
       }
-      contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+      contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
     >
       <View className="flex-row justify-between items-center mb-6 mt-4">
         <View>

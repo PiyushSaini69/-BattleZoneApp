@@ -88,7 +88,7 @@ export default function LeaderboardScreen() {
         </View>
 
         <View className="items-end">
-          <Text className="text-purple-650 dark:text-[#C084FC] text-base font-black">
+          <Text className="text-purple-600 dark:text-[#C084FC] text-base font-black">
             {metric === 'earnings' ? `₹${item.earnings}` : metric === 'kills' ? `${item.kills} Kills` : `${item.points} pts`}
           </Text>
           <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold mt-0.5">{metric}</Text>
@@ -137,7 +137,7 @@ export default function LeaderboardScreen() {
         data={leaderboard}
         keyExtractor={(item) => item._id || item.username}
         renderItem={renderItem}
-        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" colors={["#7C3AED"]} />
         }

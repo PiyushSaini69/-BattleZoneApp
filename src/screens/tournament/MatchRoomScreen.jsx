@@ -93,7 +93,7 @@ export default function MatchRoomScreen({ route, navigation }) {
           }`}
         >
           {!isSelf && (
-            <Text className="text-purple-650 dark:text-purple-400 font-extrabold text-[9px] uppercase mb-1">{item.username}</Text>
+            <Text className="text-purple-600 dark:text-purple-400 font-extrabold text-[9px] uppercase mb-1">{item.username}</Text>
           )}
           <Text className={`text-xs leading-relaxed ${isSelf ? 'text-white' : 'text-slate-900 dark:text-white'}`}>{item.message}</Text>
         </View>
@@ -176,7 +176,7 @@ export default function MatchRoomScreen({ route, navigation }) {
           onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
           ListEmptyComponent={
             <View className="py-20 items-center">
-              <Text className="text-slate-650 dark:text-slate-500 text-xs font-bold uppercase tracking-widest text-center mb-1">🎮 Chat Lobby Ready</Text>
+              <Text className="text-slate-600 dark:text-slate-500 text-xs font-bold uppercase tracking-widest text-center mb-1">🎮 Chat Lobby Ready</Text>
               <Text className="text-slate-500 dark:text-slate-400 text-[10px] text-center max-w-[200px] leading-relaxed">Coordinate matches and discuss rules with active lobby players in real-time!</Text>
             </View>
           }

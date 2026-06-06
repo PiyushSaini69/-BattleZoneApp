@@ -1,9 +1,37 @@
 import React, { useState, useContext } from 'react';
-import { ScrollView, View, Text, Pressable, Modal, Image, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, Pressable, Modal, Image, ActivityIndicator, NativeModules } from 'react-native';
+import { useColorScheme } from 'nativewind';
+import { CONFIG } from '../../config';
 import { AuthContext } from '../../context/AuthContext';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import GlassCard from '../../components/ui/GlassCard';
+
+let GoogleSignin = null;
+let isGoogleSigninSupported = false;
+
+try {
+  // Dynamically require to prevent native link Invariant Violation crash on Expo Go
+  const moduleRes = require('@react-native-google-signin/google-signin');
+  GoogleSignin = moduleRes.GoogleSignin;
+  isGoogleSigninSupported = !!NativeModules.RNGoogleSignin;
+} catch (e) {
+  console.log('Google Sign-In native module not available or linked in this environment.');
+}
+
+if (isGoogleSigninSupported && GoogleSignin) {
+  try {
+    GoogleSignin.configure({
+      webClientId: CONFIG.GOOGLE_WEB_CLIENT_ID,
+      offlineAccess: true,
+    });
+  } catch (err) {
+    console.warn('Google Sign-In configuration error:', err);
+  }
+}
+
+
+
 
 const MOCK_GAMERS = [
   {
@@ -21,7 +49,7 @@ const MOCK_GAMERS = [
     name: "Shroud (Michael Grzesiek)",
     email: "shroud@battlezone.gg",
     avatar: "https://api.dicebear.com/7.x/pixel-art/svg?seed=shroud",
-    title: "FPS Aim God & Valorant Pro",
+    title: "FPS Aim God & Free Fire Pro",
     color: "#475569"
   },
   {
@@ -46,6 +74,8 @@ const MOCK_GAMERS = [
 
 export default function LoginScreen({ navigation }) {
   const { login, googleLogin, authError, setAuthError } = useContext(AuthContext);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -95,12 +125,54 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
+  const handleGoogleLoginPress = async () => {
+    setLocalError('');
+    setAuthError('');
+
+    if (isGoogleSigninSupported) {
+      setGoogleLoading(true);
+      try {
+        await GoogleSignin.hasPlayServices();
+        const userInfo = await GoogleSignin.signIn();
+        const idToken = userInfo.idToken || userInfo.data?.idToken;
+
+        if (!idToken) {
+          throw new Error('Google Sign-In failed: No ID Token received from Google.');
+        }
+
+        const userObj = userInfo.user || userInfo.data?.user;
+        await googleLogin(idToken, {
+          googleId: userObj?.id || '',
+          email: userObj?.email || '',
+          name: userObj?.name || '',
+          avatar: userObj?.photo || null
+        });
+      } catch (err) {
+        console.log('Google login native error:', err);
+        // Fallback to dev chooser if it is a developer setup/SHA-1 configuration issue
+        if (err.code === 'DEVELOPER_ERROR' || err.message?.toLowerCase().includes('developer')) {
+          console.warn('Google Sign-in returned DEVELOPER_ERROR. Falling back to simulated Dev Accounts.');
+          setShowGamerChooser(true);
+        } else if (err.code !== 'SIGN_IN_CANCELLED') {
+          setLocalError(`Google login error: ${err.message || err.code}`);
+        }
+      } finally {
+        setGoogleLoading(false);
+      }
+    } else {
+      console.log('Google Native Sign-In not supported in this environment (e.g. Expo Go). Opening simulated Dev Accounts.');
+      setShowGamerChooser(true);
+    }
+  };
+
   return (
     <ScrollView className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}>
       <View className="items-center mb-8">
-        <Text className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-widest text-center">
-          BATTLE<Text className="text-[#7C3AED]">ZONE</Text>
-        </Text>
+        <Image 
+          source={isDark ? require('../../../assets/logolight.jpeg') : require('../../../assets/logodark.jpeg')}
+          style={{ width: 180, height: 50 }}
+          resizeMode="contain"
+        />
         <Text className="text-slate-500 dark:text-slate-400 text-[10px] mt-2 text-center uppercase tracking-widest font-semibold">
           Esports Tournament Hub
         </Text>
@@ -117,7 +189,7 @@ export default function LoginScreen({ navigation }) {
               borderColor: 'rgba(239, 68, 68, 0.2)',
             }}
           >
-            <Text className="text-red-650 dark:text-red-400 text-xs font-semibold text-center">
+            <Text className="text-red-600 dark:text-red-400 text-xs font-semibold text-center">
               {localError || authError}
             </Text>
             {((localError || authError || '').toLowerCase().includes('verify your email')) && (
@@ -153,7 +225,7 @@ export default function LoginScreen({ navigation }) {
           onPress={() => navigation.navigate('ForgotPassword')}
           className="self-end mb-6"
         >
-          <Text className="text-purple-650 dark:text-purple-400 font-semibold text-xs">Forgot Password?</Text>
+          <Text className="text-purple-600 dark:text-purple-400 font-semibold text-xs">Forgot Password?</Text>
         </Pressable>
 
         <Button
@@ -171,7 +243,7 @@ export default function LoginScreen({ navigation }) {
         </View>
 
         <Pressable
-          onPress={() => setShowGamerChooser(true)}
+          onPress={handleGoogleLoginPress}
           disabled={googleLoading}
           className="w-full py-3 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl flex-row items-center justify-center transition"
           style={({ pressed }) => [
@@ -196,7 +268,7 @@ export default function LoginScreen({ navigation }) {
       </GlassCard>
 
       <View className="flex-row justify-center items-center py-4">
-        <Text className="text-slate-655 dark:text-slate-400 text-sm">Don't have an account? </Text>
+        <Text className="text-slate-600 dark:text-slate-400 text-sm">Don't have an account? </Text>
         <Pressable onPress={() => navigation.navigate('Register')}>
           <Text className="text-[#7C3AED] font-bold text-sm">Sign Up</Text>
         </Pressable>

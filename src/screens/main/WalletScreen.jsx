@@ -154,7 +154,7 @@ export default function WalletScreen() {
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" colors={["#7C3AED"]} />
       }
-      contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+      contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
     >
       <GlassCard 
         className="p-6 mb-6 items-center"
@@ -184,7 +184,7 @@ export default function WalletScreen() {
           <View 
             className="items-center flex-1 border-r border-slate-200 dark:border-slate-800"
           >
-            <Text className="text-purple-650 dark:text-[#C084FC] font-bold text-sm">₹{wallet.winningBalance.toFixed(2)}</Text>
+            <Text className="text-purple-600 dark:text-[#C084FC] font-bold text-sm">₹{wallet.winningBalance.toFixed(2)}</Text>
             <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold mt-0.5">Winnings</Text>
           </View>
           <View className="items-center flex-1">
@@ -283,7 +283,7 @@ export default function WalletScreen() {
                   ? 'text-emerald-600 dark:text-emerald-400' 
                   : tx.status === 'pending' 
                     ? 'text-amber-600 dark:text-amber-400' 
-                    : 'text-red-650 dark:text-red-400'
+                    : 'text-red-600 dark:text-red-400'
               }`}>
                 {tx.status}
               </Text>
@@ -316,7 +316,7 @@ export default function WalletScreen() {
               </Text>
             </View>
 
-            <Text className="text-slate-650 dark:text-slate-400 text-[10px] text-center mb-6 leading-relaxed">
+            <Text className="text-slate-600 dark:text-slate-400 text-[10px] text-center mb-6 leading-relaxed">
               This is a sandbox mock payment container. Confirming below simulates a successful API bank verification.
             </Text>
 

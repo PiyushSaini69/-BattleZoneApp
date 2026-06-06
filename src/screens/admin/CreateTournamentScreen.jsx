@@ -11,7 +11,7 @@ export default function CreateTournamentScreen({ navigation }) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const [title, setTitle] = useState('');
-  const [game, setGame] = useState('bgmi'); // bgmi, free_fire, valorant, cod_mobile
+  const [game, setGame] = useState('free_fire'); // Only Free Fire is supported
   const [gameMode, setGameMode] = useState('battle_royale'); // battle_royale, clash_squad, lone_wolf, custom
   const [tournamentType, setTournamentType] = useState('solo'); // solo, duo, squad
   const [entryFee, setEntryFee] = useState('20');
@@ -78,7 +78,7 @@ export default function CreateTournamentScreen({ navigation }) {
                 borderColor: 'rgba(239, 68, 68, 0.2)'
               }}
             >
-              <Text className="text-red-655 dark:text-red-400 text-xs font-semibold text-center">{error}</Text>
+              <Text className="text-red-600 dark:text-red-400 text-xs font-semibold text-center">{error}</Text>
             </View>
           )}
 
@@ -86,34 +86,8 @@ export default function CreateTournamentScreen({ navigation }) {
             label="Tournament Title"
             value={title}
             onChangeText={setTitle}
-            placeholder="E.g., BGMI Neon Cup - Solo Arena"
+            placeholder="E.g., Free Fire Neon Cup - Solo Arena"
           />
-
-          <View className="mb-4">
-            <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold mb-1.5 ml-1">Select Game Title</Text>
-            <View className="flex-row flex-wrap justify-between">
-              {[
-                { label: 'BGMI', value: 'bgmi' },
-                { label: 'Free Fire', value: 'free_fire' },
-                { label: 'Valorant', value: 'valorant' },
-                { label: 'COD Mobile', value: 'cod_mobile' },
-              ].map((g) => (
-                <Pressable
-                  key={g.value}
-                  onPress={() => setGame(g.value)}
-                  className={`px-3 py-2 rounded-lg border mb-2 w-[48%] items-center ${
-                    game === g.value 
-                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/20' 
-                      : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-850'
-                  }`}
-                >
-                  <Text className={`text-[9px] font-bold uppercase tracking-wider ${game === g.value ? 'text-[#7C3AED] dark:text-purple-300' : 'text-slate-500 dark:text-slate-450'}`}>
-                    {g.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
 
           <View className="mb-4">
             <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold mb-1.5 ml-1">Team Arrangement</Text>

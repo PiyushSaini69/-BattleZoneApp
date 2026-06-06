@@ -86,9 +86,13 @@ export default function AdminDashboardScreen({ navigation }) {
   return (
     <View className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]">
       <View className="bg-white dark:bg-slate-955 p-4 border-b border-slate-200 dark:border-slate-900 flex-row items-center justify-between">
-        <Pressable onPress={() => navigation.goBack()} className="p-1">
-          <ArrowLeft size={20} color={isDark ? '#fff' : '#0F172A'} />
-        </Pressable>
+        {navigation.canGoBack() ? (
+          <Pressable onPress={() => navigation.goBack()} className="p-1">
+            <ArrowLeft size={20} color={isDark ? '#fff' : '#0F172A'} />
+          </Pressable>
+        ) : (
+          <View className="w-8" />
+        )}
         <Text className="text-slate-900 dark:text-white font-extrabold text-sm uppercase tracking-wide">Admin Control</Text>
         <Pressable 
           onPress={() => navigation.navigate('CreateTournament')}
@@ -117,7 +121,7 @@ export default function AdminDashboardScreen({ navigation }) {
           </GlassCard>
 
           <GlassCard className="w-[31%] p-3 items-center">
-            <Text className="text-purple-650 dark:text-purple-400 text-base font-black">{stats?.totalTournaments || 0}</Text>
+            <Text className="text-purple-600 dark:text-purple-400 text-base font-black">{stats?.totalTournaments || 0}</Text>
             <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold text-center mt-0.5">Games</Text>
           </GlassCard>
         </View>
