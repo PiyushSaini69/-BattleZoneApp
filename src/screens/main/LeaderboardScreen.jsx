@@ -4,6 +4,7 @@ import { request } from '../../services/api';
 import GlassCard from '../../components/ui/GlassCard';
 import { Trophy, Award } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function LeaderboardScreen() {
   const { colorScheme } = useColorScheme();
@@ -49,9 +50,18 @@ export default function LeaderboardScreen() {
   const getRankBadgeColor = (rank) => {
     switch (rank) {
       case 1: return '#FBBF24'; // Gold
-      case 2: return '#94A3B8'; // Silver
-      case 3: return '#B45309'; // Bronze
-      default: return isDark ? '#1E293B' : '#E2E8F0'; // Slate / Light slate
+      case 2: return '#E2E8F0'; // Silver
+      case 3: return '#CD7F32'; // Bronze
+      default: return '#1E293B'; // Dark Slate
+    }
+  };
+
+  const getRankGlowColor = (rank) => {
+    switch (rank) {
+      case 1: return 'purple';
+      case 2: return 'cyan';
+      case 3: return 'magenta';
+      default: return undefined;
     }
   };
 
@@ -61,55 +71,73 @@ export default function LeaderboardScreen() {
 
     return (
       <GlassCard 
-        className={`mb-3 py-3 px-4 flex-row items-center justify-between ${
-          rank === 1 ? 'bg-purple-900/10 border-purple-500/20' : ''
-        }`}
+        className="mb-3 py-3.5 px-4 flex-row items-center justify-between"
+        glowColor={getRankGlowColor(rank)}
       >
         <View className="flex-row items-center">
           <View 
-            className="w-7 h-7 rounded-full justify-center items-center mr-3"
-            style={{ backgroundColor: getRankBadgeColor(rank) }}
+            className="w-8 h-8 rounded-full justify-center items-center mr-3"
+            style={{ 
+              backgroundColor: getRankBadgeColor(rank),
+              shadowColor: getRankBadgeColor(rank),
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: isTopThree ? 0.6 : 0,
+              shadowRadius: 6,
+              elevation: isTopThree ? 3 : 0,
+            }}
           >
             {rank === 1 ? (
               <Trophy size={14} color="#000" />
             ) : (
-              <Text className={`font-black text-xs ${isTopThree ? 'text-black' : (isDark ? 'text-slate-300' : 'text-slate-700')}`}>
+              <Text className={`font-black text-xs ${isTopThree ? 'text-black' : 'text-slate-300'}`}>
                 {rank}
               </Text>
             )}
           </View>
 
           <View>
-            <Text className="text-slate-900 dark:text-white font-extrabold text-sm">{item.username}</Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-bold mt-0.5">
+            <Text className="text-white font-extrabold text-sm">{item.username}</Text>
+            <Text className="text-slate-400 text-[9px] uppercase font-bold tracking-wide mt-0.5">
               Ranked #{rank}
             </Text>
           </View>
         </View>
 
         <View className="items-end">
-          <Text className="text-purple-600 dark:text-[#C084FC] text-base font-black">
+          <Text className="text-violet-400 text-base font-black">
             {metric === 'earnings' ? `₹${item.earnings}` : metric === 'kills' ? `${item.kills} Kills` : `${item.points} pts`}
           </Text>
-          <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold mt-0.5">{metric}</Text>
+          <Text className="text-slate-400 text-[8px] uppercase font-bold tracking-wider mt-0.5">{metric}</Text>
         </View>
       </GlassCard>
     );
   };
 
   return (
-    <View className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]">
-      <View className="p-4 border-b border-slate-200 dark:border-slate-900 bg-slate-50 dark:bg-[#0B0F1A]">
+    <LinearGradient
+      colors={['#060A13', '#0D1321']}
+      className="flex-1"
+    >
+      <View className="p-4 border-b border-slate-900 bg-transparent">
         <View className="flex-row justify-between mb-3">
           {periodFilters.map((p) => (
             <Pressable
               key={p.value}
               onPress={() => setPeriod(p.value)}
-              className={`flex-1 mx-1 py-2 rounded-xl border items-center ${
-                period === p.value ? 'bg-[#7C3AED] border-purple-500' : 'bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800'
+              className={`flex-1 mx-1 py-2.5 rounded-xl border items-center ${
+                period === p.value 
+                  ? 'bg-violet-600 border-violet-500' 
+                  : 'bg-slate-950/60 border-slate-900'
               }`}
+              style={period === p.value ? {
+                shadowColor: '#8B5CF6',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.4,
+                shadowRadius: 5,
+                elevation: 3,
+              } : {}}
             >
-              <Text className={`text-[9px] font-bold uppercase tracking-wider ${period === p.value ? 'text-white' : 'text-slate-600 dark:text-slate-400'}`}>
+              <Text className={`text-[9px] font-black uppercase tracking-wider ${period === p.value ? 'text-white' : 'text-slate-400'}`}>
                 {p.label}
               </Text>
             </Pressable>
@@ -121,11 +149,13 @@ export default function LeaderboardScreen() {
             <Pressable
               key={m.value}
               onPress={() => setMetric(m.value)}
-              className={`flex-1 mx-1 py-1.5 rounded-xl border items-center ${
-                metric === m.value ? 'bg-[#7C3AED]/20 border-purple-500/50' : 'bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800'
+              className={`flex-1 mx-1 py-2 rounded-xl border items-center ${
+                metric === m.value 
+                  ? 'bg-cyan-500/10 border-cyan-500/40' 
+                  : 'bg-slate-950/60 border-slate-900'
               }`}
             >
-              <Text className={`text-[8px] font-extrabold uppercase tracking-widest ${metric === m.value ? 'text-purple-750 dark:text-purple-300' : 'text-slate-600 dark:text-slate-400'}`}>
+              <Text className={`text-[8px] font-black uppercase tracking-widest ${metric === m.value ? 'text-cyan-400' : 'text-slate-400'}`}>
                 {m.label}
               </Text>
             </Pressable>
@@ -139,22 +169,28 @@ export default function LeaderboardScreen() {
         renderItem={renderItem}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" colors={["#7C3AED"]} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            tintColor="#00E5FF" 
+            colors={["#00E5FF"]} 
+            progressBackgroundColor="#0A0E1A"
+          />
         }
         ListHeaderComponent={
           leaderboard.length > 0 ? (
-            <View className="mb-4 flex-row items-center">
-              <Award size={16} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginRight: 6 }} />
-              <Text className="text-slate-900 dark:text-white font-extrabold text-xs uppercase tracking-wider">Top Warriors Ranked</Text>
+            <View className="mb-4 flex-row items-center px-1">
+              <Award size={16} color="#94A3B8" style={{ marginRight: 6 }} />
+              <Text className="text-white font-extrabold text-xs uppercase tracking-widest">Top Warriors Ranked</Text>
             </View>
           ) : null
         }
         ListEmptyComponent={
           <View className="py-20 items-center">
-            <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold">No ranks computed for this period.</Text>
+            <Text className="text-slate-400 text-xs font-semibold">No ranks computed for this period.</Text>
           </View>
         }
       />
-    </View>
+    </LinearGradient>
   );
 }

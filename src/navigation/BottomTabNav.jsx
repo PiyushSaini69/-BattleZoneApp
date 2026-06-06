@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Image } from 'react-native';
+import { View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/main/HomeScreen';
 import TournamentsScreen from '../screens/main/TournamentsScreen';
@@ -9,7 +9,6 @@ import ProfileScreen from '../screens/main/ProfileScreen';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import { Home, Trophy, Wallet as WalletIcon, Award, User, Shield } from 'lucide-react-native';
 import { AuthContext } from '../context/AuthContext';
-
 import { useColorScheme } from 'nativewind';
 
 const Tab = createBottomTabNavigator();
@@ -23,45 +22,76 @@ export default function BottomTabNav() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ color }) => {
+        tabBarIcon: ({ focused, color }) => {
           const iconSize = 20;
+          let iconComponent;
           switch (route.name) {
             case 'HomeTab':
-              return <Home size={iconSize} color={color} />;
+              iconComponent = <Home size={iconSize} color={color} />;
+              break;
             case 'TournamentsTab':
-              return <Trophy size={iconSize} color={color} />;
+              iconComponent = <Trophy size={iconSize} color={color} />;
+              break;
             case 'WalletTab':
-              return <WalletIcon size={iconSize} color={color} />;
+              iconComponent = <WalletIcon size={iconSize} color={color} />;
+              break;
             case 'LeaderboardTab':
-              return <Award size={iconSize} color={color} />;
+              iconComponent = <Award size={iconSize} color={color} />;
+              break;
             case 'ProfileTab':
-              return <User size={iconSize} color={color} />;
+              iconComponent = <User size={iconSize} color={color} />;
+              break;
             case 'AdminTab':
-              return <Shield size={iconSize} color={color} />;
+              iconComponent = <Shield size={iconSize} color={color} />;
+              break;
             default:
-              return null;
+              iconComponent = null;
           }
+
+          if (focused && isDark) {
+            return (
+              <View className="items-center justify-center relative">
+                {iconComponent}
+                <View 
+                  className="w-1 h-1 rounded-full bg-cyan-400 absolute -bottom-2" 
+                  style={{
+                    shadowColor: '#00E5FF',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.9,
+                    shadowRadius: 4,
+                    elevation: 3,
+                  }} 
+                />
+              </View>
+            );
+          }
+          return iconComponent;
         },
-        tabBarActiveTintColor: isDark ? '#C084FC' : '#7C3AED',
-        tabBarInactiveTintColor: isDark ? '#64748B' : '#94A3B8',
+        tabBarActiveTintColor: isDark ? '#00E5FF' : '#7C3AED',
+        tabBarInactiveTintColor: isDark ? '#4B5563' : '#94A3B8',
         tabBarStyle: {
-          backgroundColor: isDark ? '#090d16' : '#ffffff',
+          backgroundColor: isDark ? 'rgba(10, 14, 26, 0.96)' : '#ffffff',
           borderTopWidth: 1,
-          borderTopColor: isDark ? '#1e293b' : '#e2e8f0',
-          height: 68,
-          paddingBottom: 12,
-          paddingTop: 8,
+          borderTopColor: isDark ? 'rgba(0, 229, 255, 0.15)' : '#e2e8f0',
+          height: 74,
+          paddingBottom: 14,
+          paddingTop: 10,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 10,
+          elevation: 10,
         },
         tabBarLabelStyle: {
           fontSize: 9,
-          fontWeight: 'bold',
+          fontWeight: 'extrabold',
           textTransform: 'uppercase',
-          letterSpacing: 0.5,
+          letterSpacing: 0.75,
         },
         headerStyle: {
-          backgroundColor: isDark ? '#0B0F1A' : '#f8fafc',
+          backgroundColor: isDark ? '#060A13' : '#f8fafc',
           borderBottomWidth: 1,
-          borderBottomColor: isDark ? '#1e293b' : '#e2e8f0',
+          borderBottomColor: isDark ? 'rgba(139, 92, 246, 0.15)' : '#e2e8f0',
           elevation: 0,
           shadowOpacity: 0,
         },
@@ -70,7 +100,7 @@ export default function BottomTabNav() {
           fontWeight: '900',
           fontSize: 16,
           textTransform: 'uppercase',
-          letterSpacing: 1,
+          letterSpacing: 1.5,
         },
         headerTitleAlign: 'center',
       })}
@@ -78,7 +108,7 @@ export default function BottomTabNav() {
       <Tab.Screen 
         name="HomeTab" 
         component={HomeScreen} 
-        options={{ title: 'Home', headerTitle: 'BattleZone Hub' }} 
+        options={{ title: 'Home', headerShown: false }} 
       />
       <Tab.Screen 
         name="TournamentsTab" 

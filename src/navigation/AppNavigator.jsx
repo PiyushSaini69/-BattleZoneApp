@@ -12,8 +12,11 @@ import SupportScreen from '../screens/support/SupportScreen';
 import TicketDetailScreen from '../screens/support/TicketDetailScreen';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import CreateTournamentScreen from '../screens/admin/CreateTournamentScreen';
-import { View, ActivityIndicator } from 'react-native';
+import TermsScreen from '../screens/support/TermsScreen';
+import PrivacyScreen from '../screens/support/PrivacyScreen';
+import { ActivityIndicator } from 'react-native';
 import { useColorScheme } from 'nativewind';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,9 +27,12 @@ export default function AppNavigator() {
 
   if (loadingUser) {
     return (
-      <View style={{ flex: 1, backgroundColor: isDark ? '#0B0F1A' : '#F8FAFC', justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#7C3AED" />
-      </View>
+      <LinearGradient
+        colors={isDark ? ['#060A13', '#0D1321'] : ['#F8FAFC', '#E2E8F0']}
+        style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+      >
+        <ActivityIndicator size="large" color={isDark ? '#00E5FF' : '#7C3AED'} />
+      </LinearGradient>
     );
   }
 
@@ -55,6 +61,8 @@ export default function AppNavigator() {
           <Stack.Screen name="CreateTournament" component={CreateTournamentScreen} />
         </>
       )}
+      <Stack.Screen name="Terms" component={TermsScreen} />
+      <Stack.Screen name="Privacy" component={PrivacyScreen} />
     </Stack.Navigator>
   );
 }

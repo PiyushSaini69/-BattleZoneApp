@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { ScrollView, View, Text, Pressable, Alert } from 'react-native';
+import { ScrollView, View, Text, Pressable, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { request } from '../../services/api';
 import GlassCard from '../../components/ui/GlassCard';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import { ArrowLeft } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function CreateTournamentScreen({ navigation }) {
   const { colorScheme } = useColorScheme();
@@ -59,26 +60,36 @@ export default function CreateTournamentScreen({ navigation }) {
   };
 
   return (
-    <View className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]">
-      <View className="bg-white dark:bg-slate-955 p-4 border-b border-slate-200 dark:border-slate-900 flex-row items-center justify-between">
+    <LinearGradient
+      colors={['#060A13', '#0D1321']}
+      className="flex-1"
+    >
+      <View className="bg-slate-955/40 p-4 border-b border-slate-900/60 flex-row items-center justify-between">
         <Pressable onPress={() => navigation.goBack()} className="p-1">
-          <ArrowLeft size={20} color={isDark ? '#fff' : '#0F172A'} />
+          <ArrowLeft size={20} color="#fff" />
         </Pressable>
-        <Text className="text-slate-900 dark:text-white font-extrabold text-sm uppercase tracking-wide">Create Tournament</Text>
+        <Text className="text-white font-extrabold text-sm uppercase tracking-wide">Create Tournament</Text>
         <View className="w-6" />
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-        <GlassCard className="p-5 mb-6">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <ScrollView 
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          keyboardShouldPersistTaps="handled"
+        >
+        <GlassCard className="p-5 mb-6" glowColor="purple">
           {error !== '' && (
             <View 
               className="border rounded-xl p-3.5 mb-4"
               style={{
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                borderColor: 'rgba(239, 68, 68, 0.2)'
+                backgroundColor: 'rgba(244, 63, 94, 0.08)',
+                borderColor: 'rgba(244, 63, 94, 0.35)'
               }}
             >
-              <Text className="text-red-600 dark:text-red-400 text-xs font-semibold text-center">{error}</Text>
+              <Text className="text-rose-455 text-xs font-bold text-center">{error}</Text>
             </View>
           )}
 
@@ -89,20 +100,27 @@ export default function CreateTournamentScreen({ navigation }) {
             placeholder="E.g., Free Fire Neon Cup - Solo Arena"
           />
 
-          <View className="mb-4">
-            <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold mb-1.5 ml-1">Team Arrangement</Text>
-            <View className="flex-row justify-between">
+          <View className="mb-5 px-0.5">
+            <Text className="text-slate-400 text-xs font-extrabold mb-2.5 uppercase tracking-wide">Team Arrangement</Text>
+            <View className="flex-row justify-between bg-slate-950/60 border border-slate-900 rounded-xl p-1">
               {['solo', 'duo', 'squad'].map((t) => (
                 <Pressable
                   key={t}
                   onPress={() => setTournamentType(t)}
-                  className={`flex-1 mx-1 py-2 rounded-lg border items-center ${
+                  className={`flex-1 py-2 rounded-lg items-center ${
                     tournamentType === t 
-                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/20' 
-                      : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-850'
+                      ? 'bg-slate-800' 
+                      : ''
                   }`}
+                  style={tournamentType === t ? {
+                    shadowColor: '#8B5CF6',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 2
+                  } : {}}
                 >
-                  <Text className={`text-[9px] font-bold uppercase tracking-wider ${tournamentType === t ? 'text-[#7C3AED] dark:text-purple-300' : 'text-slate-500 dark:text-slate-455'}`}>
+                  <Text className={`text-[9px] font-extrabold uppercase tracking-wider ${tournamentType === t ? 'text-violet-400' : 'text-slate-400'}`}>
                     {t}
                   </Text>
                 </Pressable>
@@ -141,7 +159,8 @@ export default function CreateTournamentScreen({ navigation }) {
             className="mt-4"
           />
         </GlassCard>
-      </ScrollView>
-    </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }

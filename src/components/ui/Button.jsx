@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, Text, ActivityIndicator } from 'react-native';
 import { useColorScheme } from 'nativewind';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Button({ 
   onPress, 
@@ -15,87 +16,150 @@ export default function Button({
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const getVariantStyles = () => {
-    if (disabled) return 'bg-slate-200 dark:bg-slate-850';
+  const isGradientVariant = ['primary', 'accent'].includes(variant) && !disabled;
+
+  const getGradientColors = () => {
     switch (variant) {
       case 'primary':
-        return 'bg-[#7C3AED] border border-purple-500';
-      case 'secondary':
-        return 'bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700';
+        return ['#7C3AED', '#8B5CF6', '#6D28D9'];
       case 'accent':
-        return 'bg-cyan-500 border border-cyan-400';
-      case 'danger':
-        return 'bg-red-600 border border-red-500';
-      case 'outline':
-        return 'bg-transparent border border-slate-300 dark:border-slate-700';
+        return ['#0891B2', '#00E5FF', '#06B6D4'];
       default:
-        return 'bg-[#7C3AED]';
+        return ['#7C3AED', '#8B5CF6'];
     }
   };
 
-  const getVariantInlineStyle = () => {
-    const styles = {};
-    if (disabled) {
-      styles.opacity = 0.5;
-    }
-    
-    if (!disabled) {
-      if (variant === 'primary') {
-        styles.shadowColor = '#7C3AED';
-        styles.shadowOffset = { width: 0, height: 4 };
-        styles.shadowOpacity = 0.3;
-        styles.shadowRadius = 6;
-        styles.elevation = 4;
-      } else if (variant === 'accent') {
-        styles.shadowColor = '#06B6D4';
-        styles.shadowOffset = { width: 0, height: 4 };
-        styles.shadowOpacity = 0.3;
-        styles.shadowRadius = 6;
-        styles.elevation = 4;
-      } else if (variant === 'danger') {
-        styles.shadowColor = '#DC2626';
-        styles.shadowOffset = { width: 0, height: 4 };
-        styles.shadowOpacity = 0.3;
-        styles.shadowRadius = 6;
-        styles.elevation = 4;
-      }
-    }
-    return styles;
-  };
-
-  const getTextColorStyles = () => {
-    if (disabled) return 'text-slate-400 dark:text-slate-500 font-bold';
+  const getFlatStyles = () => {
+    if (disabled) return {
+      backgroundColor: isDark ? '#1E293B' : '#E2E8F0',
+    };
     switch (variant) {
       case 'secondary':
-        return 'text-slate-800 dark:text-white font-bold';
+        return {
+          backgroundColor: isDark ? 'rgba(30, 41, 59, 0.8)' : '#E2E8F0',
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : '#CBD5E1',
+          borderWidth: 1,
+        };
+      case 'danger':
+        return {
+          backgroundColor: '#DC2626',
+          borderColor: '#EF4444',
+          borderWidth: 1,
+        };
       case 'outline':
-        return 'text-slate-850 dark:text-white font-semibold';
+        return {
+          backgroundColor: 'transparent',
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#CBD5E1',
+          borderWidth: 1,
+        };
       default:
-        return 'text-white font-bold';
+        return {};
     }
   };
+
+  const getShadowStyle = () => {
+    if (disabled) return { opacity: 0.5 };
+    const shadows = {};
+    if (variant === 'primary') {
+      shadows.shadowColor = '#7C3AED';
+      shadows.shadowOffset = { width: 0, height: 6 };
+      shadows.shadowOpacity = 0.4;
+      shadows.shadowRadius = 12;
+      shadows.elevation = 8;
+    } else if (variant === 'accent') {
+      shadows.shadowColor = '#00E5FF';
+      shadows.shadowOffset = { width: 0, height: 6 };
+      shadows.shadowOpacity = 0.35;
+      shadows.shadowRadius = 12;
+      shadows.elevation = 8;
+    } else if (variant === 'danger') {
+      shadows.shadowColor = '#DC2626';
+      shadows.shadowOffset = { width: 0, height: 4 };
+      shadows.shadowOpacity = 0.35;
+      shadows.shadowRadius = 8;
+      shadows.elevation = 6;
+    }
+    return shadows;
+  };
+
+  const getTextColor = () => {
+    if (disabled) return isDark ? '#475569' : '#94A3B8';
+    switch (variant) {
+      case 'secondary':
+        return isDark ? '#F1F5F9' : '#1E293B';
+      case 'outline':
+        return isDark ? '#F1F5F9' : '#1E293B';
+      default:
+        return '#FFFFFF';
+    }
+  };
+
+  const content = loading ? (
+    <ActivityIndicator 
+      color={variant === 'outline' || variant === 'secondary' ? (isDark ? '#ffffff' : '#0f172a') : '#ffffff'} 
+      size="small" 
+    />
+  ) : (
+    <Text 
+      style={{ 
+        color: getTextColor(), 
+        fontWeight: '800', 
+        fontSize: 14, 
+        textAlign: 'center',
+        textTransform: 'uppercase',
+        letterSpacing: 1.2,
+      }}
+      className={textClassName}
+    >
+      {title}
+    </Text>
+  );
 
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled || loading}
-      style={({ pressed }) => {
-        const baseStyle = getVariantInlineStyle();
-        if (pressed && !disabled) {
-          return { ...baseStyle, transform: [{ scale: 0.97 }] };
-        }
-        return baseStyle;
-      }}
-      className={`rounded-xl py-3.5 px-6 flex-row justify-center items-center ${getVariantStyles()} ${className}`}
+      style={({ pressed }) => [
+        getShadowStyle(),
+        pressed && !disabled ? { transform: [{ scale: 0.96 }] } : {},
+      ]}
+      className={className}
       {...props}
     >
-      {loading ? (
-        <ActivityIndicator color={variant === 'outline' || variant === 'secondary' ? (isDark ? '#ffffff' : '#0f172a') : '#ffffff'} size="small" />
+      {isGradientVariant ? (
+        <LinearGradient
+          colors={getGradientColors()}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{
+            borderRadius: 14,
+            paddingVertical: 15,
+            paddingHorizontal: 24,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {content}
+        </LinearGradient>
       ) : (
-        <Text className={`text-base text-center ${getTextColorStyles()} ${textClassName}`}>
-          {title}
-        </Text>
+        <View
+          style={[
+            {
+              borderRadius: 14,
+              paddingVertical: 15,
+              paddingHorizontal: 24,
+              alignItems: 'center',
+              justifyContent: 'center',
+            },
+            getFlatStyles(),
+          ]}
+        >
+          {content}
+        </View>
       )}
     </Pressable>
   );
 }
+
+// We need this for non-gradient rendering
+import { View } from 'react-native';

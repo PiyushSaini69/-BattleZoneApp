@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, Pressable } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
@@ -11,55 +11,89 @@ export default function Input({
   error,
   secureTextEntry = false,
   className = '',
+  leftIcon,
   ...props
 }) {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const inputRef = useRef(null);
 
   const isPassword = secureTextEntry;
 
   return (
-    <View className={`mb-4 w-full ${className}`}>
+    <View className={`w-full ${className || 'mb-4'}`}>
       {label && (
-        <Text className="text-slate-600 dark:text-slate-400 text-sm font-semibold mb-1.5 ml-1">
+        <Text 
+          className="text-xs font-bold uppercase tracking-widest mb-2 ml-0.5"
+          style={{ color: isDark ? 'rgba(148, 163, 184, 0.8)' : '#64748B' }}
+        >
           {label}
         </Text>
       )}
-      <View 
-        className={`flex-row items-center bg-slate-100 dark:bg-slate-900 border rounded-xl px-4 py-3.5 ${
-          isFocused 
-            ? 'border-purple-600 dark:border-[#7C3AED]' 
-            : error 
-              ? 'border-red-500' 
-              : 'border-slate-200 dark:border-slate-800'
-        }`}
+      <Pressable 
+        onPress={() => inputRef.current?.focus()}
+        className="flex-row items-center rounded-xl px-4"
+        style={[
+          {
+            backgroundColor: isDark ? '#0A0E1A' : '#F1F5F9',
+            borderWidth: 1.5,
+            borderColor: isFocused
+              ? (isDark ? '#8B5CF6' : '#7C3AED')
+              : error
+                ? '#EF4444'
+                : (isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)'),
+            paddingVertical: 14,
+          },
+          isFocused && {
+            shadowColor: isDark ? '#8B5CF6' : '#7C3AED',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: isDark ? 0.3 : 0.15,
+            shadowRadius: 8,
+            elevation: 4,
+          }
+        ]}
       >
+        {leftIcon && (
+          <View className="mr-3">
+            {leftIcon}
+          </View>
+        )}
         <TextInput
+          ref={inputRef}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={isDark ? "#64748B" : "#94A3B8"}
+          placeholderTextColor={isDark ? 'rgba(100, 116, 139, 0.6)' : '#94A3B8'}
           secureTextEntry={isPassword && !showPassword}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          style={{ flexGrow: 1, color: isDark ? '#ffffff' : '#0F172A', fontSize: 16, padding: 0 }}
+          style={{ 
+            flex: 1, 
+            color: isDark ? '#F1F5F9' : '#0F172A', 
+            fontSize: 15, 
+            padding: 0,
+            letterSpacing: 0.3,
+          }}
           autoCapitalize="none"
           {...props}
         />
         {isPassword && (
-          <Pressable onPress={() => setShowPassword(!showPassword)} className="pl-2">
+          <Pressable onPress={() => setShowPassword(!showPassword)} className="pl-3">
             {showPassword ? (
-              <EyeOff size={20} color={isDark ? "#94A3B8" : "#64748B"} />
+              <EyeOff size={20} color={isDark ? 'rgba(148, 163, 184, 0.6)' : '#94A3B8'} />
             ) : (
-              <Eye size={20} color={isDark ? "#94A3B8" : "#64748B"} />
+              <Eye size={20} color={isDark ? 'rgba(148, 163, 184, 0.6)' : '#94A3B8'} />
             )}
           </Pressable>
         )}
-      </View>
+      </Pressable>
       {error && (
-        <Text className="text-red-600 dark:text-red-400 text-xs mt-1 ml-1.5 font-medium">
+        <Text 
+          className="text-xs mt-1.5 ml-1 font-semibold"
+          style={{ color: isDark ? '#F87171' : '#DC2626' }}
+        >
           {error}
         </Text>
       )}

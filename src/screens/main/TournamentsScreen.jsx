@@ -6,6 +6,7 @@ import GlassCard from '../../components/ui/GlassCard';
 import Badge from '../../components/ui/Badge';
 import Countdown from '../../components/ui/Countdown';
 import { CONFIG } from '../../config';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function TournamentsScreen({ navigation }) {
   const socket = useContext(SocketContext);
@@ -60,46 +61,57 @@ export default function TournamentsScreen({ navigation }) {
     const progress = Math.min((item.filledSlots / item.totalSlots) * 100, 100);
 
     return (
-      <GlassCard className="mb-5 overflow-hidden p-0">
-        <Image 
-          source={{ uri: getGameBanner(item.game) }}
-          style={{ width: '100%', height: 110 }}
-          resizeMode="cover"
-        />
-        
-        <View className="absolute top-3 right-3 flex-row space-x-1.5">
-          <Badge text={item.tournamentType} variant="purple" />
-          <Badge text={item.status} variant={item.status === 'registering' ? 'success' : item.status === 'live' ? 'danger' : 'info'} />
+      <GlassCard className="mb-5 overflow-hidden p-0" glowColor="purple">
+        <View className="relative">
+          <Image 
+            source={{ uri: getGameBanner(item.game) }}
+            style={{ width: '100%', height: 120 }}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={['transparent', 'rgba(10, 14, 26, 0.95)']}
+            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 60 }}
+          />
+          <View className="absolute top-3 right-3 flex-row gap-1.5">
+            <Badge text={item.tournamentType} variant="purple" />
+            <Badge text={item.status} variant={item.status === 'registering' ? 'success' : item.status === 'live' ? 'danger' : 'info'} />
+          </View>
         </View>
 
-        <View className="p-4">
-          <Text className="text-slate-900 dark:text-white text-base font-extrabold mb-1" numberOfLines={1}>
+        <View className="p-4 bg-[#0A0F1A]/95">
+          <Text className="text-white text-base font-extrabold mb-1" numberOfLines={1}>
             {item.title}
           </Text>
-          <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase mb-3">
+          <Text className="text-slate-400 text-[10px] font-bold uppercase mb-3">
             {item.game.replace('_', ' ')} • {item.gameMode.replace('_', ' ')}
           </Text>
 
           <View className="mb-4">
             <View className="flex-row justify-between mb-1.5">
-              <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase">Filled Slots</Text>
-              <Text className="text-slate-950 dark:text-white text-xs font-black">{item.filledSlots}/{item.totalSlots}</Text>
+              <Text className="text-slate-400 text-[9px] font-bold uppercase tracking-wide">Slots Filled</Text>
+              <Text className="text-white text-xs font-black">{item.filledSlots}/{item.totalSlots}</Text>
             </View>
-            <View className="h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-              <View className="h-full bg-[#7C3AED] rounded-full" style={{ width: `${progress}%` }} />
+            <View className="h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-900">
+              <LinearGradient
+                colors={['#8B5CF6', '#00E5FF']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ width: `${progress}%`, height: '100%' }}
+                className="rounded-full"
+              />
             </View>
           </View>
 
           <View 
-            className="flex-row justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-3 mb-4"
+            className="flex-row justify-between items-center border-t border-slate-800/60 pt-3.5 mb-4"
           >
             <View>
-              <Text className="text-slate-550 dark:text-slate-400 text-[8px] uppercase font-bold tracking-wider">Prize Pool</Text>
-              <Text className="text-emerald-555 dark:text-emerald-400 text-base font-black">₹{item.prizePool}</Text>
+              <Text className="text-slate-400 text-[8px] uppercase font-bold tracking-widest">Prize Pool</Text>
+              <Text className="text-[#00E5FF] text-base font-black">₹{item.prizePool}</Text>
             </View>
             <View className="items-end">
-              <Text className="text-slate-550 dark:text-slate-400 text-[8px] uppercase font-bold tracking-wider">Entry Fee</Text>
-              <Text className="text-slate-950 dark:text-white text-base font-black">
+              <Text className="text-slate-400 text-[8px] uppercase font-bold tracking-widest">Entry Fee</Text>
+              <Text className="text-white text-base font-black">
                 {item.entryFee === 0 ? 'FREE' : `₹${item.entryFee}`}
               </Text>
             </View>
@@ -111,9 +123,19 @@ export default function TournamentsScreen({ navigation }) {
             </View>
             <Pressable
               onPress={() => navigation.navigate('TournamentDetail', { slug: item.slug })}
-              className="bg-[#7C3AED] px-4 py-2.5 rounded-xl border border-transparent"
+              className="bg-cyan-500 rounded-xl px-5 py-2.5"
+              style={({ pressed }) => [
+                {
+                  opacity: pressed ? 0.8 : 1,
+                  shadowColor: '#00E5FF',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4,
+                  elevation: 3
+                }
+              ]}
             >
-              <Text className="text-white font-bold text-[10px] uppercase tracking-wider">Details</Text>
+              <Text className="text-black font-extrabold text-[10px] uppercase tracking-widest">Details</Text>
             </Pressable>
           </View>
         </View>
@@ -122,22 +144,30 @@ export default function TournamentsScreen({ navigation }) {
   };
 
   return (
-    <View className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]">
-
+    <LinearGradient
+      colors={['#060A13', '#0D1321']}
+      className="flex-1"
+    >
       <FlatList
         data={tournaments}
         keyExtractor={(item) => item._id}
         renderItem={renderItem}
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" colors={["#7C3AED"]} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            tintColor="#00E5FF" 
+            colors={["#00E5FF"]} 
+            progressBackgroundColor="#0A0E1A"
+          />
         }
         ListEmptyComponent={
           <View className="py-20 items-center">
-            <Text className="text-slate-500 dark:text-slate-400 text-sm font-semibold">No tournaments active currently.</Text>
+            <Text className="text-slate-400 text-sm font-semibold">No tournaments active currently.</Text>
           </View>
         }
       />
-    </View>
+    </LinearGradient>
   );
 }

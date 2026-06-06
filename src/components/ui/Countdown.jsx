@@ -41,41 +41,50 @@ export default function Countdown({ targetDate, onExpire, className = '' }) {
       <View 
         className={`border px-3 py-1.5 rounded-lg ${className}`}
         style={{
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-          borderColor: 'rgba(239, 68, 68, 0.2)',
+          backgroundColor: 'rgba(244, 63, 94, 0.08)',
+          borderColor: 'rgba(244, 63, 94, 0.35)',
         }}
       >
-        <Text className="text-red-400 font-bold text-xs text-center uppercase tracking-wide">LIVE / IN PROGRESS</Text>
+        <Text className="text-rose-400 font-extrabold text-xs text-center uppercase tracking-wider">LIVE / IN PROGRESS</Text>
       </View>
     );
   }
 
   return (
     <View 
-      className={`flex-row items-center justify-center border px-3 py-2 rounded-xl ${className}`}
+      className={`flex-row items-center justify-center border px-4 py-2 rounded-xl ${className}`}
       style={{
-        backgroundColor: 'rgba(124, 58, 237, 0.1)',
-        borderColor: 'rgba(124, 58, 237, 0.2)',
+        backgroundColor: 'rgba(10, 14, 26, 0.75)',
+        borderColor: 'rgba(139, 92, 246, 0.3)',
+        shadowColor: '#8B5CF6',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 3,
       }}
     >
       <View className="items-center px-1.5">
-        <Text className="text-[#7C3AED] font-bold text-base leading-none">{pad(timeLeft.days)}</Text>
-        <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase tracking-wider mt-0.5">d</Text>
+        <Text className="text-violet-400 font-extrabold text-lg leading-none tracking-tight">{pad(timeLeft.days)}</Text>
+        <Text className="text-slate-400 text-[8px] uppercase font-bold tracking-widest mt-1">d</Text>
       </View>
-      <Text className="font-bold text-base pb-1" style={{ color: 'rgba(192, 132, 252, 0.4)' }}>:</Text>
+      <Text className="font-bold text-base pb-1 px-0.5 text-violet-400/40">:</Text>
       <View className="items-center px-1.5">
-        <Text className="text-[#7C3AED] font-bold text-base leading-none">{pad(timeLeft.hours)}</Text>
-        <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase tracking-wider mt-0.5">h</Text>
+        <Text className="text-violet-400 font-extrabold text-lg leading-none tracking-tight">{pad(timeLeft.hours)}</Text>
+        <Text className="text-slate-400 text-[8px] uppercase font-bold tracking-widest mt-1">h</Text>
       </View>
-      <Text className="font-bold text-base pb-1" style={{ color: 'rgba(192, 132, 252, 0.4)' }}>:</Text>
+      <Text className="font-bold text-base pb-1 px-0.5 text-violet-400/40">:</Text>
       <View className="items-center px-1.5">
-        <Text className="text-[#7C3AED] font-bold text-base leading-none">{pad(timeLeft.minutes)}</Text>
-        <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase tracking-wider mt-0.5">m</Text>
+        <Text className="text-violet-400 font-extrabold text-lg leading-none tracking-tight">{pad(timeLeft.minutes)}</Text>
+        <Text className="text-slate-400 text-[8px] uppercase font-bold tracking-widest mt-1">m</Text>
       </View>
-      <Text className="font-bold text-base pb-1" style={{ color: 'rgba(192, 132, 252, 0.4)' }}>:</Text>
+      <Text className="font-bold text-base pb-1 px-0.5 text-violet-400/40">:</Text>
       <View className="items-center px-1.5">
-        <Text className="text-cyan-400 font-bold text-base leading-none">{pad(timeLeft.seconds)}</Text>
-        <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase tracking-wider mt-0.5">s</Text>
+        <Text className="text-cyan-400 font-extrabold text-lg leading-none tracking-tight" style={{
+          textShadowColor: 'rgba(0, 229, 255, 0.4)',
+          textShadowOffset: { width: 0, height: 0 },
+          textShadowRadius: 6,
+        }}>{pad(timeLeft.seconds)}</Text>
+        <Text className="text-cyan-400/70 text-[8px] uppercase font-bold tracking-widest mt-1">s</Text>
       </View>
     </View>
   );

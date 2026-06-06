@@ -15,6 +15,12 @@ export const clearTokens = async () => {
   await SecureStore.deleteItemAsync('refreshToken');
 };
 
+let sessionExpiredCallback = null;
+
+export const setSessionExpiredCallback = (callback) => {
+  sessionExpiredCallback = callback;
+};
+
 // Replicate standard fetch requests but adapted for mobile secure tokens
 export const request = async (endpoint, options = {}, onSessionExpired) => {
   const headers = {
@@ -64,10 +70,12 @@ export const request = async (endpoint, options = {}, onSessionExpired) => {
             console.warn('❌ Refresh token rotation failed. Clearing session storage.');
             await clearTokens();
             if (onSessionExpired) onSessionExpired();
+            if (sessionExpiredCallback) sessionExpiredCallback();
           }
         } catch (err) {
           await clearTokens();
           if (onSessionExpired) onSessionExpired();
+          if (sessionExpiredCallback) sessionExpiredCallback();
         }
       }
 

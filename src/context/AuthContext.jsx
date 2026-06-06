@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { request, saveTokens, clearTokens, getAccessToken } from '../services/api';
+import { request, saveTokens, clearTokens, getAccessToken, setSessionExpiredCallback } from '../services/api';
 import { initiateSocketConnection, disconnectSocket } from '../services/socket';
 
 export const AuthContext = createContext();
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (username, email, password, phone, referralCode) => {
+  const register = async (username, email, password, phone, referralCode, firstName, lastName, confirmPassword) => {
     setAuthError('');
     try {
       const res = await request('/auth/register', {
@@ -47,8 +47,11 @@ export const AuthProvider = ({ children }) => {
           username,
           email,
           password,
+          confirmPassword,
           phone: phone || undefined,
-          referralCode: referralCode || undefined
+          referralCode: referralCode || undefined,
+          firstName,
+          lastName
         })
       });
       return res;
@@ -137,6 +140,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    setSessionExpiredCallback(logout);
     verifySession();
   }, []);
 

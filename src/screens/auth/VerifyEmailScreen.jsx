@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { ScrollView, View, Text, Pressable, Alert, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, Pressable, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import GlassCard from '../../components/ui/GlassCard';
+import { useColorScheme } from 'nativewind';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function VerifyEmailScreen({ route, navigation }) {
   const { verifyEmailOtp, resendVerificationOtp, authError, setAuthError } = useContext(AuthContext);
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   
   // Extract route params safely
   const initialEmail = route.params?.email || '';
@@ -110,135 +115,146 @@ export default function VerifyEmailScreen({ route, navigation }) {
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}>
-      <View className="items-center mb-8 mt-8">
-        <Text className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-widest text-center">
-          VERIFY <Text className="text-[#7C3AED]">ACCOUNT</Text>
-        </Text>
-        <Text className="text-slate-500 dark:text-slate-400 text-[10px] mt-2 text-center uppercase tracking-widest font-semibold">
-          Confirm Email Ownership
-        </Text>
-      </View>
-
-      <GlassCard className="mb-6">
-        {(localError || authError) && (
-          <View 
-            className="border rounded-xl p-3.5 mb-4"
-            style={{
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              borderColor: 'rgba(239, 68, 68, 0.2)',
-            }}
+    <LinearGradient
+      colors={isDark ? ['#060A13', '#0D1321'] : ['#F8FAFC', '#E2E8F0']}
+      className="flex-1"
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+          <ScrollView 
+            className="flex-1" 
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}
+            keyboardShouldPersistTaps="handled"
           >
-            <Text className="text-red-600 dark:text-red-400 text-xs font-semibold text-center">
-              {localError || authError}
-            </Text>
-          </View>
-        )}
-
-        {successMsg && (
-          <View 
-            className="border rounded-xl p-3.5 mb-4"
-            style={{
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              borderColor: 'rgba(16, 185, 129, 0.2)',
-            }}
+        <View className="items-center mb-8 mt-8">
+          <Text 
+            className="text-3xl font-black text-slate-900 dark:text-white tracking-widest text-center"
+            style={isDark ? {
+              textShadowColor: 'rgba(0, 229, 255, 0.4)',
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 8,
+            } : {}}
           >
-            <Text className="text-emerald-600 dark:text-emerald-400 text-xs font-semibold text-center">
-              {successMsg}
-            </Text>
-          </View>
-        )}
-
-        <Input
-          label="Registered Email Address"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="yourname@domain.com"
-          keyboardType="email-address"
-          editable={!initialEmail}
-          style={initialEmail ? { opacity: 0.7 } : {}}
-        />
-
-        <View className="flex-row justify-between items-center mb-1">
-          <Text className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-            6-Digit Verification OTP
+            VERIFY <Text className="text-cyan-400">ACCOUNT</Text>
           </Text>
-          {isTimerActive ? (
-            <Text className="text-xs text-orange-600 dark:text-orange-400 font-semibold">
-              Expires in: {formatTime(timeLeft)}
-            </Text>
-          ) : (
-            <Text className="text-xs text-red-500 font-semibold">Code expired</Text>
-          )}
+          <Text className="text-slate-500 dark:text-slate-400 text-[10px] mt-2 text-center uppercase tracking-widest font-extrabold">
+            Confirm Email Ownership
+          </Text>
         </View>
 
-        <Input
-          value={otp}
-          onChangeText={(val) => setOtp(val.replace(/[^0-9]/g, ''))}
-          placeholder="e.g. 524901"
-          keyboardType="number-pad"
-          maxLength={6}
-          className="text-center font-mono tracking-widest text-lg font-bold"
-        />
+        <GlassCard className="mb-6" glowColor="purple">
+          {(localError || authError) && (
+            <View 
+              className="border rounded-xl p-3.5 mb-4"
+              style={{
+                backgroundColor: 'rgba(244, 63, 94, 0.08)',
+                borderColor: 'rgba(244, 63, 94, 0.35)',
+              }}
+            >
+              <Text className="text-rose-455 text-xs font-bold text-center">
+                {localError || authError}
+              </Text>
+            </View>
+          )}
 
-        {/* Development Helper Badge */}
-        {devOtp !== '' && (
-          <Pressable 
-            onPress={() => setOtp(devOtp)}
-            className="mb-6 items-center flex-row justify-center bg-amber-500/10 border border-amber-500/20 rounded-xl p-3"
-          >
-            <Text className="text-amber-600 dark:text-amber-400 text-xs font-bold text-center">
-              🛠️ Dev Auto-fill: <Text className="underline font-mono">{devOtp}</Text>
+          {successMsg && (
+            <View 
+              className="border rounded-xl p-3.5 mb-4"
+              style={{
+                backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                borderColor: 'rgba(16, 185, 129, 0.35)',
+              }}
+            >
+              <Text className="text-emerald-400 text-xs font-bold text-center">
+                {successMsg}
+              </Text>
+            </View>
+          )}
+
+          <Input
+            label="Registered Email Address"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="yourname@domain.com"
+            keyboardType="email-address"
+            editable={!initialEmail}
+            style={initialEmail ? { opacity: 0.7 } : {}}
+          />
+
+          <View className="flex-row justify-between items-center mb-2 px-1">
+            <Text className="text-xs font-extrabold uppercase tracking-wide text-slate-700 dark:text-slate-400">
+              6-Digit Verification OTP
             </Text>
+            {isTimerActive ? (
+              <Text className="text-xs text-amber-500 font-extrabold uppercase tracking-wider">
+                Expires: {formatTime(timeLeft)}
+              </Text>
+            ) : (
+              <Text className="text-xs text-rose-500 font-extrabold uppercase tracking-wider">Expired</Text>
+            )}
+          </View>
+
+          <Input
+            value={otp}
+            onChangeText={(val) => setOtp(val.replace(/[^0-9]/g, ''))}
+            placeholder="e.g. 524901"
+            keyboardType="number-pad"
+            maxLength={6}
+            className="text-center font-mono tracking-widest text-xl font-black py-4"
+          />
+
+          <Button
+            title="Verify Account"
+            onPress={handleVerifySubmit}
+            loading={loading}
+            className="mt-2"
+          />
+
+          <View className="relative my-6 items-center justify-center flex-row">
+            <View className="w-full border-t border-slate-200 dark:border-white/10 absolute"></View>
+            <Text className="px-3 text-[9px] font-bold uppercase tracking-widest bg-slate-50 dark:bg-[#0D1321] text-slate-500 z-10">
+              Haven't received a code?
+            </Text>
+          </View>
+
+          <Pressable
+            onPress={handleResendOtp}
+            disabled={isTimerActive || resendLoading}
+            className="w-full py-3.5 border rounded-xl flex-row items-center justify-center transition"
+            style={({ pressed }) => [
+              {
+                backgroundColor: isTimerActive 
+                  ? 'rgba(0,0,0,0.02)' 
+                  : pressed 
+                    ? 'rgba(0, 229, 255, 0.1)' 
+                    : 'transparent',
+                borderColor: isTimerActive 
+                  ? 'rgba(255,255,255,0.05)' 
+                  : 'rgba(0, 229, 255, 0.3)',
+                borderWidth: 1,
+                opacity: isTimerActive ? 0.4 : 1
+              }
+            ]}
+          >
+            {resendLoading ? (
+              <ActivityIndicator size="small" color="#00E5FF" />
+            ) : (
+              <Text className={`font-extrabold text-xs uppercase tracking-wider ${isTimerActive ? 'text-slate-500' : 'text-cyan-400'}`}>
+                {isTimerActive ? `Resend in ${formatTime(timeLeft)}` : 'Resend Verification Code'}
+              </Text>
+            )}
           </Pressable>
-        )}
+        </GlassCard>
 
-        <Button
-          title="Verify Account"
-          onPress={handleVerifySubmit}
-          loading={loading}
-          className="mt-2"
-        />
-
-        <View className="relative my-6 items-center justify-center flex-row">
-          <View className="w-full border-t border-slate-200 dark:border-white/10 absolute"></View>
-          <Text className="px-3 text-[9px] font-bold uppercase tracking-widest bg-slate-50 dark:bg-[#111827] text-slate-400 z-10">
-            Haven't received a code?
-          </Text>
-        </View>
-
-        <Pressable
-          onPress={handleResendOtp}
-          disabled={isTimerActive || resendLoading}
-          className="w-full py-3 border rounded-xl flex-row items-center justify-center transition"
-          style={({ pressed }) => [
-            {
-              backgroundColor: isTimerActive 
-                ? 'rgba(0,0,0,0.02)' 
-                : pressed 
-                  ? 'rgba(6, 182, 212, 0.1)' 
-                  : 'transparent',
-              borderColor: isTimerActive 
-                ? 'rgba(0,0,0,0.05)' 
-                : 'rgba(6, 182, 212, 0.3)',
-              borderWidth: 1,
-              opacity: isTimerActive ? 0.5 : 1
-            }
-          ]}
-        >
-          {resendLoading ? (
-            <ActivityIndicator size="small" color="#06B6D4" />
-          ) : (
-            <Text className={`font-semibold text-xs uppercase tracking-wider ${isTimerActive ? 'text-slate-400' : 'text-[#06B6D4]'}`}>
-              {isTimerActive ? `Resend in ${formatTime(timeLeft)}` : 'Resend Verification Code'}
-            </Text>
-          )}
+        <Pressable onPress={() => navigation.navigate('Login')} className="self-center py-4 mb-4">
+          <Text className="text-cyan-400 font-extrabold text-sm uppercase tracking-wide">Back to Login</Text>
         </Pressable>
-      </GlassCard>
-
-      <Pressable onPress={() => navigation.navigate('Login')} className="self-center py-4">
-        <Text className="text-[#7C3AED] font-bold text-sm">Back to Login</Text>
-      </Pressable>
-    </ScrollView>
+          </ScrollView>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }

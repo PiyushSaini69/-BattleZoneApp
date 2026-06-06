@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { ScrollView, View, Text, Pressable, RefreshControl } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthContext } from '../../context/AuthContext';
 import { request } from '../../services/api';
 import GlassCard from '../../components/ui/GlassCard';
+import Button from '../../components/ui/Button';
 import { Trophy, Swords, Award } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function HomeScreen({ navigation }) {
   const { user } = useContext(AuthContext);
+  const insets = useSafeAreaInsets();
   const [announcements, setAnnouncements] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState({ tournamentsPlayed: 0, tournamentsWon: 0, totalKills: 0, points: 0 });
@@ -42,98 +46,122 @@ export default function HomeScreen({ navigation }) {
     setRefreshing(false);
   };
 
+  const isDark = true; // Hardcoded dark theme focus for esports aesthetic
+
   return (
-    <ScrollView 
-      className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]" 
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" colors={["#7C3AED"]} />
-      }
-      contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+    <LinearGradient
+      colors={['#060A13', '#0D1321']}
+      className="flex-1"
     >
-      <View className="flex-row justify-between items-center mb-6 mt-4">
-        <View>
-          <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider">Welcome back,</Text>
-          <Text className="text-slate-900 dark:text-white text-2xl font-black mt-1">
-            {user ? user.username : 'Warrior'} 🎮
-          </Text>
-        </View>
-        <Pressable 
-          onPress={() => navigation.navigate('Profile')}
-          className="w-12 h-12 bg-slate-200 dark:bg-slate-900 rounded-full border justify-center items-center overflow-hidden"
-          style={{ borderColor: 'rgba(124, 58, 237, 0.3)' }}
-        >
-          <Text className="text-slate-800 dark:text-white text-lg font-bold">
-            {user ? user.username.slice(0, 2).toUpperCase() : 'W'}
-          </Text>
-        </Pressable>
-      </View>
-
-      <View className="flex-row flex-wrap justify-between mb-6">
-        <GlassCard className="w-[48%] mb-4 p-3.5 items-center">
-          <Swords size={22} color="#C084FC" />
-          <Text className="text-slate-900 dark:text-white text-base font-black mt-1.5">{stats.tournamentsPlayed}</Text>
-          <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-bold tracking-wider mt-0.5">Played</Text>
-        </GlassCard>
-
-        <GlassCard className="w-[48%] mb-4 p-3.5 items-center">
-          <Trophy size={22} color="#FBBF24" />
-          <Text className="text-slate-900 dark:text-white text-base font-black mt-1.5">{stats.tournamentsWon}</Text>
-          <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-bold tracking-wider mt-0.5">Won</Text>
-        </GlassCard>
-
-        <GlassCard className="w-[48%] p-3.5 items-center">
-          <Award size={22} color="#F87171" />
-          <Text className="text-slate-900 dark:text-white text-base font-black mt-1.5">{stats.totalKills}</Text>
-          <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-bold tracking-wider mt-0.5">Total Kills</Text>
-        </GlassCard>
-
-        <GlassCard className="w-[48%] p-3.5 items-center">
-          <Trophy size={22} color="#22D3EE" />
-          <Text className="text-slate-900 dark:text-white text-base font-black mt-1.5">{stats.points}</Text>
-          <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-bold tracking-wider mt-0.5">Points</Text>
-        </GlassCard>
-      </View>
-
-      <Text className="text-slate-900 dark:text-white font-extrabold text-sm mb-3 uppercase tracking-wider">Announcements</Text>
-      {announcements.map((item) => (
-        <GlassCard 
-          key={item._id} 
-          className={`mb-4 border-l-4 p-4 ${
-            item.type === 'warning' ? 'border-l-amber-500' : 'border-l-[#7C3AED]'
-          }`}
-        >
-          <Text className="text-slate-900 dark:text-white font-bold text-sm mb-1">{item.title}</Text>
-          <Text className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">{item.content}</Text>
-        </GlassCard>
-      ))}
-
-      <GlassCard 
-        className="p-5 items-center mt-2 mb-6"
-        style={{
-          backgroundColor: 'rgba(124, 58, 237, 0.1)',
-          borderColor: 'rgba(124, 58, 237, 0.2)',
+      <ScrollView 
+        className="flex-1" 
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            tintColor="#00E5FF" 
+            colors={["#00E5FF"]} 
+            progressBackgroundColor="#0A0E1A"
+          />
+        }
+        contentContainerStyle={{ 
+          padding: 16, 
+          paddingTop: insets.top > 0 ? insets.top + 10 : 20, 
+          paddingBottom: 100 
         }}
       >
-        <Trophy size={36} color="#7C3AED" />
-        <Text className="text-slate-900 dark:text-white font-black text-lg mt-3 text-center">JOIN LIVE TOURNAMENTS</Text>
-        <Text className="text-slate-600 dark:text-slate-400 text-xs text-center mt-1.5 mb-4 leading-relaxed">
-          Compete against players across India for real prize money pools!
-        </Text>
-        <Pressable 
-          onPress={() => navigation.navigate('TournamentsTab')}
-          className="bg-[#7C3AED] px-6 py-3.5 rounded-xl border w-full"
-          style={{
-            borderColor: '#7C3AED',
-            shadowColor: '#9333ea',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 5,
-            elevation: 4,
-          }}
+        <View className="flex-row justify-between items-center mb-6 mt-1">
+          <View>
+            <Text className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest">Welcome back,</Text>
+            <Text 
+              className="text-white text-2xl font-black mt-1 uppercase tracking-wide"
+              style={{
+                textShadowColor: 'rgba(0, 229, 255, 0.35)',
+                textShadowOffset: { width: 0, height: 0 },
+                textShadowRadius: 8,
+              }}
+            >
+              {user ? user.username : 'Warrior'} 🎮
+            </Text>
+          </View>
+          <Pressable 
+            onPress={() => navigation.navigate('Profile')}
+            className="w-12 h-12 bg-slate-950 rounded-full border-2 justify-center items-center overflow-hidden"
+            style={{ 
+              borderColor: '#00E5FF',
+              shadowColor: '#00E5FF',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.5,
+              shadowRadius: 6,
+              elevation: 4,
+            }}
+          >
+            <Text className="text-cyan-400 text-lg font-black">
+              {user ? user.username.slice(0, 2).toUpperCase() : 'W'}
+            </Text>
+          </Pressable>
+        </View>
+
+        <View className="flex-row flex-wrap justify-between mb-4">
+          <GlassCard className="w-[48%] mb-4 p-3.5 items-center" glowColor="purple">
+            <Swords size={22} color="#A855F7" />
+            <Text className="text-white text-lg font-black mt-1.5">{stats.tournamentsPlayed}</Text>
+            <Text className="text-slate-400 text-[9px] uppercase font-extrabold tracking-wider mt-0.5">Played</Text>
+          </GlassCard>
+
+          <GlassCard className="w-[48%] mb-4 p-3.5 items-center" glowColor="emerald">
+            <Trophy size={22} color="#10B981" />
+            <Text className="text-white text-lg font-black mt-1.5">{stats.tournamentsWon}</Text>
+            <Text className="text-slate-400 text-[9px] uppercase font-extrabold tracking-wider mt-0.5">Won</Text>
+          </GlassCard>
+
+          <GlassCard className="w-[48%] p-3.5 items-center" glowColor="red">
+            <Award size={22} color="#EF4444" />
+            <Text className="text-white text-lg font-black mt-1.5">{stats.totalKills}</Text>
+            <Text className="text-slate-400 text-[9px] uppercase font-extrabold tracking-wider mt-0.5">Total Kills</Text>
+          </GlassCard>
+
+          <GlassCard className="w-[48%] p-3.5 items-center" glowColor="cyan">
+            <Trophy size={22} color="#00E5FF" />
+            <Text className="text-white text-lg font-black mt-1.5">{stats.points}</Text>
+            <Text className="text-slate-400 text-[9px] uppercase font-extrabold tracking-wider mt-0.5">Points</Text>
+          </GlassCard>
+        </View>
+
+        <Text className="text-white font-extrabold text-xs mb-3.5 uppercase tracking-widest px-1">Announcements</Text>
+        {announcements.map((item) => (
+          <GlassCard 
+            key={item._id} 
+            className="mb-4 p-4"
+            glowColor={item.type === 'warning' ? 'red' : 'purple'}
+          >
+            <Text className="text-white font-black text-sm mb-1 uppercase tracking-wide">{item.title}</Text>
+            <Text className="text-slate-400 text-xs leading-relaxed">{item.content}</Text>
+          </GlassCard>
+        ))}
+
+        <GlassCard 
+          className="p-5 items-center mt-2 mb-6"
+          glowColor="cyan"
         >
-          <Text className="text-white font-bold text-xs text-center uppercase tracking-wider">Explore Arenas</Text>
-        </Pressable>
-      </GlassCard>
-    </ScrollView>
+          <Trophy size={38} color="#00E5FF" style={{
+            shadowColor: '#00E5FF',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.6,
+            shadowRadius: 8,
+          }} />
+          <Text className="text-white font-black text-lg mt-3 text-center uppercase tracking-wider">JOIN LIVE TOURNAMENTS</Text>
+          <Text className="text-slate-400 text-xs text-center mt-1.5 mb-5 leading-relaxed px-2">
+            Compete against players across India for real prize money pools!
+          </Text>
+          <Button 
+            title="Explore Arenas"
+            onPress={() => navigation.navigate('TournamentsTab')}
+            variant="primary"
+            className="w-full"
+          />
+        </GlassCard>
+      </ScrollView>
+    </LinearGradient>
   );
 }

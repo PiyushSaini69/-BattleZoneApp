@@ -9,6 +9,7 @@ import Input from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
 import { Shield, HelpCircle, LogOut, CheckCircle2, Sun, Moon, Monitor } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ProfileScreen({ navigation }) {
   const { user, setUser, logout } = useContext(AuthContext);
@@ -52,163 +53,199 @@ export default function ProfileScreen({ navigation }) {
       { text: 'Disconnect', style: 'destructive', onPress: logout }
     ]);
   };
+  
   const { colorScheme, setColorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
-
   const isAdmin = user && ['admin', 'superadmin', 'moderator'].includes(user.role);
 
   return (
-    <ScrollView 
-      className="flex-1 bg-slate-50 dark:bg-[#0B0F1A]" 
-      contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+    <LinearGradient
+      colors={['#060A13', '#0D1321']}
+      className="flex-1"
     >
-      <GlassCard className="items-center p-6 mb-6 mt-4">
-        <View 
-          className="w-20 h-20 rounded-full border-2 border-[#7C3AED] justify-center items-center mb-3"
-          style={{ backgroundColor: 'rgba(124, 58, 237, 0.2)' }}
-        >
-          <Text className="text-[#7C3AED] dark:text-white text-3xl font-black">
-            {user ? user.username.slice(0, 2).toUpperCase() : 'W'}
-          </Text>
-        </View>
-
-        <View className="flex-row items-center mb-1">
-          <Text className="text-slate-900 dark:text-white text-lg font-black mr-2">{user?.username}</Text>
-          <Badge text={user?.role || 'user'} variant={isAdmin ? 'danger' : 'purple'} />
-        </View>
-        <Text className="text-slate-500 dark:text-slate-400 text-xs mb-3">{user?.email}</Text>
-
-        <View 
-          className="flex-row space-x-6 border-t pt-4 w-full border-slate-200 dark:border-slate-800"
-        >
-          <View className="flex-1 items-center">
-            <Text className="text-slate-850 dark:text-white text-sm font-bold">{user?.referralCode || 'N/A'}</Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-bold mt-0.5">Referral Code</Text>
+      <ScrollView 
+        className="flex-1" 
+        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+      >
+        <GlassCard className="items-center p-6 mb-6 mt-4" glowColor="purple">
+          <View 
+            className="w-20 h-20 rounded-full border-2 justify-center items-center mb-3 bg-[#0A0E1A]"
+            style={{ 
+              borderColor: '#00E5FF',
+              shadowColor: '#00E5FF',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.6,
+              shadowRadius: 8,
+              elevation: 4
+            }}
+          >
+            <Text className="text-white text-3xl font-black">
+              {user ? user.username.slice(0, 2).toUpperCase() : 'W'}
+            </Text>
           </View>
-          <View className="flex-1 items-center border-l border-slate-200 dark:border-slate-800">
-            <Text className="text-slate-850 dark:text-white text-sm font-bold">{user?.referralCount || 0}</Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-[9px] uppercase font-bold mt-0.5">Referred Users</Text>
-          </View>
-        </View>
-      </GlassCard>
 
-      {isAdmin && (
-        <GlassCard 
-          className="p-4 mb-6 flex-row justify-between items-center"
-          style={{
-            backgroundColor: isDark ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.05)',
-            borderColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.1)',
-          }}
-        >
+          <View className="flex-row items-center mb-1">
+            <Text className="text-white text-lg font-black mr-2 uppercase tracking-wide">{user?.username}</Text>
+            <Badge text={user?.role || 'user'} variant={isAdmin ? 'danger' : 'purple'} />
+          </View>
+          <Text className="text-slate-400 text-xs mb-3">{user?.email}</Text>
+
+          <View 
+            className="flex-row space-x-6 border-t pt-4 w-full border-slate-800/60"
+          >
+            <View className="flex-1 items-center">
+              <Text className="text-white text-sm font-black uppercase tracking-wider">{user?.referralCode || 'N/A'}</Text>
+              <Text className="text-slate-400 text-[9px] uppercase font-bold tracking-wider mt-0.5">Referral Code</Text>
+            </View>
+            <View className="flex-1 items-center border-l border-slate-800/60">
+              <Text className="text-white text-sm font-black">{user?.referralCount || 0}</Text>
+              <Text className="text-slate-400 text-[9px] uppercase font-bold tracking-wider mt-0.5">Referred Users</Text>
+            </View>
+          </View>
+        </GlassCard>
+
+        {isAdmin && (
+          <GlassCard 
+            className="p-4 mb-6 flex-row justify-between items-center"
+            glowColor="red"
+          >
+            <View className="flex-row items-center flex-1 mr-3">
+              <Shield size={20} color="#EF4444" style={{ marginRight: 8 }} />
+              <View className="flex-1">
+                <Text className="text-white font-extrabold text-xs uppercase tracking-wide">ADMINISTRATOR CONTROL</Text>
+                <Text className="text-slate-400 text-[8px] uppercase font-bold mt-0.5">Manage Withdrawals & Games</Text>
+              </View>
+            </View>
+            <Pressable 
+              onPress={() => navigation.navigate('AdminTab')}
+              className="bg-red-600 rounded-xl px-4 py-2 border border-red-500"
+              style={({ pressed }) => [{
+                opacity: pressed ? 0.8 : 1,
+                shadowColor: '#ef4444',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.4,
+                shadowRadius: 4,
+                elevation: 2
+              }]}
+            >
+              <Text className="text-white font-extrabold text-xs uppercase tracking-wider">Enter</Text>
+            </Pressable>
+          </GlassCard>
+        )}
+
+        <GlassCard className="p-5 mb-6" glowColor="purple">
+          <Text className="text-white font-extrabold text-[10px] uppercase tracking-wider mb-4 px-0.5">Setup Gaming UIDs</Text>
+          
+          {successMsg !== '' && (
+            <View 
+              className="border rounded-xl p-3.5 mb-4 flex-row items-center"
+              style={{
+                backgroundColor: 'rgba(52, 211, 153, 0.08)',
+                borderColor: 'rgba(52, 211, 153, 0.35)',
+              }}
+            >
+              <CheckCircle2 size={16} color="#34D399" style={{ marginRight: 6 }} />
+              <Text className="text-emerald-400 text-xs font-bold">{successMsg}</Text>
+            </View>
+          )}
+
+          <Input
+            label="Free Fire Player ID / UID"
+            value={freeFire}
+            onChangeText={setFreeFire}
+            placeholder="E.g., 901844781"
+          />
+
+          <Button
+            title="Save Gaming UIDs"
+            onPress={handleUpdateUIDs}
+            loading={loading}
+            className="mt-2"
+          />
+        </GlassCard>
+
+        <GlassCard className="p-5 mb-6" glowColor="purple">
+          <Text className="text-white font-extrabold text-[10px] uppercase tracking-wider mb-4 px-0.5">App Interface Theme</Text>
+          <View className="flex-row justify-between bg-slate-950/60 border border-slate-900 rounded-xl p-1">
+            <Pressable 
+              onPress={() => setColorScheme('light')}
+              className={`flex-1 flex-row justify-center items-center py-2.5 rounded-lg ${
+                colorScheme === 'light' ? 'bg-white shadow-sm' : ''
+              }`}
+            >
+              <Sun size={15} color={colorScheme === 'light' ? '#7C3AED' : '#4B5563'} style={{ marginRight: 6 }} />
+              <Text className={`text-xs font-extrabold uppercase ${colorScheme === 'light' ? 'text-[#7C3AED]' : 'text-slate-400'}`}>Light</Text>
+            </Pressable>
+
+            <Pressable 
+              onPress={() => setColorScheme('dark')}
+              className={`flex-1 flex-row justify-center items-center py-2.5 rounded-lg ${
+                colorScheme === 'dark' ? 'bg-slate-800 shadow-sm' : ''
+              }`}
+              style={colorScheme === 'dark' ? {
+                shadowColor: '#C084FC',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 2
+              } : {}}
+            >
+              <Moon size={15} color={colorScheme === 'dark' ? '#C084FC' : '#4B5563'} style={{ marginRight: 6 }} />
+              <Text className={`text-xs font-extrabold uppercase ${colorScheme === 'dark' ? 'text-[#C084FC]' : 'text-slate-400'}`}>Dark</Text>
+            </Pressable>
+
+            <Pressable 
+              onPress={() => setColorScheme('system')}
+              className={`flex-1 flex-row justify-center items-center py-2.5 rounded-lg ${
+                colorScheme === 'system' ? (isDark ? 'bg-slate-800 shadow-sm' : 'bg-white shadow-sm') : ''
+              }`}
+              style={colorScheme === 'system' ? {
+                shadowColor: '#00E5FF',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 2
+              } : {}}
+            >
+              <Monitor size={15} color={colorScheme === 'system' ? '#00E5FF' : '#4B5563'} style={{ marginRight: 6 }} />
+              <Text className={`text-xs font-extrabold uppercase ${colorScheme === 'system' ? 'text-[#00E5FF]' : 'text-slate-400'}`}>System</Text>
+            </Pressable>
+          </View>
+        </GlassCard>
+
+        <GlassCard className="p-4 mb-6 flex-row justify-between items-center" glowColor="purple">
           <View className="flex-row items-center flex-1 mr-3">
-            <Shield size={20} color="#EF4444" style={{ marginRight: 8 }} />
+            <HelpCircle size={20} color="#00E5FF" style={{ marginRight: 8 }} />
             <View className="flex-1">
-              <Text className="text-slate-900 dark:text-white font-extrabold text-xs">ADMINISTRATOR CONTROL</Text>
-              <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold mt-0.5">Manage Withdrawals & Games</Text>
+              <Text className="text-white font-extrabold text-xs uppercase tracking-wide">HELP & TICKET SUPPORT</Text>
+              <Text className="text-slate-400 text-[8px] uppercase font-bold mt-0.5">Report bugs or payment errors</Text>
             </View>
           </View>
           <Pressable 
-            onPress={() => navigation.navigate('AdminTab')}
-            style={{ backgroundColor: '#dc2626', borderColor: '#ef4444', borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8 }}
+            onPress={() => navigation.navigate('Support')}
+            className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2"
+            style={({ pressed }) => [{
+              opacity: pressed ? 0.8 : 1,
+              borderColor: 'rgba(0, 229, 255, 0.3)',
+            }]}
           >
-            <Text className="text-white font-bold text-xs uppercase">Enter</Text>
+            <Text className="text-cyan-400 font-extrabold text-xs uppercase tracking-wider">Open</Text>
           </Pressable>
         </GlassCard>
-      )}
 
-      <GlassCard className="p-5 mb-6">
-        <Text className="text-slate-900 dark:text-white font-extrabold text-[10px] uppercase tracking-wider mb-4">Setup Gaming UIDs</Text>
-        
-        {successMsg !== '' && (
-          <View 
-            className="border rounded-xl p-3.5 mb-4 flex-row items-center"
-            style={{
-              backgroundColor: 'rgba(52, 211, 153, 0.1)',
-              borderColor: 'rgba(52, 211, 153, 0.2)',
-            }}
-          >
-            <CheckCircle2 size={16} color="#34D399" style={{ marginRight: 6 }} />
-            <Text className="text-emerald-500 dark:text-emerald-400 text-xs font-semibold">{successMsg}</Text>
-          </View>
-        )}
-
-        <Input
-          label="Free Fire Player ID / UID"
-          value={freeFire}
-          onChangeText={setFreeFire}
-          placeholder="E.g., 901844781"
-        />
-
-        <Button
-          title="Save Gaming UIDs"
-          onPress={handleUpdateUIDs}
-          loading={loading}
-          className="mt-2"
-        />
-      </GlassCard>
-
-      <GlassCard className="p-5 mb-6">
-        <Text className="text-slate-900 dark:text-white font-extrabold text-[10px] uppercase tracking-wider mb-4">App Interface Theme</Text>
-        <View className="flex-row justify-between bg-slate-100 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/40 rounded-xl p-1">
-          <Pressable 
-            onPress={() => setColorScheme('light')}
-            className={`flex-1 flex-row justify-center items-center py-2.5 rounded-lg ${
-              colorScheme === 'light' ? 'bg-white shadow-sm' : ''
-            }`}
-          >
-            <Sun size={15} color={colorScheme === 'light' ? '#7C3AED' : '#94A3B8'} style={{ marginRight: 6 }} />
-            <Text className={`text-xs font-bold ${colorScheme === 'light' ? 'text-[#7C3AED]' : 'text-slate-500 dark:text-slate-400'}`}>Light</Text>
-          </Pressable>
-
-          <Pressable 
-            onPress={() => setColorScheme('dark')}
-            className={`flex-1 flex-row justify-center items-center py-2.5 rounded-lg ${
-              colorScheme === 'dark' ? 'bg-slate-800 shadow-sm' : ''
-            }`}
-          >
-            <Moon size={15} color={colorScheme === 'dark' ? '#C084FC' : '#94A3B8'} style={{ marginRight: 6 }} />
-            <Text className={`text-xs font-bold ${colorScheme === 'dark' ? 'text-[#C084FC]' : 'text-slate-500 dark:text-slate-400'}`}>Dark</Text>
-          </Pressable>
-
-          <Pressable 
-            onPress={() => setColorScheme('system')}
-            className={`flex-1 flex-row justify-center items-center py-2.5 rounded-lg ${
-              colorScheme === 'system' ? (isDark ? 'bg-slate-800 shadow-sm' : 'bg-white shadow-sm') : ''
-            }`}
-          >
-            <Monitor size={15} color={colorScheme === 'system' ? '#7C3AED' : '#94A3B8'} style={{ marginRight: 6 }} />
-            <Text className={`text-xs font-bold ${colorScheme === 'system' ? 'text-[#7C3AED]' : 'text-slate-500 dark:text-slate-400'}`}>System</Text>
-          </Pressable>
-        </View>
-      </GlassCard>
-
-      <GlassCard className="p-4 mb-6 flex-row justify-between items-center">
-        <View className="flex-row items-center flex-1 mr-3">
-          <HelpCircle size={20} color={isDark ? '#94A3B8' : '#64748B'} style={{ marginRight: 8 }} />
-          <View className="flex-1">
-            <Text className="text-slate-900 dark:text-white font-extrabold text-xs">HELP & TICKET SUPPORT</Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-[8px] uppercase font-bold mt-0.5">Report bugs or payment errors</Text>
-          </View>
-        </View>
         <Pressable 
-          onPress={() => navigation.navigate('Support')}
-          style={{ backgroundColor: isDark ? '#1e293b' : '#e2e8f0', borderColor: isDark ? '#334155' : '#cbd5e1', borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8 }}
+          onPress={handleLogoutPress}
+          className="border rounded-xl py-3.5 flex-row justify-center items-center mb-8"
+          style={({ pressed }) => [{
+            opacity: pressed ? 0.85 : 1,
+            borderColor: 'rgba(244, 63, 94, 0.4)',
+            backgroundColor: 'rgba(244, 63, 94, 0.08)',
+          }]}
         >
-          <Text className="text-slate-700 dark:text-slate-300 font-bold text-xs uppercase">Open</Text>
+          <LogOut size={16} color="#F43F5E" style={{ marginRight: 6 }} />
+          <Text className="text-rose-400 font-extrabold text-xs uppercase tracking-wider">Disconnect Session</Text>
         </Pressable>
-      </GlassCard>
-
-      <Pressable 
-        onPress={handleLogoutPress}
-        className="border rounded-xl py-3.5 flex-row justify-center items-center mb-8"
-        style={{
-          borderColor: isDark ? 'rgba(239, 68, 68, 0.35)' : 'rgba(239, 68, 68, 0.25)',
-          backgroundColor: isDark ? 'rgba(69, 10, 10, 0.1)' : 'rgba(254, 242, 242, 0.7)',
-        }}
-      >
-        <LogOut size={16} color="#EF4444" style={{ marginRight: 6 }} />
-        <Text className="text-red-500 dark:text-red-400 font-bold text-xs uppercase tracking-wider">Disconnect Session</Text>
-      </Pressable>
-    </ScrollView>
+      </ScrollView>
+    </LinearGradient>
   );
 }
