@@ -7,11 +7,12 @@ import GlassCard from '../../components/ui/GlassCard';
 
 export default function ForgotPasswordScreen({ navigation }) {
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
+  const [otp, setOtp] = useState(''); // Serves as the reset token input
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1); // 1 = Request OTP, 2 = Verify OTP & Reset Password
+  const [step, setStep] = useState(1); // 1 = Request Link/Token, 2 = Verify & Reset Password
   const [error, setError] = useState('');
+  const [devResetToken, setDevResetToken] = useState('');
 
   const handleRequestOTP = async () => {
     setError('');
@@ -27,7 +28,10 @@ export default function ForgotPasswordScreen({ navigation }) {
         body: JSON.stringify({ email })
       });
       if (res.success) {
-        Alert.alert('OTP Sent 📧', 'A password reset OTP has been sent to your email.');
+        Alert.alert('Link Sent 📧', "If that email is registered, we've sent a password reset link.");
+        if (res.data?.tokenValue) {
+          setDevResetToken(res.data.tokenValue);
+        }
         setStep(2);
       }
     } catch (err) {
@@ -40,20 +44,21 @@ export default function ForgotPasswordScreen({ navigation }) {
   const handleResetPassword = async () => {
     setError('');
     if (!otp || !newPassword) {
-      setError('OTP and new password are required.');
+      setError('Reset token and new password are required.');
       return;
     }
 
     setLoading(true);
     try {
-      // Endpoint mapping for custom password reset with OTP
-      const res = await request('/auth/verify-otp', {
+      const res = await request('/auth/reset-password', {
         method: 'POST',
-        body: JSON.stringify({ email, otp, newPassword })
+        body: JSON.stringify({ email, token: otp.trim(), newPassword })
       });
-      Alert.alert('Success 🎉', 'Password reset completed successfully! Please login with your new credentials.', [
-        { text: 'OK', onPress: () => navigation.navigate('Login') }
-      ]);
+      if (res.success) {
+        Alert.alert('Success 🎉', 'Password reset completed successfully! Please login with your new credentials.', [
+          { text: 'OK', onPress: () => navigation.navigate('Login') }
+        ]);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -85,7 +90,7 @@ export default function ForgotPasswordScreen({ navigation }) {
         {step === 1 ? (
           <>
             <Text className="text-slate-600 dark:text-slate-400 text-xs mb-6 text-center leading-relaxed">
-              Enter your registered email address below. We will send you an OTP to verify your identity and reset your password.
+              Enter your registered email address below. We will send you a secure link and reset token to reset your password.
             </Text>
             
             <Input
@@ -97,7 +102,7 @@ export default function ForgotPasswordScreen({ navigation }) {
             />
 
             <Button
-              title="Send Verification OTP"
+              title="Send Reset Link"
               onPress={handleRequestOTP}
               loading={loading}
               className="mt-2"
@@ -105,17 +110,28 @@ export default function ForgotPasswordScreen({ navigation }) {
           </>
         ) : (
           <>
-            <Text className="text-slate-600 dark:text-slate-400 text-xs mb-6 text-center leading-relaxed">
-              We have sent an OTP to <Text className="text-slate-900 dark:text-white font-bold">{email}</Text>. Enter the OTP and your new password below.
+            <Text className="text-slate-650 dark:text-slate-400 text-xs mb-6 text-center leading-relaxed">
+              We have sent a reset link containing a token to <Text className="text-slate-900 dark:text-white font-bold">{email}</Text>. Copy the token from that link and enter it below.
             </Text>
 
             <Input
-              label="OTP Code"
+              label="Reset Token"
               value={otp}
               onChangeText={setOtp}
-              placeholder="Enter 6-digit OTP"
-              keyboardType="number-pad"
+              placeholder="Enter recovery token"
             />
+
+            {/* Development Helper Badge */}
+            {devResetToken !== '' && (
+              <Pressable 
+                onPress={() => setOtp(devResetToken)}
+                className="mb-4 items-center flex-row justify-center bg-amber-500/10 border border-amber-500/20 rounded-xl p-3"
+              >
+                <Text className="text-amber-600 dark:text-amber-400 text-xs font-bold text-center">
+                  🛠️ Dev Auto-fill Token: <Text className="underline font-mono text-[10px]">{devResetToken.substring(0, 10)}...</Text>
+                </Text>
+              </Pressable>
+            )}
 
             <Input
               label="New Password"
@@ -133,10 +149,14 @@ export default function ForgotPasswordScreen({ navigation }) {
             />
 
             <Pressable 
-              onPress={() => setStep(1)}
+              onPress={() => {
+                setStep(1);
+                setOtp('');
+                setDevResetToken('');
+              }}
               className="mt-4 self-center"
             >
-              <Text className="text-slate-600 dark:text-slate-400 font-semibold text-xs underline">Resend OTP / Back</Text>
+              <Text className="text-slate-600 dark:text-slate-400 font-semibold text-xs underline">Resend Token / Back</Text>
             </Pressable>
           </>
         )}

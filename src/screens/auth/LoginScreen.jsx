@@ -53,9 +53,19 @@ export default function LoginScreen({ navigation }) {
               borderColor: 'rgba(239, 68, 68, 0.2)',
             }}
           >
-            <Text className="text-red-600 dark:text-red-400 text-xs font-semibold text-center">
+            <Text className="text-red-650 dark:text-red-400 text-xs font-semibold text-center">
               {localError || authError}
             </Text>
+            {((localError || authError || '').toLowerCase().includes('verify your email')) && (
+              <Pressable 
+                onPress={() => navigation.navigate('VerifyEmail', { email })}
+                className="mt-2 py-2 items-center bg-cyan-500/10 border border-cyan-500/20 rounded-lg"
+              >
+                <Text className="text-[#06B6D4] text-[10px] font-bold uppercase tracking-widest">
+                  ⚡ Click here to verify email
+                </Text>
+              </Pressable>
+            )}
           </View>
         )}
 

@@ -49,6 +49,40 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const verifyEmailOtp = async (email, otp) => {
+    setAuthError('');
+    try {
+      const res = await request('/auth/verify-email-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp })
+      });
+      
+      if (res.success) {
+        await saveTokens(res.data.accessToken, res.data.refreshToken);
+        setUser(res.data.user);
+        initiateSocketConnection(res.data.user.id);
+        return res.data;
+      }
+    } catch (err) {
+      setAuthError(err.message);
+      throw err;
+    }
+  };
+
+  const resendVerificationOtp = async (email) => {
+    setAuthError('');
+    try {
+      const res = await request('/auth/resend-verification-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+      });
+      return res;
+    } catch (err) {
+      setAuthError(err.message);
+      throw err;
+    }
+  };
+
   const logout = async () => {
     await clearTokens();
     disconnectSocket();
@@ -86,6 +120,8 @@ export const AuthProvider = ({ children }) => {
       setAuthError,
       login,
       register,
+      verifyEmailOtp,
+      resendVerificationOtp,
       logout,
       verifySession
     }}>

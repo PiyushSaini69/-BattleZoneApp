@@ -28,9 +28,19 @@ export default function RegisterScreen({ navigation }) {
     try {
       const res = await register(username, email, password, phone, referralCode);
       if (res.success) {
-        Alert.alert('Success 🎉', 'Registration completed successfully! Please login to your account.', [
-          { text: 'OK', onPress: () => navigation.navigate('Login') }
-        ]);
+        Alert.alert(
+          'Verification Sent 📧', 
+          'A secure verification code has been sent to your email. Please verify your account to activate it.',
+          [
+            { 
+              text: 'Verify Now', 
+              onPress: () => navigation.navigate('VerifyEmail', { 
+                email: email, 
+                devOtp: res.data?.otpValue || '' 
+              }) 
+            }
+          ]
+        );
       }
     } catch (err) {
       console.log('Registration error details:', err.message);
