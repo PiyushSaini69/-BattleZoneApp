@@ -31,13 +31,18 @@ const reversedClientId = googleClientId.split('.').reverse().join('.');
 
 module.exports = {
   expo: {
-    name: "BattleZoneMobile",
-    slug: "BattleZoneMobile",
+    name: "Battle Zone",
+    slug: "battle-zone",
     scheme: "battlezone",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/icon.png",
+    icon: "./assets/logo.png",
     userInterfaceStyle: "automatic",
+    splash: {
+      image: "./assets/logo.png",
+      resizeMode: "contain",
+      backgroundColor: "#060A13"
+    },
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.battlezone.mobile"
@@ -45,8 +50,8 @@ module.exports = {
     android: {
       package: "com.battlezone.mobile",
       adaptiveIcon: {
-        backgroundColor: "#E6F4FE",
-        foregroundImage: "./assets/android-icon-foreground.png",
+        backgroundColor: "#060A13",
+        foregroundImage: "./assets/logo.png",
         backgroundImage: "./assets/android-icon-background.png",
         monochromeImage: "./assets/android-icon-monochrome.png"
       }
