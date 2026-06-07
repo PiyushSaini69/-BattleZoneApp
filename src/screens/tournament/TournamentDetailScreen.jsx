@@ -53,13 +53,269 @@ const formatDate = (dateStr) => {
 const getGameBannerSource = (item) => {
   if (item.game === 'free_fire') {
     if (item.gameMode === 'clash_squad') {
+      const banner = item.bannerImage || '';
+      const format = item.format || '';
+      const rule = item.mode || '';
+      const isOneTap = banner.includes('onetap') || rule === 'onetap';
+      const isHS = banner.includes('headshot') || rule === 'headshot';
+      if (banner.includes('1v1') || format === '1v1' || item.tournamentType === 'solo') {
+        if (isOneTap) return require('../../../assets/cs_1v1_onetap.jpg');
+        if (isHS) return require('../../../assets/cs_1v1_headshot.jpg');
+        return require('../../../assets/cs_1v1_normal.jpg');
+      }
+      if (banner.includes('2v2') || format === '2v2' || item.tournamentType === 'duo') {
+        if (isOneTap) return require('../../../assets/cs_2v2_onetap.jpg');
+        if (isHS) return require('../../../assets/cs_2v2_headshot.jpg');
+        return require('../../../assets/cs_2v2_normal.jpg');
+      }
+      if (banner.includes('4v4') || format === '4v4' || item.tournamentType === 'squad') {
+        if (isOneTap) return require('../../../assets/cs_4v4_onetap.jpg');
+        if (isHS) return require('../../../assets/cs_4v4_headshot.jpg');
+        return require('../../../assets/cs_4v4_normal.jpg');
+      }
       return require('../../../assets/clash_squad.jpg');
     } else if (item.gameMode === 'lone_wolf') {
-      return require('../../../assets/lone_wolf.jpg');
+      const banner = item.bannerImage || '';
+      const format = item.format || '';
+      const rule = item.mode || '';
+      if (banner.includes('2v2') || format === '2v2' || item.tournamentType === 'duo') {
+        if (banner.includes('headshot') || banner.includes('onetap') || rule === 'headshot' || rule === 'onetap') {
+          return require('../../../assets/lw_2v2_headshot.jpg');
+        }
+        return require('../../../assets/lw_2v2_normal.jpg');
+      }
+      if (banner.includes('headshot') || banner.includes('onetap') || rule === 'headshot' || rule === 'onetap') {
+        return require('../../../assets/lw_1v1_headshot.jpg');
+      }
+      return require('../../../assets/lw_1v1_normal.jpg');
+    } else if (item.gameMode === 'battle_royale') {
+      const banner = item.bannerImage || '';
+      if (banner.includes('squad') || item.tournamentType === 'squad') {
+        return require('../../../assets/br_squad.jpg');
+      }
+      if (banner.includes('duo') || item.tournamentType === 'duo') {
+        return require('../../../assets/br_duo.jpg');
+      }
+      if (banner.includes('solo') || item.tournamentType === 'solo') {
+        return require('../../../assets/br_solo.jpg');
+      }
     }
     return require('../../../assets/free_fire_banner.jpg');
   }
   return { uri: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=300' };
+};
+
+const getBRDescription = (tournamentType) => {
+  if (tournamentType === 'duo') {
+    return [
+      'Room ID & Password will be shared 10–15 minutes before the match starts ⏳',
+      'All match details, updates & announcements will be provided only in the Battle Zone app 📲',
+      'Players must join on time, late entry may not be allowed ⚠️',
+      'Stable internet connection is required before starting the match 🌐',
+      '🏁 Match result will be updated within 30 minutes after match completion',
+    ];
+  }
+  if (tournamentType === 'squad') {
+    return [
+      'Room ID & Password will be shared 10–15 minutes before the match starts ⏳',
+      'All match details, updates & announcements will be provided only in the Battle Zone app 📲',
+      'Squad leaders are responsible for their team entry ⚠️',
+      'Players must join on time, late entry may not be allowed 🌐',
+      'Stable internet connection is required before starting the match 📶',
+      '🏁 Match result will be updated within 30 minutes after match completion',
+    ];
+  }
+  // solo (default)
+  return [
+    'Room ID & Password will be shared 10–15 minutes before the match starts ⏳',
+    'All match details, updates & announcements will be provided only in the Battle Zone app 📲',
+    'Players must join on time, late entry may not be allowed ⚠️',
+    'Stable internet connection is required before starting the match 🌐',
+    '🏁 Match result will be updated within 30 minutes after match completion',
+  ];
+};
+
+const getBRRules = (tournamentType) => {
+  if (tournamentType === 'duo') {
+    return {
+      rules: [
+        '❌ No Aim Bot, Hacks, Scripts or any unfair tools allowed',
+        '❌ PC players are strictly not allowed in any match',
+        '📱 Only Smartphone & Tablet users are eligible to participate',
+        '🎯 Only players with Level 40+ are allowed to participate',
+        '🔄 Players are not allowed to use revive machines',
+        '🚫 Players are not allowed to use reviving points',
+        '🎯 Headshot rate should not exceed 70%',
+        '🚫 If any player is found using hacks or cheats, their payment will be cancelled without warning',
+        '⚖️ Decision of Battle Zone management will be final in all cases',
+      ],
+      fairPlay: 'We believe in pure skill-based competition only ⚔️\nPlay fair, respect rules and enjoy the game 🏆',
+    };
+  }
+  if (tournamentType === 'squad') {
+    return {
+      rules: [
+        '❌ No Aim Bot, Hacks, Scripts or any unfair tools allowed',
+        '❌ PC players are strictly not allowed in any match',
+        '📱 Only Smartphone & Tablet users are eligible to participate',
+        '🎯 Only players with Level 40+ are allowed to participate',
+        '🔄 Players are not allowed to use revive machines',
+        '🚫 Players are not allowed to use reviving points',
+        '🎯 Headshot rate should not exceed 70%',
+        '🚫 If any player is found using hacks or cheats, the entire squad payment will be cancelled without warning',
+        '⚖️ Decision of Battle Zone management will be final in all cases',
+      ],
+      fairPlay: 'We believe in pure skill-based squad competition only ⚔️\nPlay fair, respect rules and enjoy the game 🏆',
+    };
+  }
+  // solo (default)
+  return {
+    rules: [
+      '❌ No Aim Bot, Hacks, Scripts or any unfair tools allowed',
+      '❌ PC players are strictly not allowed in any match',
+      '📱 Only Smartphone & Tablet users are eligible to participate',
+      '🎯 Only players with Level 40+ are allowed to participate',
+      '🎯 Headshot rate should not exceed 70%',
+      '🚫 In SOLO mode, Dimetri (Dimitri) character is not allowed to use',
+      '🚫 If any player is found using hacks or cheats, their payment will be cancelled without warning',
+      '⚖️ Decision of Battle Zone management will be final in all cases',
+    ],
+    fairPlay: 'We believe in pure skill-based competition only ⚔️\nPlay fair, respect rules and enjoy the game 🏆',
+  };
+};
+
+const getCSNormalDescription = (format) => {
+  if (format === '4v4') {
+    return [
+      'Room ID & Password will be shared 10–15 minutes before the match starts ⏳',
+      'All match details, updates & announcements will be provided only in the Battle Zone app 📲',
+      'Squad leaders are responsible for their team entry ⚠️',
+      'Players must join on time, late entry will not be allowed 🌐',
+      'Stable internet connection is required before starting the match 📶',
+      '🏁 Match result will be updated within 30 minutes after match completion',
+    ];
+  }
+  // 1v1 and 2v2 description
+  return [
+    'Room ID & Password will be shared 10–15 minutes before the match starts ⏳',
+    'All match details, updates & announcements will be provided only in the Battle Zone app 📲',
+    'Players must join on time, late entry will not be allowed ⚠️',
+    'Stable internet connection is required before starting the match 🌐',
+    '🏁 Match result will be updated within 30 minutes after match completion',
+  ];
+};
+
+const getCSNormalRules = (format) => {
+  const commonRules = [
+    '❌ No Aim Bot, Hacks, Scripts or any unfair tools allowed',
+    '❌ PC players are strictly not allowed in any match',
+    '📱 Only Smartphone & Tablet users are eligible to participate',
+    '🎯 Only players with Level 40+ are allowed to participate',
+    '🚫 Any player found using hacks or cheats will be disqualified and no payment will be given',
+    '⚖️ Decision of Battle Zone management will be final in all cases',
+  ];
+
+  if (format === '2v2') {
+    return {
+      rules: commonRules,
+      fairPlay: 'This is a pure skill-based 2 vs 2 competition ⚔️\nRespect rules and enjoy fair gaming 🏆',
+    };
+  }
+  if (format === '4v4') {
+    return {
+      rules: commonRules,
+      fairPlay: 'This is a pure skill-based 4 vs 4 competition ⚔️\nRespect rules and enjoy fair gaming 🏆',
+    };
+  }
+  // Default to 1v1
+  return {
+    rules: commonRules,
+    fairPlay: 'This is a pure skill-based 1v1 competition ⚔️\nRespect rules and enjoy fair gaming 🏆',
+  };
+};
+
+const getCSSpecialDescription = (format) => {
+  return [
+    'Room ID & Password will be shared 10–15 minutes before the match starts ⏳',
+    'All match details, updates & announcements will be provided only in the Battle Zone app 📲',
+    'Players must join on time, late entry will not be allowed ⚠️',
+    'A stable internet connection is required before starting the match 🌐',
+    '🏁 Match results will be updated within 30 minutes after match completion',
+  ];
+};
+
+const getCSSpecialRules = (format, mode) => {
+  const isOneTap = mode === 'onetap';
+  const matchTypeLine = isOneTap ? '🎯 This is a One Tap Match' : '🎯 This is an Only Headshot Match';
+  
+  const rules = [
+    '❌ No Aim Bot, Hacks, Scripts, or any unfair tools allowed',
+    '❌ PC players are strictly not allowed in any match',
+    '📱 Only Smartphone & Tablet users are eligible to participate',
+    '🎯 Only players with Level 40+ are allowed to participate',
+    matchTypeLine,
+  ];
+
+  if (format === '1v1') {
+    rules.push('🚫 Character skills will be OFF');
+    rules.push('🚫 Loadout system will be OFF');
+  } else {
+    rules.push('🚫 Loadout system will be OFF');
+    rules.push('🚫 Character skills will be ON');
+  }
+
+  rules.push('🚫 Any player found using hacks or cheats will be disqualified and no payment will be given');
+  rules.push('⚖️ The decision of Battle Zone management will be final in all cases');
+
+  let fairPlay = '';
+  if (format === '1v1') {
+    fairPlay = `This is a pure skill-based 1 vs 1 ${isOneTap ? 'onetap' : 'headshot'} competition ⚔️\nRespect the rules and enjoy fair gaming 🏆`;
+  } else if (format === '2v2') {
+    fairPlay = `This is a pure skill-based 2 vs 2 ${isOneTap ? 'onetap' : 'headshot'} competition ⚔️\nRespect the rules and enjoy fair gaming 🏆`;
+  } else {
+    fairPlay = `This is a pure skill-based 4 vs 4 ${isOneTap ? 'onetap' : 'headshot'} competition ⚔️\nRespect the rules and enjoy fair gaming 🏆`;
+  }
+
+  return { rules, fairPlay };
+};
+
+const getLWDescription = (format) => {
+  return [
+    'Room ID & Password will be shared 10–15 minutes before the match starts ⏳',
+    'All match details, updates & announcements will be provided only in the Battle Zone app 📲',
+    'Players must join on time, late entry will not be allowed ⚠️',
+    'A stable internet connection is required before starting the match 🌐',
+    '🏁 Match results will be updated within 30 minutes after match completion',
+  ];
+};
+
+const getLWRules = (format, mode) => {
+  const isHeadshot = mode === 'headshot';
+  const isOneTap = mode === 'onetap';
+  const fmtLabel = format === '2v2' ? '2 vs 2' : '1 vs 1';
+
+  const rules = [
+    '❌ No Aim Bot, Hacks, Scripts, or any unfair tools allowed',
+    '❌ PC players are strictly not allowed in any match',
+    '📱 Only Smartphone & Tablet users are eligible to participate',
+    '🎯 Only players with Level 40+ are allowed to participate',
+  ];
+
+  if (isHeadshot) {
+    rules.push('🎯 This is an Only Headshot Match');
+    rules.push('🚫 Loadout system will be OFF');
+  } else if (isOneTap) {
+    rules.push('🎯 This is a One Tap Match');
+    rules.push('🚫 Loadout system will be OFF');
+  }
+
+  rules.push('🚫 Character skills will be ON');
+  rules.push('🚫 Any player found using hacks or cheats will be disqualified and no payment will be given');
+  rules.push('⚖️ The decision of Battle Zone management will be final in all cases');
+
+  const fairPlay = `This is a pure skill-based Lone Wolf ${fmtLabel} competition ⚔️\nRespect rules and enjoy fair gaming 🏆`;
+
+  return { rules, fairPlay };
 };
 
 export default function TournamentDetailScreen({ route, navigation }) {
@@ -343,17 +599,117 @@ export default function TournamentDetailScreen({ route, navigation }) {
               {/* Match description */}
               <Text className="text-slate-500 dark:text-slate-400 font-black text-xs uppercase tracking-wide mb-1.5 px-0.5">Match Information</Text>
               <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-                <Text className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed mb-3">
-                  {tournament.description || 'Welcome to BattleZone custom matches lobby.'}
-                </Text>
+                {tournament.gameMode === 'battle_royale' ? (
+                  <>
+                    {/* BR Description */}
+                    <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📋 Description:</Text>
+                    {getBRDescription(tournament.tournamentType).map((line, idx) => (
+                      <Text key={`desc-${idx}`} className="text-slate-600 dark:text-slate-300 text-xs mb-1.5 leading-relaxed">• {line}</Text>
+                    ))}
 
-                <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">Rules & Restrictions:</Text>
-                {tournament.rules && tournament.rules.length > 0 ? (
-                  tournament.rules.map((rule, idx) => (
-                    <Text key={idx} className="text-slate-500 text-xs mb-1.5">• {rule}</Text>
-                  ))
+                    {/* BR Rules */}
+                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                      <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📜 Rules & Restrictions:</Text>
+                      {getBRRules(tournament.tournamentType).rules.map((rule, idx) => (
+                        <Text key={`rule-${idx}`} className="text-slate-500 text-xs mb-1.5">{rule}</Text>
+                      ))}
+                    </View>
+
+                    {/* Fair Play Notice */}
+                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 bg-amber-50 dark:bg-amber-500/5 rounded-lg p-3">
+                      <Text className="text-amber-600 dark:text-amber-400 font-extrabold text-xs mb-1">💡 FAIR PLAY NOTICE:</Text>
+                      <Text className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+                        {getBRRules(tournament.tournamentType).fairPlay}
+                      </Text>
+                    </View>
+                  </>
+                ) : tournament.gameMode === 'clash_squad' && (tournament.mode === 'normal' || !tournament.mode) ? (
+                  <>
+                    {/* CS Normal Description */}
+                    <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📋 Description:</Text>
+                    {getCSNormalDescription(tournament.format).map((line, idx) => (
+                      <Text key={`desc-${idx}`} className="text-slate-600 dark:text-slate-300 text-xs mb-1.5 leading-relaxed">• {line}</Text>
+                    ))}
+
+                    {/* CS Normal Rules */}
+                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                      <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📜 Rules & Restrictions:</Text>
+                      {getCSNormalRules(tournament.format).rules.map((rule, idx) => (
+                        <Text key={`rule-${idx}`} className="text-slate-500 text-xs mb-1.5">{rule}</Text>
+                      ))}
+                    </View>
+
+                    {/* Fair Play Notice */}
+                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 bg-amber-50 dark:bg-amber-500/5 rounded-lg p-3">
+                      <Text className="text-amber-600 dark:text-amber-400 font-extrabold text-xs mb-1">💡 FAIR PLAY NOTICE:</Text>
+                      <Text className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+                        {getCSNormalRules(tournament.format).fairPlay}
+                      </Text>
+                    </View>
+                  </>
+                ) : tournament.gameMode === 'clash_squad' && (tournament.mode === 'headshot' || tournament.mode === 'onetap') ? (
+                  <>
+                    {/* CS Special (Headshot/Onetap) Description */}
+                    <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📋 Description:</Text>
+                    {getCSSpecialDescription(tournament.format).map((line, idx) => (
+                      <Text key={`desc-${idx}`} className="text-slate-600 dark:text-slate-300 text-xs mb-1.5 leading-relaxed">• {line}</Text>
+                    ))}
+
+                    {/* CS Special (Headshot/Onetap) Rules */}
+                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                      <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📜 Rules & Restrictions:</Text>
+                      {getCSSpecialRules(tournament.format, tournament.mode).rules.map((rule, idx) => (
+                        <Text key={`rule-${idx}`} className="text-slate-500 text-xs mb-1.5">{rule}</Text>
+                      ))}
+                    </View>
+
+                    {/* Fair Play Notice */}
+                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 bg-amber-50 dark:bg-amber-500/5 rounded-lg p-3">
+                      <Text className="text-amber-600 dark:text-amber-400 font-extrabold text-xs mb-1">💡 FAIR PLAY NOTICE:</Text>
+                      <Text className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+                        {getCSSpecialRules(tournament.format, tournament.mode).fairPlay}
+                      </Text>
+                    </View>
+                  </>
+                ) : tournament.gameMode === 'lone_wolf' ? (
+                  <>
+                    {/* Lone Wolf Description */}
+                    <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📋 Description:</Text>
+                    {getLWDescription(tournament.format).map((line, idx) => (
+                      <Text key={`desc-${idx}`} className="text-slate-600 dark:text-slate-300 text-xs mb-1.5 leading-relaxed">• {line}</Text>
+                    ))}
+
+                    {/* Lone Wolf Rules */}
+                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                      <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📜 Rules & Restrictions:</Text>
+                      {getLWRules(tournament.format, tournament.mode).rules.map((rule, idx) => (
+                        <Text key={`rule-${idx}`} className="text-slate-500 text-xs mb-1.5">{rule}</Text>
+                      ))}
+                    </View>
+
+                    {/* Fair Play Notice */}
+                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 bg-amber-50 dark:bg-amber-500/5 rounded-lg p-3">
+                      <Text className="text-amber-600 dark:text-amber-400 font-extrabold text-xs mb-1">💡 FAIR PLAY NOTICE:</Text>
+                      <Text className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+                        {getLWRules(tournament.format, tournament.mode).fairPlay}
+                      </Text>
+                    </View>
+                  </>
                 ) : (
-                  <Text className="text-slate-500 text-xs">• Normal Free Fire custom match rules govern play.</Text>
+                  <>
+                    <Text className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed mb-3">
+                      {tournament.description || 'Welcome to BattleZone custom matches lobby.'}
+                    </Text>
+
+                    <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">Rules & Restrictions:</Text>
+                    {tournament.rules && tournament.rules.length > 0 ? (
+                      tournament.rules.map((rule, idx) => (
+                        <Text key={idx} className="text-slate-500 text-xs mb-1.5">• {rule}</Text>
+                      ))
+                    ) : (
+                      <Text className="text-slate-500 text-xs">• Normal Free Fire custom match rules govern play.</Text>
+                    )}
+                  </>
                 )}
               </View>
 

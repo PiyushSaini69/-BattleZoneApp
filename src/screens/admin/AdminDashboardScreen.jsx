@@ -7,6 +7,24 @@ import Badge from '../../components/ui/Badge';
 import { Plus, ArrowLeft, Check, X, Search, Trash2, ShieldAlert, Award, UserPlus, CreditCard, DollarSign, Activity } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle, Text as SvgText } from 'react-native-svg';
+
+const GoldCoin = ({ size = 14 }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24">
+    <Circle cx="12" cy="12" r="10" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5" />
+    <Circle cx="12" cy="12" r="7" fill="none" stroke="#FEF08A" strokeWidth="1" strokeDasharray="2 1" />
+    <SvgText
+      x="12"
+      y="15.5"
+      fontSize="10"
+      fontWeight="900"
+      fill="#FEF08A"
+      textAnchor="middle"
+    >
+      C
+    </SvgText>
+  </Svg>
+);
 
 export default function AdminDashboardScreen({ navigation }) {
   const { colorScheme } = useColorScheme();
@@ -53,7 +71,7 @@ export default function AdminDashboardScreen({ navigation }) {
       const statsRes = await request('/admin/dashboard');
       if (statsRes.success) setStats(statsRes.data);
 
-      const tourneysRes = await request('/tournaments');
+      const tourneysRes = await request('/tournaments?includeDrafts=true');
       if (tourneysRes.success) setTournaments(tourneysRes.data.tournaments);
 
       const wdRes = await request('/admin/withdrawals');
@@ -307,7 +325,6 @@ export default function AdminDashboardScreen({ navigation }) {
             { id: 'stats', label: 'Dashboard' },
             { id: 'matches', label: 'Lobbies' },
             { id: 'brackets', label: 'Brackets' },
-            { id: 'users', label: 'Users' },
             { id: 'payouts', label: 'Payouts' }
           ].map(tab => (
             <Pressable
@@ -346,8 +363,11 @@ export default function AdminDashboardScreen({ navigation }) {
             <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-widest px-0.5 mb-2">Platform Lobbies</Text>
             
             <View className="flex-row justify-between mb-4" style={{ gap: 8 }}>
-              <GlassCard className="flex-1 p-3.5 items-center" glowColor="red">
-                <Text className="text-slate-950 dark:text-white text-base font-black">{stats?.revenue?.total || 0}</Text>
+              <GlassCard className="flex-1 p-3.5 items-center justify-center" glowColor="red">
+                <View className="flex-row items-center" style={{ gap: 4 }}>
+                  <GoldCoin size={14} />
+                  <Text className="text-slate-950 dark:text-white text-base font-black">{stats?.revenue?.total || 0}</Text>
+                </View>
                 <Text className="text-slate-500 text-[8px] uppercase font-bold text-center mt-1">Revenue</Text>
               </GlassCard>
               <GlassCard className="flex-1 p-3.5 items-center" glowColor="red">
@@ -399,8 +419,16 @@ export default function AdminDashboardScreen({ navigation }) {
                   </View>
 
                   <View className="grid grid-cols-2 flex-row flex-wrap border-t border-slate-200 dark:border-slate-800 pt-3 mt-1 pb-2" style={{ gap: 8 }}>
-                    <Text className="text-slate-500 text-[10px] w-[45%]">Fee: <Text className="text-slate-950 dark:text-white font-bold">₹{t.entryFee}</Text></Text>
-                    <Text className="text-slate-500 text-[10px] w-[45%]">Pool: <Text className="text-emerald-500 font-bold">₹{t.prizePool}</Text></Text>
+                    <View className="flex-row items-center w-[45%]">
+                      <Text className="text-slate-500 text-[10px] mr-1">Fee:</Text>
+                      <GoldCoin size={10} />
+                      <Text className="text-slate-950 dark:text-white font-bold text-[10px] ml-0.5">{t.entryFee}</Text>
+                    </View>
+                    <View className="flex-row items-center w-[45%]">
+                      <Text className="text-slate-500 text-[10px] mr-1">Pool:</Text>
+                      <GoldCoin size={10} />
+                      <Text className="text-emerald-500 font-bold text-[10px] ml-0.5">{t.prizePool}</Text>
+                    </View>
                     <Text className="text-slate-500 text-[10px] w-[45%]">Slots: <Text className="text-slate-950 dark:text-white font-bold">{t.filledSlots} / {t.totalSlots}</Text></Text>
                     <Text className="text-slate-500 text-[9px] w-[45%] truncate text-right">Map: {t.mapType || 'CS Arena'}</Text>
                   </View>
@@ -522,65 +550,7 @@ export default function AdminDashboardScreen({ navigation }) {
           </View>
         )}
 
-        {/* VIEW 4: USERS */}
-        {activeTab === 'users' && (
-          <View className="space-y-4">
-            <TextInput
-              placeholder="Search user email or username..."
-              value={userSearch}
-              onChangeText={setUserSearch}
-              placeholderTextColor="#64748B"
-              className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white text-xs bg-slate-100/50 dark:bg-slate-950/40 mb-3"
-            />
 
-            {users.length === 0 ? (
-              <GlassCard className="py-12 items-center"><Text className="text-slate-500 text-xs font-semibold">No users match query.</Text></GlassCard>
-            ) : (
-              users.map((user) => (
-                <GlassCard key={user._id} className="p-4 mb-4" glowColor="red">
-                  <View className="flex-row justify-between items-start border-b border-slate-200 dark:border-slate-800 pb-2 mb-2">
-                    <View className="flex-1">
-                      <Text className="text-slate-950 dark:text-white font-bold text-sm">{user.username}</Text>
-                      <Text className="text-slate-500 text-[10px] mt-0.5">{user.email}</Text>
-                    </View>
-                    <Badge variant={user.isBanned ? 'danger' : 'success'}>
-                      {user.isBanned ? 'Suspended' : 'Active'}
-                    </Badge>
-                  </View>
-
-                  <View className="flex-row justify-between pt-1 pb-3">
-                    <Text className="text-slate-500 text-[10px]">Played: <Text className="text-slate-950 dark:text-white font-bold">{user.stats?.tournamentsPlayed || 0}</Text></Text>
-                    <Text className="text-slate-500 text-[10px]">Won: <Text className="text-slate-950 dark:text-white font-bold">{user.stats?.tournamentsWon || 0}</Text></Text>
-                    <Text className="text-slate-500 text-[10px]">Earnings: <Text className="text-emerald-500 font-bold">₹{user.stats?.totalEarnings || 0}</Text></Text>
-                  </View>
-
-                  <View className="flex-row gap-2" style={{ gap: 8 }}>
-                    <Pressable
-                      onPress={() => {
-                        setAdjustingUser(user);
-                        setAdjAmount('100');
-                        setAdjDesc('Mobile Adjust');
-                        setWalletModalVisible(true);
-                      }}
-                      className="bg-rose-600 px-3 py-1.5 rounded-lg border border-rose-500"
-                    >
-                      <Text className="text-white text-[9px] font-black uppercase">Adjust Wallet</Text>
-                    </Pressable>
-
-                    <Pressable
-                      onPress={() => handleToggleBan(user)}
-                      className={`px-3 py-1.5 border rounded-lg ${user.isBanned ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-red-500/30 bg-red-500/10'}`}
-                    >
-                      <Text className={`text-[9px] font-black uppercase ${user.isBanned ? 'text-emerald-500' : 'text-red-500'}`}>
-                        {user.isBanned ? 'Restore Access' : 'Suspend User'}
-                      </Text>
-                    </Pressable>
-                  </View>
-                </GlassCard>
-              ))
-            )}
-          </View>
-        )}
 
         {/* VIEW 5: PAYOUTS (WITHDRAWALS) */}
         {activeTab === 'payouts' && (
@@ -596,7 +566,10 @@ export default function AdminDashboardScreen({ navigation }) {
                   <View className="flex-1 mr-2">
                     <Text className="text-slate-950 dark:text-white font-bold text-xs">Player: {w.userId?.username || 'Unknown'}</Text>
                     <Text className="text-slate-400 text-[9px] mt-0.5">UPI ID: {w.upiId || w.userId?.email}</Text>
-                    <Text className="text-emerald-500 text-sm font-black mt-1.5">₹{w.amount}</Text>
+                    <View className="flex-row items-center mt-1.5">
+                      <GoldCoin size={14} />
+                      <Text className="text-emerald-500 text-sm font-black ml-1">{w.amount}</Text>
+                    </View>
                   </View>
 
                   <View className="flex-row space-x-2" style={{ gap: 8 }}>
@@ -758,7 +731,7 @@ export default function AdminDashboardScreen({ navigation }) {
             </View>
 
             <TextInput
-              placeholder="Adjustment Amount (₹)"
+              placeholder="Adjustment Amount (Coins)"
               value={adjAmount}
               onChangeText={setAdjAmount}
               keyboardType="numeric"

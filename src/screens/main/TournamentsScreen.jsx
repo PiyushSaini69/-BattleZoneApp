@@ -122,9 +122,52 @@ export default function TournamentsScreen({ navigation, route }) {
   const getGameBannerSource = (item) => {
     if (item.game === 'free_fire') {
       if (item.gameMode === 'clash_squad') {
+        const banner = item.bannerImage || '';
+        const format = item.format || '';
+        const rule = item.mode || '';
+        const isOneTap = banner.includes('onetap') || rule === 'onetap';
+        const isHS = banner.includes('headshot') || rule === 'headshot';
+        if (banner.includes('1v1') || format === '1v1' || item.tournamentType === 'solo') {
+          if (isOneTap) return require('../../../assets/cs_1v1_onetap.jpg');
+          if (isHS) return require('../../../assets/cs_1v1_headshot.jpg');
+          return require('../../../assets/cs_1v1_normal.jpg');
+        }
+        if (banner.includes('2v2') || format === '2v2' || item.tournamentType === 'duo') {
+          if (isOneTap) return require('../../../assets/cs_2v2_onetap.jpg');
+          if (isHS) return require('../../../assets/cs_2v2_headshot.jpg');
+          return require('../../../assets/cs_2v2_normal.jpg');
+        }
+        if (banner.includes('4v4') || format === '4v4' || item.tournamentType === 'squad') {
+          if (isOneTap) return require('../../../assets/cs_4v4_onetap.jpg');
+          if (isHS) return require('../../../assets/cs_4v4_headshot.jpg');
+          return require('../../../assets/cs_4v4_normal.jpg');
+        }
         return require('../../../assets/clash_squad.jpg');
       } else if (item.gameMode === 'lone_wolf') {
-        return require('../../../assets/lone_wolf.jpg');
+        const banner = item.bannerImage || '';
+        const format = item.format || '';
+        const rule = item.mode || '';
+        if (banner.includes('2v2') || format === '2v2' || item.tournamentType === 'duo') {
+          if (banner.includes('headshot') || banner.includes('onetap') || rule === 'headshot' || rule === 'onetap') {
+            return require('../../../assets/lw_2v2_headshot.jpg');
+          }
+          return require('../../../assets/lw_2v2_normal.jpg');
+        }
+        if (banner.includes('headshot') || banner.includes('onetap') || rule === 'headshot' || rule === 'onetap') {
+          return require('../../../assets/lw_1v1_headshot.jpg');
+        }
+        return require('../../../assets/lw_1v1_normal.jpg');
+      } else if (item.gameMode === 'battle_royale') {
+        const banner = item.bannerImage || '';
+        if (banner.includes('squad') || item.tournamentType === 'squad') {
+          return require('../../../assets/br_squad.jpg');
+        }
+        if (banner.includes('duo') || item.tournamentType === 'duo') {
+          return require('../../../assets/br_duo.jpg');
+        }
+        if (banner.includes('solo') || item.tournamentType === 'solo') {
+          return require('../../../assets/br_solo.jpg');
+        }
       }
       return require('../../../assets/free_fire_banner.jpg');
     }
