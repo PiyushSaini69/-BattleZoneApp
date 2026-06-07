@@ -63,7 +63,7 @@ export default function HomeScreen({ navigation }) {
       >
 
         <View 
-          className="rounded-2xl overflow-hidden mt-2 mb-4"
+          className="rounded-2xl overflow-hidden mt-2 mb-3"
         >
           <Pressable 
             onPress={() => navigation.navigate('TournamentsTab')}
@@ -76,6 +76,82 @@ export default function HomeScreen({ navigation }) {
               resizeMode="stretch"
             />
           </Pressable>
+        </View>
+
+        {/* Pagination Dots Indicator */}
+        <View className="flex-row justify-center items-center mb-4" style={{ flexDirection: 'row', gap: 6 }}>
+          <View className="w-2 h-2 rounded-full bg-[#7C3AED]" />
+          <View className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-700" />
+          <View className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-700" />
+          <View className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-700" />
+          <View className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-700" />
+          <View className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-700" />
+          <View className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-700" />
+        </View>
+
+        {/* My Contest Section */}
+        <View className="mb-4">
+          <Text className="text-slate-900 dark:text-white text-base font-extrabold mb-3">
+            My Contest
+          </Text>
+          <View className="flex-row justify-between" style={{ gap: 10 }}>
+            {/* Upcoming Tab Button */}
+            <Pressable
+              onPress={() => navigation.navigate('TournamentsTab', { activeTab: 'upcoming', myMatchesOnly: true })}
+              className="flex-1 bg-white py-5 rounded-2xl items-center justify-center border border-slate-200"
+              style={({ pressed }) => [{
+                opacity: pressed ? 0.9 : 1,
+                elevation: 4,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.12,
+                shadowRadius: 3.5,
+              }]}
+            >
+              <Trophy size={28} color="#7C3AED" />
+              <Text className="text-slate-800 text-xs font-extrabold mt-3 text-center">
+                Upcoming
+              </Text>
+            </Pressable>
+
+            {/* Ongoing Tab Button */}
+            <Pressable
+              onPress={() => navigation.navigate('TournamentsTab', { activeTab: 'ongoing', myMatchesOnly: true })}
+              className="flex-1 bg-white py-5 rounded-2xl items-center justify-center border border-slate-200"
+              style={({ pressed }) => [{
+                opacity: pressed ? 0.9 : 1,
+                elevation: 4,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.12,
+                shadowRadius: 3.5,
+              }]}
+            >
+              <Trophy size={28} color="#7C3AED" />
+              <Text className="text-slate-800 text-xs font-extrabold mt-3 text-center">
+                Ongoing
+              </Text>
+            </Pressable>
+
+            {/* Completed Tab Button */}
+            <Pressable
+              onPress={() => navigation.navigate('TournamentsTab', { activeTab: 'results', myMatchesOnly: true })}
+              className="flex-1 bg-white py-5 rounded-2xl items-center justify-center border border-slate-200"
+              style={({ pressed }) => [{
+                opacity: pressed ? 0.9 : 1,
+                elevation: 4,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.12,
+                shadowRadius: 3.5,
+              }]}
+            >
+              <Trophy size={28} color="#7C3AED" />
+              <Text className="text-slate-800 text-xs font-extrabold mt-3 text-center">
+                Completed
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         <GlassCard 

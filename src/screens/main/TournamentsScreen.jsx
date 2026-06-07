@@ -48,11 +48,18 @@ const formatDate = (dateStr) => {
   }
 };
 
-export default function TournamentsScreen({ navigation }) {
+export default function TournamentsScreen({ navigation, route }) {
   const socket = useContext(SocketContext);
   const [tournaments, setTournaments] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState('upcoming'); // ongoing, upcoming, results
+  const [activeTab, setActiveTab] = useState(route?.params?.activeTab || 'upcoming'); // ongoing, upcoming, results
+  const myMatchesOnly = route?.params?.myMatchesOnly || false;
+
+  useEffect(() => {
+    if (route?.params?.activeTab) {
+      setActiveTab(route.params.activeTab);
+    }
+  }, [route?.params?.activeTab]);
 
   const { colorScheme } = useColorScheme();
   const systemScheme = useRNColorScheme();
@@ -71,18 +78,20 @@ export default function TournamentsScreen({ navigation }) {
 
   const fetchTournaments = async () => {
     try {
-      const res = await request(`/tournaments?game=free_fire`);
+      const url = myMatchesOnly ? '/tournaments/my' : '/tournaments?game=free_fire';
+      const res = await request(url);
       if (res.success) {
         setTournaments(res.data.tournaments);
       }
     } catch (e) {
       console.log('Error fetching tournaments:', e.message);
+      setTournaments([]);
     }
   };
 
   useEffect(() => {
     fetchTournaments();
-  }, []);
+  }, [myMatchesOnly]);
 
   useEffect(() => {
     if (socket) {
@@ -275,6 +284,18 @@ export default function TournamentsScreen({ navigation }) {
   };
 
   const getEmptyMessage = () => {
+    if (myMatchesOnly) {
+      switch (activeTab) {
+        case 'ongoing':
+          return "You haven't joined any live contests.";
+        case 'upcoming':
+          return "You haven't registered for any upcoming contests.";
+        case 'results':
+          return "No completed matches in your history.";
+        default:
+          return "No contests found in your list.";
+      }
+    }
     switch (activeTab) {
       case 'ongoing':
         return 'No live tournaments ongoing at the moment.';
