@@ -273,35 +273,49 @@ const TournamentCard = ({ item, navigation, isDark }) => {
 
         {/* Progress and Action Button Row */}
         <View className="flex-row justify-between items-center border-t border-slate-200 dark:border-slate-800/60 pt-4 mt-1">
-          {/* Progress Bar (Left Column) */}
-          <View className="flex-1 mr-4">
-            <View className="h-1.5 bg-slate-200 dark:bg-slate-950 rounded-full overflow-hidden mb-1.5 border border-slate-300/40 dark:border-slate-900">
-              <View 
-                style={{ width: `${progress}%`, height: '100%', backgroundColor: '#7C3AED' }} 
-                className="rounded-full"
-              />
+          {/* Progress Bar (Left Column) - Hidden for completed/ended/results/ongoing */}
+          {!(item.status === 'completed' || item.status === 'ended' || item.status === 'results' || item.status === 'live') && (
+            <View className="flex-1 mr-4">
+              <View className="h-1.5 bg-slate-200 dark:bg-slate-950 rounded-full overflow-hidden mb-1.5 border border-slate-300/40 dark:border-slate-900">
+                <View 
+                  style={{ width: `${progress}%`, height: '100%', backgroundColor: '#7C3AED' }} 
+                  className="rounded-full"
+                />
+              </View>
+              <View className="flex-row justify-between items-center">
+                <Text className={`text-[9px] font-bold ${isFull ? 'text-rose-500 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                  {isFull ? 'No Spots Left! Match is Full.' : `Only ${spotsLeft} spots left!`}
+                </Text>
+                <Text className="text-slate-900 dark:text-white text-[10px] font-black">{item.filledSlots}/{item.totalSlots}</Text>
+              </View>
             </View>
-            <View className="flex-row justify-between items-center">
-              <Text className={`text-[9px] font-bold ${isFull ? 'text-rose-500 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>
-                {isFull ? 'No Spots Left! Match is Full.' : `Only ${spotsLeft} spots left!`}
-              </Text>
-              <Text className="text-slate-900 dark:text-white text-[10px] font-black">{item.filledSlots}/{item.totalSlots}</Text>
-            </View>
-          </View>
+          )}
 
           {/* Action Buttons (Right Column) */}
-          <View className="flex-row">
+          <View className={(item.status === 'completed' || item.status === 'ended' || item.status === 'results' || item.status === 'live') ? "flex-1" : "flex-row"}>
             <Pressable
-              onPress={() => navigation.navigate('TournamentDetail', { slug: item.slug })}
-              className={`py-3 px-6 rounded-xl items-center justify-center ${
-                isFull 
-                  ? 'bg-slate-350 dark:bg-slate-800' 
-                  : 'bg-emerald-500 dark:bg-emerald-600'
+              onPress={() => {
+                if (item.status === 'completed' || item.status === 'ended' || item.status === 'results') {
+                  navigation.navigate('ViewResults', { tournamentId: item._id, slug: item.slug, title: item.title });
+                  return;
+                }
+                if (item.status === 'live') {
+                  navigation.navigate('MatchRoom', { tournamentId: item._id });
+                } else {
+                  navigation.navigate('TournamentDetail', { slug: item.slug });
+                }
+              }}
+              className={`py-3 rounded-xl items-center justify-center ${
+                (item.status === 'completed' || item.status === 'ended' || item.status === 'results' || item.status === 'live')
+                  ? ((item.status === 'live') ? 'bg-violet-600 dark:bg-violet-500 w-full' : 'bg-rose-600 dark:bg-rose-500 w-full')
+                  : (isFull ? 'bg-slate-350 dark:bg-slate-800 px-6' : 'bg-emerald-500 dark:bg-emerald-600 px-6')
               }`}
               style={({ pressed }) => [
                 {
                   opacity: pressed ? 0.85 : 1,
-                  shadowColor: isFull ? 'transparent' : '#10B981',
+                  shadowColor: (item.status === 'completed' || item.status === 'ended' || item.status === 'results') 
+                    ? '#EF4444' 
+                    : (item.status === 'live' ? '#8B5CF6' : (isFull ? 'transparent' : '#10B981')),
                   shadowOffset: { width: 0, height: 1.5 },
                   shadowOpacity: isFull ? 0 : 0.2,
                   shadowRadius: 3,
@@ -310,7 +324,9 @@ const TournamentCard = ({ item, navigation, isDark }) => {
               ]}
             >
               <Text className="text-white font-extrabold text-[12px] uppercase tracking-wider">
-                {isFull ? 'FULL' : 'JOIN'}
+                {(item.status === 'completed' || item.status === 'ended' || item.status === 'results') 
+                  ? 'VIEW RESULTS' 
+                  : (item.status === 'live' ? 'ENTRY LOBBY' : (isFull ? 'FULL' : 'JOIN'))}
               </Text>
             </Pressable>
           </View>

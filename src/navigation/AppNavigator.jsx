@@ -10,10 +10,12 @@ import VerifyEmailScreen from '../screens/auth/VerifyEmailScreen';
 import TournamentDetailScreen from '../screens/tournament/TournamentDetailScreen';
 import RegisterTournamentScreen from '../screens/tournament/RegisterTournamentScreen';
 import MatchRoomScreen from '../screens/tournament/MatchRoomScreen';
+import ViewResultsScreen from '../screens/tournament/ViewResultsScreen';
 import SupportScreen from '../screens/support/SupportScreen';
 import TicketDetailScreen from '../screens/support/TicketDetailScreen';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import CreateTournamentScreen from '../screens/admin/CreateTournamentScreen';
+import DeclareResultsScreen from '../screens/admin/DeclareResultsScreen';
 import TermsScreen from '../screens/support/TermsScreen';
 import PrivacyScreen from '../screens/support/PrivacyScreen';
 import AboutUsScreen from '../screens/support/AboutUsScreen';
@@ -64,12 +66,14 @@ export default function AppNavigator() {
           <Stack.Screen name="TournamentDetail" component={TournamentDetailScreen} />
           <Stack.Screen name="RegisterTournament" component={RegisterTournamentScreen} />
           <Stack.Screen name="MatchRoom" component={MatchRoomScreen} />
+          <Stack.Screen name="ViewResults" component={ViewResultsScreen} />
           
           <Stack.Screen name="Support" component={SupportScreen} />
           <Stack.Screen name="TicketDetail" component={TicketDetailScreen} />
           
           <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
           <Stack.Screen name="CreateTournament" component={CreateTournamentScreen} />
+          <Stack.Screen name="DeclareResults" component={DeclareResultsScreen} />
           <Stack.Screen name="Notification" component={NotificationScreen} />
           
           <Stack.Screen name="AddCoin" component={AddCoinScreen} />

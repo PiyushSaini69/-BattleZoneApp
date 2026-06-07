@@ -448,14 +448,17 @@ export default function TournamentDetailScreen({ route, navigation }) {
   };
 
   const getRightButtonConfig = () => {
+    if (tournament.status === 'completed' || tournament.status === 'ended' || tournament.status === 'results') {
+      return { text: 'VIEW RESULTS', disabled: false, styleClass: 'bg-rose-600 dark:bg-rose-500' };
+    }
     if (isRegistered) {
-      if (isLive || tournament.status === 'completed') {
+      if (isLive) {
         return { text: 'ENTER LOBBY', disabled: false, styleClass: 'bg-violet-600 dark:bg-violet-500' };
       }
       return { text: 'LOBBY LOCKED', disabled: false, styleClass: 'bg-slate-500 dark:bg-slate-700' };
     }
     if (isFull) {
-      return { text: 'MATCH FULL', disabled: true, styleClass: 'bg-slate-550 dark:bg-slate-800' };
+      return { text: 'MATCH FULL', disabled: true, styleClass: 'bg-slate-400 dark:bg-slate-800' };
     }
     return { text: 'REGISTER NOW', disabled: false, styleClass: 'bg-rose-600 dark:bg-rose-500' };
   };
@@ -463,8 +466,12 @@ export default function TournamentDetailScreen({ route, navigation }) {
   const rightBtn = getRightButtonConfig();
 
   const handleRightButtonPress = () => {
+    if (tournament.status === 'completed' || tournament.status === 'ended' || tournament.status === 'results') {
+      navigation.navigate('ViewResults', { tournamentId: tournament._id, slug: tournament.slug, title: tournament.title });
+      return;
+    }
     if (isRegistered) {
-      if (isLive || tournament.status === 'completed') {
+      if (isLive) {
         handleEnterLobby();
       } else {
         Alert.alert(
@@ -691,24 +698,70 @@ export default function TournamentDetailScreen({ route, navigation }) {
                 </View>
               ) : null}
 
-              {/* Players Joined list */}
+              {/* Players Joined / Match Results list */}
               <View className="mb-6 space-y-2.5">
-                <Text className="text-slate-500 dark:text-slate-400 font-black text-sm uppercase tracking-widest px-0.5">Registered Players ({participants.length})</Text>
+                <Text className="text-slate-500 dark:text-slate-400 font-black text-sm uppercase tracking-widest px-0.5">
+                  {(tournament.status === 'completed' && tournament.resultsDeclared) ? 'Match Leaderboard / Results' : `Registered Players (${participants.length})`}
+                </Text>
                 <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-                  {participants.length === 0 ? (
-                    <Text className="text-slate-450 text-sm font-semibold text-center py-4">Lobby is currently empty.</Text>
+                  {(tournament.status === 'completed' && tournament.resultsDeclared) ? (
+                    participants.some(p => p.rank > 0 || p.kills > 0 || p.prizeWon > 0) ? (
+                      [...participants]
+                        .sort((a, b) => {
+                          const rA = a.rank || 999;
+                          const rB = b.rank || 999;
+                          if (rA !== rB) return rA - rB;
+                          return (b.points || 0) - (a.points || 0);
+                        })
+                        .map((player, idx, arr) => (
+                          <View 
+                            key={player.slotNumber} 
+                            className={`flex-row justify-between items-center py-2.5 ${
+                              idx === arr.length - 1 ? '' : 'border-b border-slate-100 dark:border-slate-800/60'
+                            }`}
+                          >
+                            <View className="flex-row items-center flex-1 mr-2">
+                              <Text className="text-rose-500 dark:text-cyan-400 font-black text-xs w-6">#{player.rank || '-'}</Text>
+                              <View>
+                                <Text className="text-slate-800 dark:text-slate-200 font-bold text-sm">{player.displayName}</Text>
+                                <Text className="text-slate-400 text-[9px] font-bold uppercase mt-0.5">Slot #{player.slotNumber}</Text>
+                              </View>
+                            </View>
+                            <View className="flex-row items-center" style={{ gap: 12 }}>
+                              <View className="items-end">
+                                <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase">Kills</Text>
+                                <Text className="text-slate-900 dark:text-white font-black text-xs mt-0.5">{player.kills || 0}</Text>
+                              </View>
+                              {player.prizeWon > 0 && (
+                                <View className="bg-emerald-500/10 dark:bg-emerald-500/25 px-2 py-1 rounded-lg flex-row items-center">
+                                  <GoldCoin size={10} />
+                                  <Text className="text-emerald-500 font-black text-[10.5px] ml-1">+{player.prizeWon}</Text>
+                                </View>
+                              )}
+                            </View>
+                          </View>
+                        ))
+                    ) : (
+                      <Text className="text-slate-500 dark:text-slate-400 text-sm font-semibold text-center py-6 leading-relaxed">
+                        🏁 Match results are being calculated by the administrators. Please check back soon!
+                      </Text>
+                    )
                   ) : (
-                    participants.map((player, idx) => (
-                      <View 
-                        key={player.slotNumber} 
-                        className={`flex-row justify-between items-center py-2.5 ${
-                          idx === participants.length - 1 ? '' : 'border-b border-slate-100 dark:border-slate-800/60'
-                        }`}
-                      >
-                        <Text className="text-slate-800 dark:text-slate-200 font-bold text-sm">{player.displayName}</Text>
-                        <Text className="text-slate-400 text-[10.5px] font-bold">Slot #{player.slotNumber}</Text>
-                      </View>
-                    ))
+                    participants.length === 0 ? (
+                      <Text className="text-slate-450 text-sm font-semibold text-center py-4">Lobby is currently empty.</Text>
+                    ) : (
+                      participants.map((player, idx) => (
+                        <View 
+                          key={player.slotNumber} 
+                          className={`flex-row justify-between items-center py-2.5 ${
+                            idx === participants.length - 1 ? '' : 'border-b border-slate-100 dark:border-slate-800/60'
+                          }`}
+                        >
+                          <Text className="text-slate-800 dark:text-slate-200 font-bold text-sm">{player.displayName}</Text>
+                          <Text className="text-slate-400 text-[10.5px] font-bold">Slot #{player.slotNumber}</Text>
+                        </View>
+                      ))
+                    )
                   )}
                 </View>
               </View>
@@ -792,24 +845,46 @@ export default function TournamentDetailScreen({ route, navigation }) {
       {/* Bottom Action Bar */}
       <View 
         style={{ height: 56 + insets.bottom, paddingBottom: insets.bottom }}
-        className="flex-row w-full border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A0F1A] absolute bottom-0 shadow-lg"
+        className="flex-row w-full border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#0A0F1A]/95 absolute bottom-0 shadow-lg"
       >
         <Pressable 
           onPress={handleMyEntriesPress}
-          className="flex-1 bg-[#10B981] items-center justify-center"
+          className="flex-1"
           style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
         >
-          <Text className="text-white font-black text-xs uppercase tracking-wider">MY ENTRIES</Text>
+          <LinearGradient
+            colors={['#10B981', '#059669']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="w-full h-full items-center justify-center"
+          >
+            <Text className="text-white font-black text-xs uppercase tracking-wider">MY ENTRIES</Text>
+          </LinearGradient>
         </Pressable>
         <Pressable 
           onPress={handleRightButtonPress}
           disabled={rightBtn.disabled}
-          className={`flex-1 items-center justify-center ${rightBtn.styleClass}`}
+          className="flex-1"
           style={({ pressed }) => [{ opacity: pressed && !rightBtn.disabled ? 0.85 : 1 }]}
         >
-          <Text className="text-white font-black text-xs uppercase tracking-wider">
-            {rightBtn.text}
-          </Text>
+          <LinearGradient
+            colors={
+              rightBtn.disabled
+                ? (isDark ? ['#334155', '#1E293B'] : ['#CBD5E1', '#94A3B8'])
+                : (rightBtn.styleClass.includes('rose')
+                    ? ['#F43F5E', '#E11D48']
+                    : (rightBtn.styleClass.includes('violet')
+                        ? ['#8B5CF6', '#6D28D9']
+                        : (isDark ? ['#475569', '#334155'] : ['#94A3B8', '#64748B'])))
+            }
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="w-full h-full items-center justify-center"
+          >
+            <Text className="text-white font-black text-xs uppercase tracking-wider">
+              {rightBtn.text}
+            </Text>
+          </LinearGradient>
         </Pressable>
       </View>
     </LinearGradient>
