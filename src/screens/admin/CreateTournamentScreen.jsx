@@ -9,7 +9,7 @@ import { ArrowLeft } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function CreateTournamentScreen({ navigation }) {
+export default function CreateTournamentScreen({ route, navigation }) {
   const { colorScheme } = useColorScheme();
   const systemScheme = useRNColorScheme();
   const isDark = colorScheme === 'system' ? systemScheme === 'dark' : colorScheme === 'dark';
@@ -44,10 +44,10 @@ export default function CreateTournamentScreen({ navigation }) {
   // BR dependent states
   const [brType, setBrType] = useState('solo'); // solo, duo, squad
   const [brMap, setBrMap] = useState('Bermuda'); // Bermuda, Bermuda Remastered, Kalahari, Purgatory, Alpine, Nexterra
-  const [br1stPrize, setBr1stPrize] = useState('0');
-  const [br2ndPrize, setBr2ndPrize] = useState('0');
-  const [br3rdPrize, setBr3rdPrize] = useState('0');
-  const [brPerKill, setBrPerKill] = useState('0');
+  const [br1stPrize, setBr1stPrize] = useState('');
+  const [br2ndPrize, setBr2ndPrize] = useState('');
+  const [br3rdPrize, setBr3rdPrize] = useState('');
+  const [brPerKill, setBrPerKill] = useState('');
 
   // CS states
   const [csFormat, setCsFormat] = useState('4v4'); // 1v1, 2v2, 4v4
@@ -58,11 +58,11 @@ export default function CreateTournamentScreen({ navigation }) {
   const [lwMode, setLwMode] = useState('normal'); // normal, headshot, onetap
 
   // CS/LW winner prize
-  const [cslwWinnerPrize, setCslwWinnerPrize] = useState('0');
+  const [cslwWinnerPrize, setCslwWinnerPrize] = useState('');
 
   // Shared states
-  const [entryFee, setEntryFee] = useState('0');
-  const [totalSlots, setTotalSlots] = useState('0');
+  const [entryFee, setEntryFee] = useState('');
+  const [totalSlots, setTotalSlots] = useState('');
   const [date, setDate] = useState(getCurrentDateString());
   const [time, setTime] = useState(curTime.timeStr);
   const [isPm, setIsPm] = useState(curTime.isPmVal);
@@ -73,6 +73,59 @@ export default function CreateTournamentScreen({ navigation }) {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const editTournament = route?.params?.tournament;
+  const isEditMode = !!editTournament;
+
+  useEffect(() => {
+    if (isEditMode && editTournament) {
+      setAutoGen(false);
+      setTitle(editTournament.title || '');
+      setGameMode(editTournament.gameMode || 'battle_royale');
+      setEntryFee(editTournament.entryFee !== undefined && editTournament.entryFee !== null ? String(editTournament.entryFee) : '');
+      setTotalSlots(editTournament.totalSlots !== undefined && editTournament.totalSlots !== null ? String(editTournament.totalSlots) : '');
+      setDescription(editTournament.description || '');
+      setRulesText(editTournament.rules ? editTournament.rules.join('\n') : '');
+      setBannerMapping(editTournament.bannerImage || '');
+
+      // Parse schedule date and time
+      if (editTournament.scheduledAt) {
+        const schedDate = new Date(editTournament.scheduledAt);
+        if (!isNaN(schedDate.getTime())) {
+          const day = String(schedDate.getDate()).padStart(2, '0');
+          const month = String(schedDate.getMonth() + 1).padStart(2, '0');
+          const year = schedDate.getFullYear();
+          setDate(`${day}-${month}-${year}`);
+
+          let hours = schedDate.getHours();
+          const minutes = String(schedDate.getMinutes()).padStart(2, '0');
+          const isPmVal = hours >= 12;
+          hours = hours % 12;
+          hours = hours ? hours : 12;
+          const hoursStr = String(hours).padStart(2, '0');
+          setTime(`${hoursStr}:${minutes}`);
+          setIsPm(isPmVal);
+        }
+      }
+
+      if (editTournament.gameMode === 'battle_royale') {
+        setBrType(editTournament.tournamentType || 'solo');
+        setBrMap(editTournament.mapType || 'Bermuda');
+        setBrPerKill(editTournament.perKillReward !== undefined && editTournament.perKillReward !== null ? String(editTournament.perKillReward) : '');
+        setBr1stPrize(editTournament.firstPrize !== undefined && editTournament.firstPrize !== null ? String(editTournament.firstPrize) : '');
+        setBr2ndPrize(editTournament.secondPrize !== undefined && editTournament.secondPrize !== null ? String(editTournament.secondPrize) : '');
+        setBr3rdPrize(editTournament.thirdPrize !== undefined && editTournament.thirdPrize !== null ? String(editTournament.thirdPrize) : '');
+      } else if (editTournament.gameMode === 'clash_squad') {
+        setCsFormat(editTournament.format || '4v4');
+        setCsMode(editTournament.mode || 'normal');
+        setCslwWinnerPrize(editTournament.winnerPrize !== undefined && editTournament.winnerPrize !== null ? String(editTournament.winnerPrize) : '');
+      } else if (editTournament.gameMode === 'lone_wolf') {
+        setLwFormat(editTournament.format || '1v1');
+        setLwMode(editTournament.mode || 'normal');
+        setCslwWinnerPrize(editTournament.winnerPrize !== undefined && editTournament.winnerPrize !== null ? String(editTournament.winnerPrize) : '');
+      }
+    }
+  }, [editTournament]);
 
   // Rules and Banner Auto Generator
   const getAutoData = (mode, format, type, ruleMode, map) => {
@@ -278,7 +331,6 @@ export default function CreateTournamentScreen({ navigation }) {
     const ruleMode = gameMode === 'clash_squad' ? csMode : gameMode === 'lone_wolf' ? lwMode : '';
     
     const data = getAutoData(gameMode, format, type, ruleMode, brMap);
-    setTitle(data.title);
     setDescription(data.description);
     setRulesText(data.rules);
     setBannerMapping(data.banner);
@@ -374,13 +426,18 @@ export default function CreateTournamentScreen({ navigation }) {
         payload.prizeDistribution = [{ rank: 1, amount: parseFloat(cslwWinnerPrize) }];
       }
 
-      const res = await request('/admin/tournaments', {
-        method: 'POST',
+      const apiEndpoint = isEditMode 
+        ? `/admin/tournaments/${editTournament._id}`
+        : '/admin/tournaments';
+      const apiMethod = isEditMode ? 'PATCH' : 'POST';
+
+      const res = await request(apiEndpoint, {
+        method: apiMethod,
         body: JSON.stringify(payload)
       });
 
       if (res.success) {
-        Alert.alert('Success 🎉', 'Tournament catalog created as DRAFT successfully!', [
+        Alert.alert('Success 🎉', isEditMode ? 'Tournament updated successfully!' : 'Tournament catalog created successfully!', [
           { text: 'OK', onPress: () => navigation.goBack() }
         ]);
       }
@@ -404,7 +461,7 @@ export default function CreateTournamentScreen({ navigation }) {
         <Pressable onPress={() => navigation.goBack()} className="p-1">
           <ArrowLeft size={20} color={isDark ? '#fff' : '#0f172a'} />
         </Pressable>
-        <Text className="text-slate-900 dark:text-white font-extrabold text-sm uppercase tracking-wide">Create Tournament</Text>
+        <Text className="text-slate-900 dark:text-white font-extrabold text-sm uppercase tracking-wide">{isEditMode ? 'Edit Tournament' : 'Create Tournament'}</Text>
         <View className="w-6" />
       </View>
 
@@ -475,9 +532,6 @@ export default function CreateTournamentScreen({ navigation }) {
                         onPress={() => {
                           setBrType(t);
                           setAutoGen(true);
-                          if (t === 'solo') setTotalSlots('48');
-                          else if (t === 'duo') setTotalSlots('24');
-                          else if (t === 'squad') setTotalSlots('12');
                         }}
                         className={`flex-1 py-1.5 rounded-lg items-center ${brType === t ? (isDark ? 'bg-slate-800' : 'bg-white') : ''}`}
                       >
@@ -558,9 +612,6 @@ export default function CreateTournamentScreen({ navigation }) {
                           onPress={() => {
                             setCsFormat(f);
                             setAutoGen(true);
-                            if (f === '1v1') setTotalSlots('2');
-                            else if (f === '2v2') setTotalSlots('4');
-                            else if (f === '4v4') setTotalSlots('8');
                           }}
                           className={`flex-1 py-1.5 rounded-lg items-center ${csFormat === f ? (isDark ? 'bg-slate-800' : 'bg-white') : ''}`}
                         >
@@ -633,8 +684,6 @@ export default function CreateTournamentScreen({ navigation }) {
                           onPress={() => {
                             setLwFormat(f);
                             setAutoGen(true);
-                            if (f === '1v1') setTotalSlots('2');
-                            else if (f === '2v2') setTotalSlots('4');
                           }}
                           className={`flex-1 py-1.5 rounded-lg items-center ${lwFormat === f ? (isDark ? 'bg-slate-800' : 'bg-white') : ''}`}
                         >
@@ -813,7 +862,7 @@ export default function CreateTournamentScreen({ navigation }) {
             </View>
 
             <Button
-              title="Create Tournament Draft"
+              title={isEditMode ? "Update Tournament" : "Create Tournament"}
               onPress={handleCreate}
               loading={loading}
               className="mt-4 bg-rose-600 border border-rose-500"

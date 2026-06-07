@@ -34,6 +34,7 @@ export default function AdminDashboardScreen({ navigation }) {
 
   // Tab state
   const [activeTab, setActiveTab] = useState('stats'); // stats, matches, brackets, users, payouts
+  const [matchesSubTab, setMatchesSubTab] = useState('upcoming'); // ongoing, upcoming, results
 
   // Core MERN states
   const [stats, setStats] = useState(null);
@@ -53,6 +54,13 @@ export default function AdminDashboardScreen({ navigation }) {
   const [selectedRoomT, setSelectedRoomT] = useState(null);
   const [roomIdInput, setRoomIdInput] = useState('');
   const [roomPasswordInput, setRoomPasswordInput] = useState('');
+
+  // Results Modal State
+  const [resultsModalVisible, setResultsModalVisible] = useState(false);
+  const [selectedResultsT, setSelectedResultsT] = useState(null);
+  const [resultsParticipants, setResultsParticipants] = useState([]);
+  const [resultsInputs, setResultsInputs] = useState({});
+  const [resultsLoading, setResultsLoading] = useState(false);
 
   const [walletModalVisible, setWalletModalVisible] = useState(false);
   const [adjustingUser, setAdjustingUser] = useState(null);
@@ -148,6 +156,107 @@ export default function AdminDashboardScreen({ navigation }) {
         }
       }}
     ]);
+  };
+
+  const handleCompleteTournament = async (tId) => {
+    Alert.alert('Complete Match 🏆', 'Are you sure you want to mark this match as completed?', [
+      { text: 'No', style: 'cancel' },
+      { text: 'Yes, Complete', style: 'default', onPress: async () => {
+        try {
+          const res = await request(`/admin/tournaments/${tId}/complete`, { method: 'PATCH' });
+          if (res.success) {
+            Alert.alert('Success', 'Match marked as completed successfully!');
+            await loadAdminData();
+          }
+        } catch (e) {
+          Alert.alert('Error', e.message);
+        }
+      }}
+    ]);
+  };
+
+  const openResultsModal = async (tournament) => {
+    setSelectedResultsT(tournament);
+    setResultsModalVisible(true);
+    setResultsLoading(true);
+    try {
+      const res = await request(`/tournaments/${tournament._id}/participants`);
+      if (res.success) {
+        setResultsParticipants(res.data);
+        const initialInputs = {};
+        res.data.forEach(p => {
+          if (p.userId) {
+            initialInputs[p.userId] = {
+              kills: String(p.kills || '0'),
+              rank: String(p.rank || '')
+            };
+          }
+        });
+        setResultsInputs(initialInputs);
+      } else {
+        Alert.alert('Error', 'Failed to load tournament participants.');
+      }
+    } catch (e) {
+      Alert.alert('Error', e.message);
+    } finally {
+      setResultsLoading(false);
+    }
+  };
+
+  const submitTournamentResults = async () => {
+    const playerResults = [];
+    let validationFailed = false;
+
+    resultsParticipants.forEach(p => {
+      if (!p.userId) return;
+      const input = resultsInputs[p.userId];
+      const kills = parseInt(input?.kills || '0', 10);
+      const rank = parseInt(input?.rank || '', 10);
+
+      if (isNaN(rank) || rank <= 0) {
+        validationFailed = true;
+        return;
+      }
+
+      playerResults.push({
+        userId: p.userId,
+        kills: isNaN(kills) ? 0 : kills,
+        rank: rank,
+        points: 0
+      });
+    });
+
+    if (validationFailed) {
+      Alert.alert('Validation Error', 'Please enter a valid Rank (positive number) for all participants.');
+      return;
+    }
+
+    if (playerResults.length === 0) {
+      Alert.alert('Error', 'No participants with user accounts found.');
+      return;
+    }
+
+    setResultsLoading(true);
+    try {
+      const res = await request(`/admin/tournaments/${selectedResultsT._id}/results`, {
+        method: 'POST',
+        body: JSON.stringify({ playerResults })
+      });
+      if (res.success) {
+        Alert.alert('Success 🎉', 'Match results submitted and prizes credited successfully!');
+        setResultsModalVisible(false);
+        setSelectedResultsT(null);
+        setResultsParticipants([]);
+        setResultsInputs({});
+        await loadAdminData();
+      } else {
+        Alert.alert('Error', res.message || 'Failed to submit results.');
+      }
+    } catch (e) {
+      Alert.alert('Error', e.message);
+    } finally {
+      setResultsLoading(false);
+    }
   };
 
   const handleGenerateBracket = async (tId) => {
@@ -323,7 +432,7 @@ export default function AdminDashboardScreen({ navigation }) {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 12, gap: 8 }}>
           {[
             { id: 'stats', label: 'Dashboard' },
-            { id: 'matches', label: 'Lobbies' },
+            { id: 'matches', label: 'Matches' },
             { id: 'brackets', label: 'Brackets' },
             { id: 'payouts', label: 'Payouts' }
           ].map(tab => (
@@ -360,7 +469,7 @@ export default function AdminDashboardScreen({ navigation }) {
         {/* VIEW 1: STATS */}
         {activeTab === 'stats' && (
           <View className="space-y-4">
-            <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-widest px-0.5 mb-2">Platform Lobbies</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-widest px-0.5 mb-2">Platform Matches</Text>
             
             <View className="flex-row justify-between mb-4" style={{ gap: 8 }}>
               <GlassCard className="flex-1 p-3.5 items-center justify-center" glowColor="red">
@@ -403,10 +512,53 @@ export default function AdminDashboardScreen({ navigation }) {
         {/* VIEW 2: LOBBIES MATCHES */}
         {activeTab === 'matches' && (
           <View className="space-y-4">
-            {tournaments.length === 0 ? (
-              <GlassCard className="p-10 items-center"><Text className="text-slate-500 text-xs font-semibold">No tournaments available.</Text></GlassCard>
-            ) : (
-              tournaments.map((t) => (
+            {/* Matches Sub-tabs Selector */}
+            <View className="flex-row bg-slate-200/50 dark:bg-slate-950/40 p-1 border border-slate-300/40 dark:border-slate-800 rounded-xl mb-4">
+              {[
+                { id: 'ongoing', label: 'Ongoing' },
+                { id: 'upcoming', label: 'Upcoming' },
+                { id: 'results', label: 'Results' }
+              ].map((subTab) => (
+                <Pressable
+                  key={subTab.id}
+                  onPress={() => setMatchesSubTab(subTab.id)}
+                  className={`flex-1 py-2 rounded-lg items-center ${
+                    matchesSubTab === subTab.id ? (isDark ? 'bg-slate-800' : 'bg-white') : ''
+                  }`}
+                  style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+                >
+                  <Text className={`text-[9.5px] font-black uppercase tracking-wider ${
+                    matchesSubTab === subTab.id ? 'text-rose-500' : 'text-slate-500'
+                  }`}>
+                    {subTab.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            {(() => {
+              const filtered = tournaments.filter((t) => {
+                if (matchesSubTab === 'ongoing') {
+                  return t.status === 'live' || t.status === 'ongoing';
+                } else if (matchesSubTab === 'upcoming') {
+                  return t.status === 'registering' || t.status === 'upcoming' || t.status === 'scheduled' || t.status === 'draft';
+                } else if (matchesSubTab === 'results') {
+                  return t.status === 'completed' || t.status === 'ended' || t.status === 'results' || t.status === 'cancelled';
+                }
+                return true;
+              });
+
+              if (filtered.length === 0) {
+                return (
+                  <GlassCard className="p-10 items-center">
+                    <Text className="text-slate-500 text-xs font-semibold text-center">
+                      No {matchesSubTab} matches available.
+                    </Text>
+                  </GlassCard>
+                );
+              }
+
+              return filtered.map((t) => (
                 <GlassCard key={t._id} className="p-4 mb-4" glowColor="red">
                   <View className="flex-row justify-between items-start mb-2">
                     <View className="flex-1 mr-2">
@@ -446,6 +598,14 @@ export default function AdminDashboardScreen({ navigation }) {
                     {t.status !== 'completed' && t.status !== 'cancelled' && (
                       <>
                         <Pressable
+                          onPress={() => navigation.navigate('CreateTournament', { tournament: t })}
+                          className="bg-amber-500 px-3 py-1.5 rounded-lg border border-amber-600 shadow-sm"
+                          style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+                        >
+                          <Text className="text-black text-[9px] font-black uppercase">Edit</Text>
+                        </Pressable>
+
+                        <Pressable
                           onPress={() => {
                             setSelectedRoomT(t);
                             setRoomIdInput(t.roomId || '');
@@ -472,12 +632,30 @@ export default function AdminDashboardScreen({ navigation }) {
                         >
                           <Text className="text-red-500 text-[9px] font-black uppercase">Cancel</Text>
                         </Pressable>
+
+                        {t.status !== 'draft' && (
+                          <View className="flex-row gap-2 flex-wrap mt-1">
+                            <Pressable
+                              onPress={() => handleCompleteTournament(t._id)}
+                              className="bg-red-500/10 border border-red-500/30 px-2.5 py-1.5 rounded-lg"
+                            >
+                              <Text className="text-red-500 text-[9px] font-black uppercase">Complete Only</Text>
+                            </Pressable>
+
+                            <Pressable
+                              onPress={() => openResultsModal(t)}
+                              className="bg-emerald-600 px-2.5 py-1.5 rounded-lg border border-emerald-500 shadow-sm"
+                            >
+                              <Text className="text-white text-[9px] font-black uppercase">Post Results</Text>
+                            </Pressable>
+                          </View>
+                        )}
                       </>
                     )}
                   </View>
                 </GlassCard>
               ))
-            )}
+            })()}
           </View>
         )}
 
@@ -753,6 +931,92 @@ export default function AdminDashboardScreen({ navigation }) {
             >
               <Text className="text-white text-xs font-black uppercase tracking-wider">Apply Wallet Adjustment</Text>
             </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MODAL 4: POST TOURNAMENT RESULTS */}
+      <Modal animationType="slide" transparent visible={resultsModalVisible} onRequestClose={() => setResultsModalVisible(false)}>
+        <View className="flex-1 justify-end bg-black/70">
+          <View className="bg-slate-900 border-t border-slate-800 rounded-t-3xl p-6 space-y-4 pb-10 max-h-[85%]">
+            <View className="flex-row justify-between items-center mb-1">
+              <View>
+                <Text className="text-white font-extrabold text-sm uppercase tracking-wide">Enter Match Results</Text>
+                {selectedResultsT && (
+                  <Text className="text-slate-400 text-[10px] uppercase font-bold mt-0.5">{selectedResultsT.title}</Text>
+                )}
+              </View>
+              <Pressable onPress={() => setResultsModalVisible(false)} className="p-1"><X size={20} color="#64748B" /></Pressable>
+            </View>
+
+            {resultsLoading ? (
+              <View className="py-20 items-center justify-center">
+                <ActivityIndicator size="large" color="#EF4444" />
+                <Text className="text-slate-500 text-xs font-semibold mt-4">Loading participants...</Text>
+              </View>
+            ) : resultsParticipants.length === 0 ? (
+              <View className="py-12 items-center">
+                <Text className="text-slate-500 text-xs font-semibold">No participants registered in this match.</Text>
+              </View>
+            ) : (
+              <>
+                <ScrollView className="space-y-4 max-h-[60%] pr-1" contentContainerStyle={{ paddingBottom: 20 }}>
+                  {resultsParticipants.map((p, idx) => {
+                    if (!p.userId) return null;
+                    const input = resultsInputs[p.userId] || { kills: '0', rank: '' };
+                    return (
+                      <View key={p.userId || idx} className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 mb-3">
+                        <View className="flex-row justify-between items-center mb-2">
+                          <Text className="text-white text-xs font-bold">{p.displayName || p.username}</Text>
+                          <Text className="text-cyan-400 font-mono text-[9px] uppercase">UID: {p.gameUID || 'N/A'}</Text>
+                        </View>
+                        <View className="flex-row justify-between" style={{ gap: 10 }}>
+                          <View className="flex-1">
+                            <Text className="text-slate-500 text-[9px] font-bold uppercase mb-1">Rank / Position</Text>
+                            <TextInput
+                              placeholder="e.g. 1, 2, 12"
+                              value={input.rank}
+                              onChangeText={(text) => {
+                                setResultsInputs(prev => ({
+                                  ...prev,
+                                  [p.userId]: { ...prev[p.userId], rank: text }
+                                }));
+                              }}
+                              keyboardType="numeric"
+                              placeholderTextColor="#64748B"
+                              className="p-2.5 border rounded-lg bg-slate-900 border-slate-800 text-white text-xs font-bold"
+                            />
+                          </View>
+                          <View className="flex-1">
+                            <Text className="text-slate-500 text-[9px] font-bold uppercase mb-1">Total Kills</Text>
+                            <TextInput
+                              placeholder="0"
+                              value={input.kills}
+                              onChangeText={(text) => {
+                                setResultsInputs(prev => ({
+                                  ...prev,
+                                  [p.userId]: { ...prev[p.userId], kills: text }
+                                }));
+                              }}
+                              keyboardType="numeric"
+                              placeholderTextColor="#64748B"
+                              className="p-2.5 border rounded-lg bg-slate-900 border-slate-800 text-white text-xs font-bold"
+                            />
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </ScrollView>
+
+                <Pressable
+                  onPress={submitTournamentResults}
+                  className="bg-emerald-500 py-3.5 rounded-xl items-center shadow-lg"
+                >
+                  <Text className="text-black text-xs font-black uppercase tracking-wider">Credit Prizes & End Match</Text>
+                </Pressable>
+              </>
+            )}
           </View>
         </View>
       </Modal>

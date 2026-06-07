@@ -179,174 +179,188 @@ export default function TournamentsScreen({ navigation, route }) {
     }
   };
 
-  const renderItem = ({ item }) => {
-    const progress = Math.min((item.filledSlots / item.totalSlots) * 100, 100);
-    const spotsLeft = item.totalSlots - item.filledSlots;
-    const isFull = spotsLeft <= 0;
+const TournamentCard = ({ item, navigation, isDark }) => {
+  const [showAllPrizes, setShowAllPrizes] = useState(false);
+  const progress = Math.min((item.filledSlots / item.totalSlots) * 100, 100);
+  const spotsLeft = item.totalSlots - item.filledSlots;
+  const isFull = spotsLeft <= 0;
+  const isCSLW = item.gameMode === 'clash_squad' || item.gameMode === 'lone_wolf';
 
-    return (
-      <GlassCard className="mb-5 overflow-hidden p-0" glowColor="purple">
-          <View className="relative">
-          <Image 
-            source={getGameBannerSource(item)}
-            style={{ width: '100%', height: 160 }}
-            resizeMode="cover"
-          />
-          <LinearGradient
-            colors={isDark ? ['transparent', 'rgba(10, 14, 26, 0.95)'] : ['transparent', 'rgba(255, 255, 255, 0.95)']}
-            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 60 }}
-          />
-          
-          {/* Rules Overlay Card */}
-          <View 
-            className="absolute top-2.5 right-2.5 bg-black/85 border border-amber-600/70 rounded-xl p-2 z-10"
-            style={{ maxWidth: '60%' }}
-          >
-            <Text className="text-white text-[7.5px] font-black tracking-wide mb-0.5">I'D LEV 40+ ✅</Text>
-            <Text className="text-white text-[7.5px] font-black tracking-wide mb-0.5">HUD POV ALLOWED ✅</Text>
-            <Text className="text-white text-[7.5px] font-black tracking-wide mb-0.5">M79 LAUNCHER BAN ❌</Text>
-            <Text className="text-white text-[7.5px] font-black tracking-wide mb-0.5">TEAMUP NOT ALLOWED ❌</Text>
-            <Text className="text-white text-[7.5px] font-black tracking-wide mb-0.5">HACKERS BAN ❌</Text>
-            <Text className="text-white text-[7.5px] font-black tracking-wide">DOUBLE VECTOR BAN ❌</Text>
-          </View>
+  return (
+    <GlassCard className="mb-5 overflow-hidden p-0" glowColor="purple">
+      <View className="relative">
+        <Image 
+          source={getGameBannerSource(item)}
+          style={{ width: '100%', height: 160 }}
+          resizeMode="stretch"
+        />
 
-          {/* Map Overlay Text */}
-          <Text 
-            className="text-yellow-400 font-black text-2xl italic tracking-widest uppercase absolute bottom-2 right-4 z-10"
-            style={{
-              textShadowColor: '#000',
-              textShadowOffset: { width: 1.5, height: 1.5 },
-              textShadowRadius: 1,
-            }}
-          >
-            {item.map || 'Bermuda'}
+        {/* Map Overlay Text */}
+        <Text 
+          className="text-yellow-400 font-black text-2xl italic tracking-widest uppercase absolute bottom-2 right-4 z-10"
+          style={{
+            textShadowColor: '#000',
+            textShadowOffset: { width: 1.5, height: 1.5 },
+            textShadowRadius: 1,
+          }}
+        >
+          {item.map || 'Bermuda'}
+        </Text>
+      </View>
+
+      <View className="p-4 bg-white/95 dark:bg-[#0A0F1A]/95">
+        {/* Header Row: Title, Time */}
+        <View className="mb-4">
+          <Text className="text-slate-900 dark:text-white text-sm font-black uppercase" numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold mt-1">
+            Time: {formatDate(item.scheduledAt)}
           </Text>
         </View>
 
-        <View className="p-4 bg-white/95 dark:bg-[#0A0F1A]/95">
-          {/* Header Row: Title, Time */}
-          <View className="mb-4">
-            <Text className="text-slate-900 dark:text-white text-sm font-black uppercase" numberOfLines={1}>
-              {item.title}
+        {/* Stats Grid: Row 1 */}
+        <View className="flex-row justify-between mb-4">
+          <View className="items-center flex-1">
+            <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">
+              {isCSLW ? 'Winner Prize' : 'Prize Pool'}
             </Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold mt-1">
-              Time: {formatDate(item.scheduledAt)}
-            </Text>
-          </View>
-
-          {/* Stats Grid: Row 1 */}
-          {(() => {
-            const isCSLW = item.gameMode === 'clash_squad' || item.gameMode === 'lone_wolf';
-            return (
-              <View className="flex-row justify-between mb-4">
-                <View className="items-center flex-1">
-                  <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">
-                    {isCSLW ? 'Winner Prize' : 'Prize Pool'}
-                  </Text>
-                  <View className="flex-row items-center justify-center">
-                    <GoldCoin size={14} />
-                    <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">
-                      {isCSLW ? (item.winnerPrize || item.prizePool) : item.prizePool}
-                    </Text>
-                  </View>
-                </View>
-                <View className="items-center flex-1">
-                  <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">
-                    {isCSLW ? 'Rule Mode' : 'Per Kill'}
-                  </Text>
-                  {isCSLW ? (
-                    <Text className="text-slate-905 dark:text-white text-xs font-black uppercase mt-0.5">{item.mode || 'Normal'}</Text>
-                  ) : (
-                    <View className="flex-row items-center justify-center">
-                      <GoldCoin size={14} />
-                      <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">
-                        {item.perKillReward || item.perKill || 0}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <View className="items-center flex-1">
-                  <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Entry Fee</Text>
-                  <View className="flex-row items-center justify-center">
-                    <GoldCoin size={14} />
-                    <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">{item.entryFee}</Text>
-                  </View>
-                </View>
-              </View>
-            );
-          })()}
-
-          {/* Stats Grid: Row 2 */}
-          <View className="flex-row justify-between mb-4">
-            <View className="items-center flex-1">
-              <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Type</Text>
-              <Text className="text-slate-900 dark:text-white text-xs font-bold capitalize">{item.tournamentType || 'Solo'}</Text>
-            </View>
-            <View className="items-center flex-1">
-              <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Map</Text>
-              <Text className="text-slate-900 dark:text-white text-xs font-bold capitalize">{item.map || 'Bermuda'}</Text>
+            <View className="flex-row items-center justify-center">
+              <GoldCoin size={14} />
+              <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">
+                {isCSLW ? (item.winnerPrize || item.prizePool) : item.prizePool}
+              </Text>
             </View>
           </View>
-
-          {/* Progress and Action Button Row */}
-          <View className="flex-row justify-between items-center border-t border-slate-200 dark:border-slate-800/60 pt-4 mt-1">
-            {/* Progress Bar (Left Column) */}
-            <View className="flex-1 mr-4">
-              <View className="h-1.5 bg-slate-200 dark:bg-slate-950 rounded-full overflow-hidden mb-1.5 border border-slate-300/40 dark:border-slate-900">
-                <View 
-                  style={{ width: `${progress}%`, height: '100%', backgroundColor: '#7C3AED' }} 
-                  className="rounded-full"
-                />
+          <View className="items-center flex-1">
+            <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">
+              {isCSLW ? 'Rule Mode' : 'Per Kill'}
+            </Text>
+            {isCSLW ? (
+              <Text className="text-slate-905 dark:text-white text-xs font-black uppercase mt-0.5">{item.mode || 'Normal'}</Text>
+            ) : (
+              <View className="flex-row items-center justify-center">
+                <GoldCoin size={14} />
+                <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">
+                  {item.perKillReward || item.perKill || 0}
+                </Text>
               </View>
-              <View className="flex-row justify-between items-center">
-                <Text className={`text-[9px] font-bold ${isFull ? 'text-rose-500 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>
-                  {isFull ? 'No Spots Left! Match is Full.' : `Only ${spotsLeft} spots left!`}
-                </Text>
-                <Text className="text-slate-900 dark:text-white text-[10px] font-black">{item.filledSlots}/{item.totalSlots}</Text>
-              </View>
-            </View>
-
-            {/* Action Buttons (Right Column) */}
-            <View className="flex-row" style={{ gap: 8 }}>
-              <Pressable
-                onPress={() => navigation.navigate('TournamentDetail', { slug: item.slug })}
-                className="bg-slate-200 dark:bg-slate-800 py-2 px-3.5 rounded-xl items-center justify-center border border-slate-300/60 dark:border-slate-700/60"
-                style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
-              >
-                <Text className="text-slate-900 dark:text-slate-200 font-extrabold text-[9px] uppercase tracking-wider">
-                  DETAILS
-                </Text>
-              </Pressable>
-              
-              <Pressable
-                onPress={() => navigation.navigate('RegisterTournament', { slug: item.slug, tournamentId: item._id })}
-                disabled={isFull}
-                className={`py-2 px-4 rounded-xl items-center justify-center ${
-                  isFull 
-                    ? 'bg-slate-300 dark:bg-slate-800 opacity-60' 
-                    : 'bg-emerald-500 dark:bg-emerald-600'
-                }`}
-                style={({ pressed }) => [
-                  !isFull && {
-                    opacity: pressed ? 0.85 : 1,
-                    shadowColor: '#10B981',
-                    shadowOffset: { width: 0, height: 1.5 },
-                    shadowOpacity: 0.2,
-                    shadowRadius: 3,
-                    elevation: 2
-                  }
-                ]}
-              >
-                <Text className="text-white font-extrabold text-[9px] uppercase tracking-wider">
-                  {isFull ? 'FULL' : 'JOIN'}
-                </Text>
-              </Pressable>
+            )}
+          </View>
+          <View className="items-center flex-1">
+            <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Entry Fee</Text>
+            <View className="flex-row items-center justify-center">
+              <GoldCoin size={14} />
+              <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">{item.entryFee}</Text>
             </View>
           </View>
         </View>
-      </GlassCard>
-    );
-  };
+
+        {/* Stats Grid: Row 2 */}
+        <View className="flex-row justify-between mb-4">
+          <View className="items-center flex-1">
+            <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Type</Text>
+            <Text className="text-slate-900 dark:text-white text-xs font-bold capitalize">{item.tournamentType || 'Solo'}</Text>
+          </View>
+          <View className="items-center flex-1">
+            <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Map</Text>
+            <Text className="text-slate-900 dark:text-white text-xs font-bold capitalize">{item.map || 'Bermuda'}</Text>
+          </View>
+          <View className="items-center flex-1 justify-center pt-2">
+            {!isCSLW && (Number(item.secondPrize) > 0 || Number(item.thirdPrize) > 0) ? (
+              <Pressable
+                onPress={() => setShowAllPrizes(!showAllPrizes)}
+                className="py-1 px-2.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg"
+                style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+              >
+                <Text className="text-[8px] text-rose-500 font-extrabold uppercase tracking-wider">
+                  {showAllPrizes ? 'Hide Prizes' : 'View Prizes'}
+                </Text>
+              </Pressable>
+            ) : (
+              <View />
+            )}
+          </View>
+        </View>
+
+        {/* Expanded Breakdown */}
+        {showAllPrizes && !isCSLW && (
+          <View className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60 rounded-xl p-3 mb-4 space-y-1">
+            {Number(item.firstPrize) > 0 && (
+              <Text className="text-slate-700 dark:text-slate-300 text-[10px] font-bold">🥇 Rank 1: ₹{item.firstPrize} Coins</Text>
+            )}
+            {Number(item.secondPrize) > 0 && (
+              <Text className="text-slate-700 dark:text-slate-300 text-[10px] font-bold">🥈 Rank 2: ₹{item.secondPrize} Coins</Text>
+            )}
+            {Number(item.thirdPrize) > 0 && (
+              <Text className="text-slate-700 dark:text-slate-300 text-[10px] font-bold">🥉 Rank 3: ₹{item.thirdPrize} Coins</Text>
+            )}
+          </View>
+        )}
+
+        {/* Progress and Action Button Row */}
+        <View className="flex-row justify-between items-center border-t border-slate-200 dark:border-slate-800/60 pt-4 mt-1">
+          {/* Progress Bar (Left Column) */}
+          <View className="flex-1 mr-4">
+            <View className="h-1.5 bg-slate-200 dark:bg-slate-950 rounded-full overflow-hidden mb-1.5 border border-slate-300/40 dark:border-slate-900">
+              <View 
+                style={{ width: `${progress}%`, height: '100%', backgroundColor: '#7C3AED' }} 
+                className="rounded-full"
+              />
+            </View>
+            <View className="flex-row justify-between items-center">
+              <Text className={`text-[9px] font-bold ${isFull ? 'text-rose-500 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                {isFull ? 'No Spots Left! Match is Full.' : `Only ${spotsLeft} spots left!`}
+              </Text>
+              <Text className="text-slate-900 dark:text-white text-[10px] font-black">{item.filledSlots}/{item.totalSlots}</Text>
+            </View>
+          </View>
+
+          {/* Action Buttons (Right Column) */}
+          <View className="flex-row" style={{ gap: 8 }}>
+            <Pressable
+              onPress={() => navigation.navigate('TournamentDetail', { slug: item.slug })}
+              className="bg-slate-200 dark:bg-slate-800 py-2 px-3.5 rounded-xl items-center justify-center border border-slate-300/60 dark:border-slate-700/60"
+              style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+            >
+              <Text className="text-slate-900 dark:text-slate-200 font-extrabold text-[9px] uppercase tracking-wider">
+                DETAILS
+              </Text>
+            </Pressable>
+            
+            <Pressable
+              onPress={() => navigation.navigate('RegisterTournament', { slug: item.slug, tournamentId: item._id })}
+              disabled={isFull}
+              className={`py-2 px-4 rounded-xl items-center justify-center ${
+                isFull 
+                  ? 'bg-slate-300 dark:bg-slate-800 opacity-60' 
+                  : 'bg-emerald-500 dark:bg-emerald-600'
+              }`}
+              style={({ pressed }) => [
+                !isFull && {
+                  opacity: pressed ? 0.85 : 1,
+                  shadowColor: '#10B981',
+                  shadowOffset: { width: 0, height: 1.5 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 3,
+                  elevation: 2
+                }
+              ]}
+            >
+              <Text className="text-white font-extrabold text-[9px] uppercase tracking-wider">
+                {isFull ? 'FULL' : 'JOIN'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </GlassCard>
+  );
+};
+
+const renderItem = ({ item }) => {
+  return <TournamentCard item={item} navigation={navigation} isDark={isDark} />;
+};
 
   const getEmptyMessage = () => {
     if (myMatchesOnly) {

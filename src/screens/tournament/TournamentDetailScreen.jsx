@@ -332,6 +332,7 @@ export default function TournamentDetailScreen({ route, navigation }) {
   
   // Tab states for CS / LW
   const [activeSubTab, setActiveSubTab] = useState('details'); // details, bracket
+  const [showAllPrizes, setShowAllPrizes] = useState(false);
 
   const loadData = async () => {
     try {
@@ -490,23 +491,15 @@ export default function TournamentDetailScreen({ route, navigation }) {
           <Image 
             source={getGameBannerSource(tournament)}
             style={{ width: '100%', height: 200 }}
-            resizeMode="cover"
+            resizeMode="stretch"
           />
-          <LinearGradient
-            colors={['transparent', isDark ? 'rgba(6, 10, 19, 0.98)' : 'rgba(248, 250, 252, 0.98)']}
-            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 80 }}
-          />
+
 
           <Pressable onPress={() => navigation.goBack()} className="absolute top-3 left-3 z-20 p-2 bg-black/45 rounded-full">
             <ArrowLeft size={22} color="#ffffff" strokeWidth={2.5} />
           </Pressable>
           
-          {/* Preset overlay badges */}
-          <View className="absolute top-3 right-4 bg-black/85 border border-rose-500/50 rounded-xl p-2 z-10">
-            <Text className="text-white text-[7.5px] font-black uppercase mb-0.5">LEVEL 40+ REQUIRED ✅</Text>
-            <Text className="text-white text-[7.5px] font-black uppercase mb-0.5">NO CHEATING/HACKING ❌</Text>
-            <Text className="text-white text-[7.5px] font-black uppercase">TEAMUP SUSPENSION ❌</Text>
-          </View>
+
 
           <Text 
             className="text-rose-500 font-black text-2xl italic tracking-widest uppercase absolute bottom-2 right-6 z-10"
@@ -580,138 +573,60 @@ export default function TournamentDetailScreen({ route, navigation }) {
               </View>
 
               {/* Prize Details Section */}
-              <Text className="text-slate-500 dark:text-slate-400 font-black text-xs uppercase tracking-wide mb-1.5 px-0.5">Prize Pools Distribution</Text>
-              <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-                {isCSLW ? (
-                  <Text className="text-emerald-500 font-black text-sm text-center">
-                    🏆 Winner Champion Prize: ₹{tournament.winnerPrize || tournament.prizePool} Coins!
-                  </Text>
-                ) : (
-                  <View className="space-y-1">
-                    <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold">🥇 Rank #1: ₹{tournament.firstPrize || Math.round(tournament.prizePool * 0.5)} Coins</Text>
-                    <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold">🥈 Rank #2: ₹{tournament.secondPrize || Math.round(tournament.prizePool * 0.3)} Coins</Text>
-                    <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold">🥉 Rank #3: ₹{tournament.thirdPrize || Math.round(tournament.prizePool * 0.2)} Coins</Text>
-                    <Text className="text-rose-500 text-[10px] font-extrabold mt-1.5">💀 Per Kill Bounty Reward: ₹{tournament.perKillReward || 0} Coins per elimination</Text>
+              {((isCSLW && Number(tournament.winnerPrize || tournament.prizePool) > 0) ||
+                (!isCSLW && (Number(tournament.firstPrize) > 0 || Number(tournament.secondPrize) > 0 || Number(tournament.thirdPrize) > 0 || Number(tournament.perKillReward) > 0))) ? (
+                <>
+                  <Text className="text-slate-500 dark:text-slate-400 font-black text-xs uppercase tracking-wide mb-1.5 px-0.5">Prize Pools Distribution</Text>
+                  <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+                    {isCSLW ? (
+                      <Text className="text-emerald-500 font-black text-sm text-center">
+                        🏆 Winner Champion Prize: ₹{tournament.winnerPrize || tournament.prizePool} Coins!
+                      </Text>
+                    ) : (
+                      <View className="space-y-1">
+                        {Number(tournament.firstPrize) > 0 && (
+                          <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold mb-1">🥇 Rank #1: ₹{tournament.firstPrize} Coins</Text>
+                        )}
+                        {Number(tournament.secondPrize) > 0 && (
+                          <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold mb-1">🥈 Rank #2: ₹{tournament.secondPrize} Coins</Text>
+                        )}
+                        {Number(tournament.thirdPrize) > 0 && (
+                          <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold mb-1">🥉 Rank #3: ₹{tournament.thirdPrize} Coins</Text>
+                        )}
+                        {Number(tournament.perKillReward) > 0 && (
+                          <Text className="text-rose-500 text-[10px] font-extrabold mt-1.5">💀 Per Kill Bounty Reward: ₹{tournament.perKillReward} Coins per elimination</Text>
+                        )}
+                      </View>
+                    )}
                   </View>
-                )}
-              </View>
+                </>
+              ) : null}
 
               {/* Match description */}
-              <Text className="text-slate-500 dark:text-slate-400 font-black text-xs uppercase tracking-wide mb-1.5 px-0.5">Match Information</Text>
-              <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-                {tournament.gameMode === 'battle_royale' ? (
-                  <>
-                    {/* BR Description */}
-                    <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📋 Description:</Text>
-                    {getBRDescription(tournament.tournamentType).map((line, idx) => (
-                      <Text key={`desc-${idx}`} className="text-slate-600 dark:text-slate-300 text-xs mb-1.5 leading-relaxed">• {line}</Text>
-                    ))}
+              {(tournament.description || (tournament.rules && tournament.rules.length > 0)) ? (
+                <>
+                  <Text className="text-slate-500 dark:text-slate-400 font-black text-xs uppercase tracking-wide mb-1.5 px-0.5">Match Information</Text>
+                  <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+                    {tournament.description ? (
+                      <>
+                        <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📋 Description:</Text>
+                        <Text className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed mb-4">
+                          {tournament.description}
+                        </Text>
+                      </>
+                    ) : null}
 
-                    {/* BR Rules */}
-                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                      <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📜 Rules & Restrictions:</Text>
-                      {getBRRules(tournament.tournamentType).rules.map((rule, idx) => (
-                        <Text key={`rule-${idx}`} className="text-slate-500 text-xs mb-1.5">{rule}</Text>
-                      ))}
-                    </View>
-
-                    {/* Fair Play Notice */}
-                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 bg-amber-50 dark:bg-amber-500/5 rounded-lg p-3">
-                      <Text className="text-amber-600 dark:text-amber-400 font-extrabold text-xs mb-1">💡 FAIR PLAY NOTICE:</Text>
-                      <Text className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-                        {getBRRules(tournament.tournamentType).fairPlay}
-                      </Text>
-                    </View>
-                  </>
-                ) : tournament.gameMode === 'clash_squad' && (tournament.mode === 'normal' || !tournament.mode) ? (
-                  <>
-                    {/* CS Normal Description */}
-                    <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📋 Description:</Text>
-                    {getCSNormalDescription(tournament.format).map((line, idx) => (
-                      <Text key={`desc-${idx}`} className="text-slate-600 dark:text-slate-300 text-xs mb-1.5 leading-relaxed">• {line}</Text>
-                    ))}
-
-                    {/* CS Normal Rules */}
-                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                      <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📜 Rules & Restrictions:</Text>
-                      {getCSNormalRules(tournament.format).rules.map((rule, idx) => (
-                        <Text key={`rule-${idx}`} className="text-slate-500 text-xs mb-1.5">{rule}</Text>
-                      ))}
-                    </View>
-
-                    {/* Fair Play Notice */}
-                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 bg-amber-50 dark:bg-amber-500/5 rounded-lg p-3">
-                      <Text className="text-amber-600 dark:text-amber-400 font-extrabold text-xs mb-1">💡 FAIR PLAY NOTICE:</Text>
-                      <Text className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-                        {getCSNormalRules(tournament.format).fairPlay}
-                      </Text>
-                    </View>
-                  </>
-                ) : tournament.gameMode === 'clash_squad' && (tournament.mode === 'headshot' || tournament.mode === 'onetap') ? (
-                  <>
-                    {/* CS Special (Headshot/Onetap) Description */}
-                    <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📋 Description:</Text>
-                    {getCSSpecialDescription(tournament.format).map((line, idx) => (
-                      <Text key={`desc-${idx}`} className="text-slate-600 dark:text-slate-300 text-xs mb-1.5 leading-relaxed">• {line}</Text>
-                    ))}
-
-                    {/* CS Special (Headshot/Onetap) Rules */}
-                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                      <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📜 Rules & Restrictions:</Text>
-                      {getCSSpecialRules(tournament.format, tournament.mode).rules.map((rule, idx) => (
-                        <Text key={`rule-${idx}`} className="text-slate-500 text-xs mb-1.5">{rule}</Text>
-                      ))}
-                    </View>
-
-                    {/* Fair Play Notice */}
-                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 bg-amber-50 dark:bg-amber-500/5 rounded-lg p-3">
-                      <Text className="text-amber-600 dark:text-amber-400 font-extrabold text-xs mb-1">💡 FAIR PLAY NOTICE:</Text>
-                      <Text className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-                        {getCSSpecialRules(tournament.format, tournament.mode).fairPlay}
-                      </Text>
-                    </View>
-                  </>
-                ) : tournament.gameMode === 'lone_wolf' ? (
-                  <>
-                    {/* Lone Wolf Description */}
-                    <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📋 Description:</Text>
-                    {getLWDescription(tournament.format).map((line, idx) => (
-                      <Text key={`desc-${idx}`} className="text-slate-600 dark:text-slate-300 text-xs mb-1.5 leading-relaxed">• {line}</Text>
-                    ))}
-
-                    {/* Lone Wolf Rules */}
-                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                      <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📜 Rules & Restrictions:</Text>
-                      {getLWRules(tournament.format, tournament.mode).rules.map((rule, idx) => (
-                        <Text key={`rule-${idx}`} className="text-slate-500 text-xs mb-1.5">{rule}</Text>
-                      ))}
-                    </View>
-
-                    {/* Fair Play Notice */}
-                    <View className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 bg-amber-50 dark:bg-amber-500/5 rounded-lg p-3">
-                      <Text className="text-amber-600 dark:text-amber-400 font-extrabold text-xs mb-1">💡 FAIR PLAY NOTICE:</Text>
-                      <Text className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-                        {getLWRules(tournament.format, tournament.mode).fairPlay}
-                      </Text>
-                    </View>
-                  </>
-                ) : (
-                  <>
-                    <Text className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed mb-3">
-                      {tournament.description || 'Welcome to BattleZone custom matches lobby.'}
-                    </Text>
-
-                    <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">Rules & Restrictions:</Text>
                     {tournament.rules && tournament.rules.length > 0 ? (
-                      tournament.rules.map((rule, idx) => (
-                        <Text key={idx} className="text-slate-500 text-xs mb-1.5">• {rule}</Text>
-                      ))
-                    ) : (
-                      <Text className="text-slate-500 text-xs">• Normal Free Fire custom match rules govern play.</Text>
-                    )}
-                  </>
-                )}
-              </View>
+                      <>
+                        <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">📜 Rules & Restrictions:</Text>
+                        {tournament.rules.map((rule, idx) => (
+                          <Text key={idx} className="text-slate-500 text-xs mb-1.5">{rule}</Text>
+                        ))}
+                      </>
+                    ) : null}
+                  </View>
+                </>
+              ) : null}
 
               {/* Slots progress */}
               <Text className="text-slate-500 dark:text-slate-400 font-black text-xs uppercase tracking-wide mb-1.5 px-0.5">Lobby Slot Progress</Text>
