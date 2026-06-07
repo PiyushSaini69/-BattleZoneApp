@@ -16,6 +16,7 @@ import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import CreateTournamentScreen from '../screens/admin/CreateTournamentScreen';
 import TermsScreen from '../screens/support/TermsScreen';
 import PrivacyScreen from '../screens/support/PrivacyScreen';
+import AboutUsScreen from '../screens/support/AboutUsScreen';
 import NotificationScreen from '../screens/main/NotificationScreen';
 import AddCoinScreen from '../screens/main/AddCoinScreen';
 import RedeemCoinScreen from '../screens/main/RedeemCoinScreen';
@@ -80,6 +81,7 @@ export default function AppNavigator() {
       )}
       <Stack.Screen name="Terms" component={TermsScreen} />
       <Stack.Screen name="Privacy" component={PrivacyScreen} />
+      <Stack.Screen name="AboutUs" component={AboutUsScreen} />
     </Stack.Navigator>
   );
 }

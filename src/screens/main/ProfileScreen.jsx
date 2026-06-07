@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { ScrollView, View, Text, Pressable, Alert, Switch, Modal, Clipboard, useColorScheme as useRNColorScheme } from 'react-native';
+import { ScrollView, View, Text, Pressable, Alert, Switch, Modal, Clipboard, Share, useColorScheme as useRNColorScheme } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { request } from '../../services/api';
 import Button from '../../components/ui/Button';
@@ -7,7 +7,7 @@ import Input from '../../components/ui/Input';
 import Header from '../../components/ui/Header';
 import { 
   User, Wallet, BarChart3, Trophy, Bell, Headphones, 
-  LogOut, ChevronRight, Shield, CheckCircle2, Settings, FileText, Copy
+  LogOut, ChevronRight, Shield, CheckCircle2, Settings, FileText, Copy, Info, Share2
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -42,10 +42,21 @@ export default function ProfileScreen({ navigation }) {
   // Modals state
   const [showThemeModal, setShowThemeModal] = useState(false);
 
+  const handleShareApp = async () => {
+    try {
+      const message = `Join me on BattleZone, the ultimate esports tournament platform! Play daily matches, show off your skills, and earn coins. Download the app now and use my referral code: ${user?.referralCode || 'N/A'}`;
+      await Share.share({
+        message,
+      });
+    } catch (error) {
+      Alert.alert('Sharing Failed', error.message);
+    }
+  };
+
   const handleLogoutPress = () => {
-    Alert.alert('Logout 🔌', 'Are you sure you want to disconnect from BattleZone?', [
+    Alert.alert('Logout 🔌', 'Are you sure you want to log out from BattleZone?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Disconnect', style: 'destructive', onPress: logout }
+      { text: 'Log Out', style: 'destructive', onPress: logout }
     ]);
   };
 
@@ -227,6 +238,32 @@ export default function ProfileScreen({ navigation }) {
             </View>
           </Pressable>
 
+          {/* Share App */}
+          <Pressable
+            onPress={handleShareApp}
+            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View className="flex-row items-center">
+              <Share2 size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">Share App</Text>
+            </View>
+            <ChevronRight size={16} color="#94A3B8" />
+          </Pressable>
+
+          {/* About Us */}
+          <Pressable
+            onPress={() => navigation.navigate('AboutUs')}
+            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View className="flex-row items-center">
+              <Info size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">About Us</Text>
+            </View>
+            <ChevronRight size={16} color="#94A3B8" />
+          </Pressable>
+
           {/* Contact Us */}
           <Pressable
             onPress={() => navigation.navigate('Support')}
@@ -289,10 +326,17 @@ export default function ProfileScreen({ navigation }) {
           >
             <View className="flex-row items-center">
               <LogOut size={18} color="#F43F5E" />
-              <Text className="text-rose-700 dark:text-rose-300 text-sm font-black ml-3.5">Disconnect Session</Text>
+              <Text className="text-rose-700 dark:text-rose-300 text-sm font-black ml-3.5">Logout</Text>
             </View>
             <ChevronRight size={16} color="#F43F5E" />
           </Pressable>
+
+          {/* App Version Info */}
+          <View className="items-center justify-center mt-2 mb-4">
+            <Text className="text-slate-400 dark:text-slate-500 text-[10px] font-black uppercase tracking-wider">
+              BattleZone App v1.0.0
+            </Text>
+          </View>
         </View>
       </ScrollView>
 
