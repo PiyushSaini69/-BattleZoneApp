@@ -52,6 +52,10 @@ export default function RegisterTournamentScreen({ route, navigation }) {
   const [p2UID, setP2UID] = useState('');
   const [p3UID, setP3UID] = useState('');
   const [p4UID, setP4UID] = useState('');
+  const [p5UID, setP5UID] = useState('');
+  const [p6UID, setP6UID] = useState('');
+  const [p7UID, setP7UID] = useState('');
+  const [p8UID, setP8UID] = useState('');
 
   const [wallet, setWallet] = useState({ depositBalance: 0, winningBalance: 0, bonusBalance: 0, totalBalance: 0 });
 
@@ -104,40 +108,59 @@ export default function RegisterTournamentScreen({ route, navigation }) {
     const payload = { slotNumber: selectedSlot };
 
     if (isBR) {
-      if (!gameUID.trim()) {
-        Alert.alert('UID Required ⚠️', 'Please enter your character UID.');
-        return;
-      }
-      payload.gameUID = gameUID;
-    } else {
-      // CS or LW Forms Validation
-      if (format === '1v1') {
-        if (!p1Name.trim() || !p1UID.trim() || !p1Mobile.trim()) {
-          Alert.alert('Validation Error ⚠️', 'Player Name, Character UID, and Mobile Number are required.');
+      const brType = tournament.tournamentType || 'solo';
+      if (brType === 'solo') {
+        if (!gameUID.trim()) {
+          Alert.alert('Game Name Required ⚠️', 'Please enter your Game Name.');
           return;
         }
-        payload.p1Name = p1Name;
-        payload.p1UID = p1UID;
-        payload.p1Mobile = p1Mobile;
-        payload.gameUID = p1UID;
-      } else if (format === '2v2') {
-        if (!teamName.trim() || !p1UID.trim() || !p2UID.trim()) {
-          Alert.alert('Validation Error ⚠️', 'Team Name and both Player UIDs are required.');
+        payload.gameUID = gameUID;
+      } else if (brType === 'duo') {
+        if (!p1UID.trim() || !p2UID.trim()) {
+          Alert.alert('Validation Error ⚠️', 'Both Player Game Names are required.');
           return;
         }
-        payload.teamName = teamName;
         payload.p1UID = p1UID;
         payload.p2UID = p2UID;
+        payload.teamMembersUIDs = [p1UID, p2UID];
         payload.gameUID = p1UID;
-      } else if (format === '4v4') {
-        if (!teamName.trim() || !p1UID.trim() || !p2UID.trim() || !p3UID.trim() || !p4UID.trim()) {
-          Alert.alert('Validation Error ⚠️', 'Team Name and all 4 Player UIDs are required.');
+      } else if (brType === 'squad') {
+        if (!p1UID.trim() || !p2UID.trim() || !p3UID.trim() || !p4UID.trim()) {
+          Alert.alert('Validation Error ⚠️', 'All 4 Player Game Names are required.');
           return;
         }
-        payload.teamName = teamName;
         payload.p1UID = p1UID;
         payload.p2UID = p2UID;
         payload.teamMembersUIDs = [p1UID, p2UID, p3UID, p4UID];
+        payload.gameUID = p1UID;
+      }
+    } else {
+      // CS or LW Forms Validation
+      if (format === '1v1') {
+        if (!p1UID.trim() || !p2UID.trim()) {
+          Alert.alert('Validation Error ⚠️', 'Both Player Game Names are required.');
+          return;
+        }
+        payload.p1UID = p1UID;
+        payload.p2UID = p2UID;
+        payload.gameUID = p1UID;
+      } else if (format === '2v2') {
+        if (!p1UID.trim() || !p2UID.trim() || !p3UID.trim() || !p4UID.trim()) {
+          Alert.alert('Validation Error ⚠️', 'All 4 Player Game Names are required.');
+          return;
+        }
+        payload.p1UID = p1UID;
+        payload.p2UID = p2UID;
+        payload.teamMembersUIDs = [p1UID, p2UID, p3UID, p4UID];
+        payload.gameUID = p1UID;
+      } else if (format === '4v4') {
+        if (!p1UID.trim() || !p2UID.trim() || !p3UID.trim() || !p4UID.trim() || !p5UID.trim() || !p6UID.trim() || !p7UID.trim() || !p8UID.trim()) {
+          Alert.alert('Validation Error ⚠️', 'All 8 Player Game Names are required.');
+          return;
+        }
+        payload.p1UID = p1UID;
+        payload.p2UID = p2UID;
+        payload.teamMembersUIDs = [p1UID, p2UID, p3UID, p4UID, p5UID, p6UID, p7UID, p8UID];
         payload.gameUID = p1UID;
       }
     }
@@ -204,6 +227,7 @@ export default function RegisterTournamentScreen({ route, navigation }) {
   };
 
   const format = tournament.format || '1v1';
+  const brType = tournament?.tournamentType || 'solo';
 
   return (
     <LinearGradient
@@ -319,36 +343,75 @@ export default function RegisterTournamentScreen({ route, navigation }) {
                   </Text>
 
                   {/* BR Form */}
-                  {tournament.gameMode === 'battle_royale' && (
+                  {tournament.gameMode === 'battle_royale' && brType === 'solo' && (
                     <Input
-                      label="Game Character UID"
+                      label="Game Name"
                       value={gameUID}
                       onChangeText={setGameUID}
-                      placeholder="Enter Free Fire UID"
+                      placeholder="Enter In-Game Name"
                     />
+                  )}
+
+                  {tournament.gameMode === 'battle_royale' && brType === 'duo' && (
+                    <View className="space-y-4">
+                      <Input
+                        label="Player 1 Game Name"
+                        value={p1UID}
+                        onChangeText={setP1UID}
+                        placeholder="Enter Player 1 IGN"
+                      />
+                      <Input
+                        label="Player 2 Game Name"
+                        value={p2UID}
+                        onChangeText={setP2UID}
+                        placeholder="Enter Player 2 IGN"
+                      />
+                    </View>
+                  )}
+
+                  {tournament.gameMode === 'battle_royale' && brType === 'squad' && (
+                    <View className="space-y-4">
+                      <Input
+                        label="Player 1 Game Name"
+                        value={p1UID}
+                        onChangeText={setP1UID}
+                        placeholder="Enter Player 1 IGN"
+                      />
+                      <Input
+                        label="Player 2 Game Name"
+                        value={p2UID}
+                        onChangeText={setP2UID}
+                        placeholder="Enter Player 2 IGN"
+                      />
+                      <Input
+                        label="Player 3 Game Name"
+                        value={p3UID}
+                        onChangeText={setP3UID}
+                        placeholder="Enter Player 3 IGN"
+                      />
+                      <Input
+                        label="Player 4 Game Name"
+                        value={p4UID}
+                        onChangeText={setP4UID}
+                        placeholder="Enter Player 4 IGN"
+                      />
+                    </View>
                   )}
 
                   {/* CS / LW 1v1 Form */}
                   {(tournament.gameMode === 'clash_squad' || tournament.gameMode === 'lone_wolf') && format === '1v1' && (
                     <View className="space-y-4">
                       <Input
-                        label="Player Name (IGN)"
-                        value={p1Name}
-                        onChangeText={setP1Name}
-                        placeholder="Enter Game Name"
-                      />
-                      <Input
-                        label="Character UID"
+                        label="Player 1 Game Name"
                         value={p1UID}
                         onChangeText={setP1UID}
-                        placeholder="Enter Free Fire UID"
+                        placeholder="Enter Player 1 IGN"
                       />
                       <Input
-                        label="Mobile Number"
-                        value={p1Mobile}
-                        onChangeText={setP1Mobile}
-                        placeholder="Enter Contact Number"
-                        keyboardType="phone-pad"
+                        label="Player 2 Game Name"
+                        value={p2UID}
+                        onChangeText={setP2UID}
+                        placeholder="Enter Player 2 IGN"
                       />
                     </View>
                   )}
@@ -357,22 +420,28 @@ export default function RegisterTournamentScreen({ route, navigation }) {
                   {(tournament.gameMode === 'clash_squad' || tournament.gameMode === 'lone_wolf') && format === '2v2' && (
                     <View className="space-y-4">
                       <Input
-                        label="Team Name"
-                        value={teamName}
-                        onChangeText={setTeamName}
-                        placeholder="Enter Team Name"
-                      />
-                      <Input
-                        label="Player 1 UID (Captain)"
+                        label="Player 1 Game Name"
                         value={p1UID}
                         onChangeText={setP1UID}
-                        placeholder="Enter Captain UID"
+                        placeholder="Enter Player 1 IGN"
                       />
                       <Input
-                        label="Player 2 UID"
+                        label="Player 2 Game Name"
                         value={p2UID}
                         onChangeText={setP2UID}
-                        placeholder="Enter Partner UID"
+                        placeholder="Enter Player 2 IGN"
+                      />
+                      <Input
+                        label="Player 3 Game Name"
+                        value={p3UID}
+                        onChangeText={setP3UID}
+                        placeholder="Enter Player 3 IGN"
+                      />
+                      <Input
+                        label="Player 4 Game Name"
+                        value={p4UID}
+                        onChangeText={setP4UID}
+                        placeholder="Enter Player 4 IGN"
                       />
                     </View>
                   )}
@@ -381,34 +450,52 @@ export default function RegisterTournamentScreen({ route, navigation }) {
                   {tournament.gameMode === 'clash_squad' && format === '4v4' && (
                     <View className="space-y-4">
                       <Input
-                        label="Team Name"
-                        value={teamName}
-                        onChangeText={setTeamName}
-                        placeholder="Enter Team Name"
-                      />
-                      <Input
-                        label="Player 1 UID (Captain)"
+                        label="Player 1 Game Name"
                         value={p1UID}
                         onChangeText={setP1UID}
-                        placeholder="Enter Captain UID"
+                        placeholder="Enter Player 1 IGN"
                       />
                       <Input
-                        label="Player 2 UID"
+                        label="Player 2 Game Name"
                         value={p2UID}
                         onChangeText={setP2UID}
-                        placeholder="Enter Player 2 UID"
+                        placeholder="Enter Player 2 IGN"
                       />
                       <Input
-                        label="Player 3 UID"
+                        label="Player 3 Game Name"
                         value={p3UID}
                         onChangeText={setP3UID}
-                        placeholder="Enter Player 3 UID"
+                        placeholder="Enter Player 3 IGN"
                       />
                       <Input
-                        label="Player 4 UID"
+                        label="Player 4 Game Name"
                         value={p4UID}
                         onChangeText={setP4UID}
-                        placeholder="Enter Player 4 UID"
+                        placeholder="Enter Player 4 IGN"
+                      />
+                      <Input
+                        label="Player 5 Game Name"
+                        value={p5UID}
+                        onChangeText={setP5UID}
+                        placeholder="Enter Player 5 IGN"
+                      />
+                      <Input
+                        label="Player 6 Game Name"
+                        value={p6UID}
+                        onChangeText={setP6UID}
+                        placeholder="Enter Player 6 IGN"
+                      />
+                      <Input
+                        label="Player 7 Game Name"
+                        value={p7UID}
+                        onChangeText={setP7UID}
+                        placeholder="Enter Player 7 IGN"
+                      />
+                      <Input
+                        label="Player 8 Game Name"
+                        value={p8UID}
+                        onChangeText={setP8UID}
+                        placeholder="Enter Player 8 IGN"
                       />
                     </View>
                   )}

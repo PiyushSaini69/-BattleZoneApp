@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, View, Text, Pressable, Alert, KeyboardAvoidingView, Platform, useColorScheme as useRNColorScheme, TextInput } from 'react-native';
+import { ScrollView, View, Text, Pressable, Alert, KeyboardAvoidingView, Platform, useColorScheme as useRNColorScheme, TextInput, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { request } from '../../services/api';
 import GlassCard from '../../components/ui/GlassCard';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Calendar, Clock } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function CreateTournamentScreen({ route, navigation }) {
   const { colorScheme } = useColorScheme();
@@ -62,7 +63,8 @@ export default function CreateTournamentScreen({ route, navigation }) {
 
   // Shared states
   const [entryFee, setEntryFee] = useState('');
-  const [totalSlots, setTotalSlots] = useState('');
+  const [prizePool, setPrizePool] = useState('');
+  const [totalSlots, setTotalSlots] = useState('48');
   const [date, setDate] = useState(getCurrentDateString());
   const [time, setTime] = useState(curTime.timeStr);
   const [isPm, setIsPm] = useState(curTime.isPmVal);
@@ -70,6 +72,44 @@ export default function CreateTournamentScreen({ route, navigation }) {
   const [description, setDescription] = useState('');
   const [rulesText, setRulesText] = useState('');
   const [bannerMapping, setBannerMapping] = useState('');
+  
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [pickerDate, setPickerDate] = useState(new Date());
+
+  const onChangeDate = (event, selectedDate) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (selectedDate) {
+      setPickerDate(selectedDate);
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const year = selectedDate.getFullYear();
+      setDate(`${day}-${month}-${year}`);
+    }
+  };
+
+  const onChangeTime = (event, selectedTime) => {
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+    }
+    if (selectedTime) {
+      const newPickerDate = new Date(pickerDate);
+      newPickerDate.setHours(selectedTime.getHours());
+      newPickerDate.setMinutes(selectedTime.getMinutes());
+      setPickerDate(newPickerDate);
+
+      let hours = selectedTime.getHours();
+      const minutes = String(selectedTime.getMinutes()).padStart(2, '0');
+      const isPmVal = hours >= 12;
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const hoursStr = String(hours).padStart(2, '0');
+      setTime(`${hoursStr}:${minutes}`);
+      setIsPm(isPmVal);
+    }
+  };
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -83,6 +123,7 @@ export default function CreateTournamentScreen({ route, navigation }) {
       setTitle(editTournament.title || '');
       setGameMode(editTournament.gameMode || 'battle_royale');
       setEntryFee(editTournament.entryFee !== undefined && editTournament.entryFee !== null ? String(editTournament.entryFee) : '');
+      setPrizePool(editTournament.prizePool !== undefined && editTournament.prizePool !== null ? String(editTournament.prizePool) : '');
       setTotalSlots(editTournament.totalSlots !== undefined && editTournament.totalSlots !== null ? String(editTournament.totalSlots) : '');
       setDescription(editTournament.description || '');
       setRulesText(editTournament.rules ? editTournament.rules.join('\n') : '');
@@ -105,6 +146,7 @@ export default function CreateTournamentScreen({ route, navigation }) {
           const hoursStr = String(hours).padStart(2, '0');
           setTime(`${hoursStr}:${minutes}`);
           setIsPm(isPmVal);
+          setPickerDate(schedDate);
         }
       }
 
@@ -334,7 +376,50 @@ export default function CreateTournamentScreen({ route, navigation }) {
     setDescription(data.description);
     setRulesText(data.rules);
     setBannerMapping(data.banner);
+
+    // Auto-fill defaults for BR Solo
+    if (gameMode === 'battle_royale' && brType === 'solo') {
+      setEntryFee('10');
+      setTotalSlots('48');
+      setBrPerKill('8');
+      setBr1stPrize('30');
+      setBr2ndPrize('20');
+      setBr3rdPrize('0');
+    }
+
+    // Auto-fill defaults for BR Duo
+    if (gameMode === 'battle_royale' && brType === 'duo') {
+      setEntryFee('10');
+      setTotalSlots('24');
+      setBrPerKill('8');
+      setBr1stPrize('30');
+      setBr2ndPrize('20');
+      setBr3rdPrize('0');
+    }
+
+    // Auto-fill defaults for BR Squad
+    if (gameMode === 'battle_royale' && brType === 'squad') {
+      setEntryFee('10');
+      setTotalSlots('12');
+      setBrPerKill('8');
+      setBr1stPrize('60');
+      setBr2ndPrize('0');
+      setBr3rdPrize('0');
+    }
   }, [gameMode, brType, brMap, csFormat, csMode, lwFormat, lwMode, autoGen]);
+
+  // Auto-calculate prizePool when individual prizes change
+  useEffect(() => {
+    if (gameMode === 'battle_royale') {
+      const p1 = parseFloat(br1stPrize) || 0;
+      const p2 = parseFloat(br2ndPrize) || 0;
+      const p3 = parseFloat(br3rdPrize) || 0;
+      setPrizePool(String(p1 + p2 + p3));
+    } else {
+      const winner = parseFloat(cslwWinnerPrize) || 0;
+      setPrizePool(String(winner));
+    }
+  }, [br1stPrize, br2ndPrize, br3rdPrize, cslwWinnerPrize, gameMode]);
 
   const handleCreate = async () => {
     setError('');
@@ -389,7 +474,8 @@ export default function CreateTournamentScreen({ route, navigation }) {
         title,
         game: 'free_fire',
         gameMode,
-        entryFee: parseFloat(entryFee),
+        entryFee: parseFloat(entryFee) || 0,
+        prizePool: parseFloat(prizePool) || 0,
         totalSlots: parseInt(totalSlots, 10),
         scheduledAt,
         description,
@@ -402,28 +488,28 @@ export default function CreateTournamentScreen({ route, navigation }) {
       if (gameMode === 'battle_royale') {
         payload.tournamentType = brType;
         payload.mapType = brMap;
-        payload.perKillReward = parseFloat(brPerKill);
-        payload.firstPrize = parseFloat(br1stPrize);
-        payload.secondPrize = parseFloat(br2ndPrize);
-        payload.thirdPrize = parseFloat(br3rdPrize);
-        payload.prizePool = parseFloat(br1stPrize) + parseFloat(br2ndPrize) + parseFloat(br3rdPrize);
+        payload.perKillReward = parseFloat(brPerKill) || 0;
+        payload.firstPrize = parseFloat(br1stPrize) || 0;
+        payload.secondPrize = parseFloat(br2ndPrize) || 0;
+        payload.thirdPrize = parseFloat(br3rdPrize) || 0;
+        payload.prizePool = parseFloat(prizePool) || 0;
         payload.prizeDistribution = [
-          { rank: 1, amount: parseFloat(br1stPrize) },
-          { rank: 2, amount: parseFloat(br2ndPrize) },
-          { rank: 3, amount: parseFloat(br3rdPrize) }
+          { rank: 1, amount: parseFloat(br1stPrize) || 0 },
+          { rank: 2, amount: parseFloat(br2ndPrize) || 0 },
+          { rank: 3, amount: parseFloat(br3rdPrize) || 0 }
         ];
       } else if (gameMode === 'clash_squad') {
         payload.format = csFormat;
         payload.mode = csMode;
-        payload.winnerPrize = parseFloat(cslwWinnerPrize);
-        payload.prizePool = parseFloat(cslwWinnerPrize);
-        payload.prizeDistribution = [{ rank: 1, amount: parseFloat(cslwWinnerPrize) }];
+        payload.winnerPrize = parseFloat(cslwWinnerPrize) || 0;
+        payload.prizePool = parseFloat(prizePool) || 0;
+        payload.prizeDistribution = [{ rank: 1, amount: parseFloat(cslwWinnerPrize) || 0 }];
       } else if (gameMode === 'lone_wolf') {
         payload.format = lwFormat;
         payload.mode = lwMode;
-        payload.winnerPrize = parseFloat(cslwWinnerPrize);
-        payload.prizePool = parseFloat(cslwWinnerPrize);
-        payload.prizeDistribution = [{ rank: 1, amount: parseFloat(cslwWinnerPrize) }];
+        payload.winnerPrize = parseFloat(cslwWinnerPrize) || 0;
+        payload.prizePool = parseFloat(prizePool) || 0;
+        payload.prizeDistribution = [{ rank: 1, amount: parseFloat(cslwWinnerPrize) || 0 }];
       }
 
       const apiEndpoint = isEditMode 
@@ -502,6 +588,7 @@ export default function CreateTournamentScreen({ route, navigation }) {
                     onPress={() => {
                       setGameMode(item.id);
                       setAutoGen(true);
+                      setTotalSlots(item.id === 'battle_royale' ? '48' : '8');
                     }}
                     className={`flex-1 py-2 rounded-lg items-center ${
                       gameMode === item.id ? (isDark ? 'bg-slate-800' : 'bg-white') : ''
@@ -650,23 +737,6 @@ export default function CreateTournamentScreen({ route, navigation }) {
                   onChangeText={setCslwWinnerPrize}
                   keyboardType="numeric"
                 />
-
-                <View className="mb-2">
-                  <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold mb-1 uppercase">Bracket Size (Teams)</Text>
-                  <View className="flex-row flex-wrap gap-2">
-                    {['2', '4', '8', '16'].map((sz) => (
-                      <Pressable
-                        key={sz}
-                        onPress={() => setTotalSlots(sz)}
-                        className={`px-3 py-1.5 border rounded-lg ${totalSlots === sz ? 'border-rose-500 bg-rose-500/5' : 'border-slate-300 dark:border-slate-800'}`}
-                      >
-                        <Text className={`text-[9px] font-bold ${totalSlots === sz ? 'text-rose-500' : 'text-slate-400'}`}>
-                          {sz} Teams
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
               </View>
             )}
 
@@ -722,37 +792,32 @@ export default function CreateTournamentScreen({ route, navigation }) {
                   onChangeText={setCslwWinnerPrize}
                   keyboardType="numeric"
                 />
-
-                <View className="mb-2">
-                  <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold mb-1 uppercase">Bracket Size (Players)</Text>
-                  <View className="flex-row flex-wrap gap-2">
-                    {['2', '4', '8', '16'].map((sz) => (
-                      <Pressable
-                        key={sz}
-                        onPress={() => setTotalSlots(sz)}
-                        className={`px-3 py-1.5 border rounded-lg ${totalSlots === sz ? 'border-rose-500 bg-rose-500/5' : 'border-slate-300 dark:border-slate-800'}`}
-                      >
-                        <Text className={`text-[9px] font-bold ${totalSlots === sz ? 'text-rose-500' : 'text-slate-400'}`}>
-                          {sz} Players
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
               </View>
             )}
 
             {/* General form settings */}
             <View className="flex-row justify-between mb-4" style={{ gap: 12 }}>
               <View className="flex-1">
-                <Input
-                  label="Date (DD-MM-YYYY)"
-                  value={date}
-                  onChangeText={setDate}
-                  placeholder="15-06-2026"
-                  keyboardType="numeric"
-                  className="mb-0"
-                />
+                <Text 
+                  className="text-xs font-bold uppercase tracking-widest mb-2 ml-0.5 text-slate-500 dark:text-slate-400"
+                >
+                  Date (DD-MM-YYYY)
+                </Text>
+                <Pressable 
+                  onPress={() => setShowDatePicker(true)}
+                  className="flex-row items-center rounded-xl px-4 justify-between"
+                  style={{
+                    backgroundColor: isDark ? '#0A0E1A' : '#F1F5F9',
+                    borderWidth: 1.5,
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)',
+                    height: 50,
+                  }}
+                >
+                  <Text style={{ color: isDark ? '#F1F5F9' : '#0F172A', fontSize: 14 }}>
+                    {date || 'Select Date'}
+                  </Text>
+                  <Calendar size={18} color={isDark ? '#94A3B8' : '#64748B'} />
+                </Pressable>
               </View>
               <View className="flex-1">
                 <Text 
@@ -761,15 +826,21 @@ export default function CreateTournamentScreen({ route, navigation }) {
                   Time (HH:MM)
                 </Text>
                 <View className="flex-row items-center">
-                  <View className="flex-1 mr-2">
-                    <Input
-                      value={time}
-                      onChangeText={setTime}
-                      placeholder="06:00"
-                      keyboardType="numeric"
-                      className="mb-0"
-                    />
-                  </View>
+                  <Pressable 
+                    onPress={() => setShowTimePicker(true)}
+                    className="flex-1 mr-2 flex-row items-center rounded-xl px-4 justify-between"
+                    style={{
+                      backgroundColor: isDark ? '#0A0E1A' : '#F1F5F9',
+                      borderWidth: 1.5,
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)',
+                      height: 50,
+                    }}
+                  >
+                    <Text style={{ color: isDark ? '#F1F5F9' : '#0F172A', fontSize: 14 }}>
+                      {time || 'Select Time'}
+                    </Text>
+                    <Clock size={18} color={isDark ? '#94A3B8' : '#64748B'} />
+                  </Pressable>
                   <Pressable
                     onPress={() => setIsPm(!isPm)}
                     className="rounded-xl justify-center items-center border"
@@ -795,21 +866,39 @@ export default function CreateTournamentScreen({ route, navigation }) {
               </View>
             </View>
 
-            <Input
-              label="Entry Fee (Coins)"
-              value={entryFee}
-              onChangeText={setEntryFee}
-              placeholder="20"
-              keyboardType="number-pad"
-            />
+            <View className="flex-row justify-between mb-4" style={{ gap: 12 }}>
+              <View className="flex-1">
+                <Input
+                  label="Entry Fee (Coins)"
+                  value={entryFee}
+                  onChangeText={setEntryFee}
+                  placeholder="10"
+                  keyboardType="numeric"
+                />
+              </View>
+              <View className="flex-1">
+                <Input
+                  label="Prize Pool (Coins)"
+                  value={prizePool}
+                  onChangeText={setPrizePool}
+                  placeholder="50"
+                  keyboardType="numeric"
+                />
+              </View>
+            </View>
 
             <Input
-              label="Total Available Slots"
+              label="Total Slots"
               value={totalSlots}
-              onChangeText={setTotalSlots}
+              onChangeText={(val) => {
+                setAutoGen(false);
+                setTotalSlots(val);
+              }}
               placeholder="48"
-              keyboardType="number-pad"
+              keyboardType="numeric"
             />
+
+
 
             {/* Editable autogenerated title and mapping */}
             <Input
@@ -870,6 +959,105 @@ export default function CreateTournamentScreen({ route, navigation }) {
           </GlassCard>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Android DateTimePickers */}
+      {Platform.OS === 'android' && showDatePicker && (
+        <DateTimePicker
+          value={pickerDate}
+          mode="date"
+          display="default"
+          onChange={onChangeDate}
+        />
+      )}
+
+      {Platform.OS === 'android' && showTimePicker && (
+        <DateTimePicker
+          value={pickerDate}
+          mode="time"
+          display="default"
+          is24Hour={false}
+          onChange={onChangeTime}
+        />
+      )}
+
+      {/* iOS Date Picker Modal */}
+      {Platform.OS === 'ios' && (
+        <Modal
+          transparent={true}
+          visible={showDatePicker}
+          animationType="slide"
+          onRequestClose={() => setShowDatePicker(false)}
+        >
+          <Pressable 
+            className="flex-1 bg-black/60 justify-end"
+            onPress={() => setShowDatePicker(false)}
+          >
+            <Pressable 
+              className="bg-slate-900 border-t border-slate-800 p-6 rounded-t-3xl"
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View className="flex-row justify-between items-center mb-4">
+                <Text className="text-white font-bold text-lg">Select Date</Text>
+                <Pressable 
+                  onPress={() => setShowDatePicker(false)}
+                  className="bg-rose-600 px-4 py-2 rounded-xl"
+                >
+                  <Text className="text-white font-extrabold text-xs uppercase">Done</Text>
+                </Pressable>
+              </View>
+              <View className="bg-slate-950 rounded-2xl p-4 items-center justify-center">
+                <DateTimePicker
+                  value={pickerDate}
+                  mode="date"
+                  display="spinner"
+                  textColor="#FFFFFF"
+                  onChange={onChangeDate}
+                />
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
+
+      {/* iOS Time Picker Modal */}
+      {Platform.OS === 'ios' && (
+        <Modal
+          transparent={true}
+          visible={showTimePicker}
+          animationType="slide"
+          onRequestClose={() => setShowTimePicker(false)}
+        >
+          <Pressable 
+            className="flex-1 bg-black/60 justify-end"
+            onPress={() => setShowTimePicker(false)}
+          >
+            <Pressable 
+              className="bg-slate-900 border-t border-slate-800 p-6 rounded-t-3xl"
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View className="flex-row justify-between items-center mb-4">
+                <Text className="text-white font-bold text-lg">Select Time</Text>
+                <Pressable 
+                  onPress={() => setShowTimePicker(false)}
+                  className="bg-rose-600 px-4 py-2 rounded-xl"
+                >
+                  <Text className="text-white font-extrabold text-xs uppercase">Done</Text>
+                </Pressable>
+              </View>
+              <View className="bg-slate-950 rounded-2xl p-4 items-center justify-center">
+                <DateTimePicker
+                  value={pickerDate}
+                  mode="time"
+                  display="spinner"
+                  textColor="#FFFFFF"
+                  is24Hour={false}
+                  onChange={onChangeTime}
+                />
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
     </LinearGradient>
   );
 }

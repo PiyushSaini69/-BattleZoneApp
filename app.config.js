@@ -66,7 +66,8 @@ module.exports = {
         {
           "iosUrlScheme": reversedClientId
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ]
   }
 };
