@@ -7,7 +7,7 @@ import GlassCard from '../../components/ui/GlassCard';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Countdown from '../../components/ui/Countdown';
-import { Swords, Calendar, Users, DollarSign, CheckCircle, ArrowLeft } from 'lucide-react-native';
+import { Swords, Calendar, Users, DollarSign, CheckCircle, ArrowLeft, Award, Trophy } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -59,12 +59,7 @@ const getGameBannerSource = (item) => {
     }
     return require('../../../assets/free_fire_banner.jpg');
   }
-  switch (item.game) {
-    case 'bgmi': return { uri: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=300' };
-    case 'valorant': return { uri: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=300' };
-    case 'cod_mobile': return { uri: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=300' };
-    default: return { uri: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=300' };
-  }
+  return { uri: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=300' };
 };
 
 export default function TournamentDetailScreen({ route, navigation }) {
@@ -78,9 +73,9 @@ export default function TournamentDetailScreen({ route, navigation }) {
   const [tournament, setTournament] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-
+  
+  // Tab states for CS / LW
+  const [activeSubTab, setActiveSubTab] = useState('details'); // details, bracket
 
   const loadData = async () => {
     try {
@@ -102,13 +97,22 @@ export default function TournamentDetailScreen({ route, navigation }) {
 
   useEffect(() => {
     if (socket && tournament) {
-      socket.on('tournament:slot_update', (data) => {
+      const handleSlotUpdate = (data) => {
         if (data.tournamentId === tournament._id) {
           setTournament(prev => prev ? { ...prev, filledSlots: data.filledSlots } : null);
         }
-      });
+      };
+      const handleBracketUpdate = (data) => {
+        if (data.tournamentId === tournament._id) {
+          loadData();
+        }
+      };
+      
+      socket.on('tournament:slot_update', handleSlotUpdate);
+      socket.on('tournament:bracket_update', handleBracketUpdate);
       return () => {
-        socket.off('tournament:slot_update');
+        socket.off('tournament:slot_update', handleSlotUpdate);
+        socket.off('tournament:bracket_update', handleBracketUpdate);
       };
     }
   }, [socket, tournament]);
@@ -120,7 +124,7 @@ export default function TournamentDetailScreen({ route, navigation }) {
   };
 
   const userRegistration = tournament && user 
-    ? participants.find(p => p.userId._id === user.id || p.userId === user.id)
+    ? participants.find(p => p.userId?._id === user.id || p.userId === user.id || p.userId?._id === user._id)
     : null;
 
   const isRegistered = !!userRegistration;
@@ -143,7 +147,6 @@ export default function TournamentDetailScreen({ route, navigation }) {
       ]);
       return;
     }
-
     navigation.navigate('RegisterTournament', { slug: tournament.slug, tournamentId: tournament._id });
   };
 
@@ -166,21 +169,24 @@ export default function TournamentDetailScreen({ route, navigation }) {
 
   const handleMyEntriesPress = () => {
     if (isRegistered) {
-      Alert.alert(
-        'Your Registration Details 🎮', 
-        `Slot Number: #${userRegistration.slotNumber}\nCharacter UID: ${userRegistration.gameUID}\n\nEnsure your in-game character matches this UID for score tracking accuracy.`
-      );
+      let details = `Slot Number: #${userRegistration.slotNumber}\n`;
+      if (tournament.gameMode === 'battle_royale') {
+        details += `UID: ${userRegistration.gameUID}`;
+      } else {
+        if (userRegistration.teamName) {
+          details += `Team Name: ${userRegistration.teamName}\n`;
+        }
+        details += `UID: ${userRegistration.gameUID}`;
+      }
+      Alert.alert('Your Registration 🎮', details);
     } else {
-      Alert.alert(
-        'Not Registered ⚠️', 
-        'You have not registered for this tournament yet. Click "REGISTER NOW" to secure your slot!'
-      );
+      Alert.alert('Not Registered ⚠️', 'Join the lobby to secure your slot!');
     }
   };
 
   const getRightButtonConfig = () => {
     if (isRegistered) {
-      if (isLive) {
+      if (isLive || tournament.status === 'completed') {
         return { text: 'ENTER LOBBY', disabled: false, styleClass: 'bg-violet-600 dark:bg-violet-500' };
       }
       return { text: 'LOBBY LOCKED', disabled: false, styleClass: 'bg-slate-500 dark:bg-slate-700' };
@@ -188,19 +194,19 @@ export default function TournamentDetailScreen({ route, navigation }) {
     if (isFull) {
       return { text: 'MATCH FULL', disabled: true, styleClass: 'bg-slate-550 dark:bg-slate-800' };
     }
-    return { text: 'REGISTER NOW', disabled: false, styleClass: 'bg-cyan-500 dark:bg-cyan-600' };
+    return { text: 'REGISTER NOW', disabled: false, styleClass: 'bg-rose-600 dark:bg-rose-500' };
   };
 
   const rightBtn = getRightButtonConfig();
 
   const handleRightButtonPress = () => {
     if (isRegistered) {
-      if (isLive) {
+      if (isLive || tournament.status === 'completed') {
         handleEnterLobby();
       } else {
         Alert.alert(
           'Lobby Locked 🔑', 
-          'Room details (ID & Password) will unlock here automatically 10-15 minutes before the match start time.'
+          'Room ID & Password will unlock here automatically 15 minutes before the match start time.'
         );
       }
     } else {
@@ -208,7 +214,8 @@ export default function TournamentDetailScreen({ route, navigation }) {
     }
   };
 
-
+  const isCSLW = tournament.gameMode === 'clash_squad' || tournament.gameMode === 'lone_wolf';
+  const hasBracket = tournament.bracket && tournament.bracket.length > 0;
 
   return (
     <LinearGradient
@@ -217,24 +224,16 @@ export default function TournamentDetailScreen({ route, navigation }) {
     >
       <ScrollView 
         className="flex-1"
-        refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
-            tintColor="#00E5FF" 
-            colors={["#00E5FF"]} 
-            progressBackgroundColor="#0A0E1A"
-          />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#EF4444" />}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
-        {/* Status Bar Spacing */}
         <View style={{ height: insets.top }} />
 
+        {/* Banner Overlays */}
         <View className="relative">
           <Image 
             source={getGameBannerSource(tournament)}
-            style={{ width: '100%', height: 210 }}
+            style={{ width: '100%', height: 200 }}
             resizeMode="cover"
           />
           <LinearGradient
@@ -242,153 +241,222 @@ export default function TournamentDetailScreen({ route, navigation }) {
             style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 80 }}
           />
 
-          {/* Back Button */}
-          <Pressable 
-            onPress={() => navigation.goBack()}
-            className="absolute top-3 left-3 z-20 p-2"
-          >
+          <Pressable onPress={() => navigation.goBack()} className="absolute top-3 left-3 z-20 p-2 bg-black/45 rounded-full">
             <ArrowLeft size={22} color="#ffffff" strokeWidth={2.5} />
           </Pressable>
           
-          {/* Rules Overlay Card */}
-          <View 
-            className="absolute top-3 right-4 bg-black/85 border border-amber-600/70 rounded-xl p-2.5 z-10"
-            style={{ maxWidth: '60%' }}
-          >
-            <Text className="text-white text-[7.5px] font-black tracking-wide mb-0.5">I'D LEV 40+ ✅</Text>
-            <Text className="text-white text-[7.5px] font-black tracking-wide mb-0.5">HUD POV ALLOWED ✅</Text>
-            <Text className="text-white text-[7.5px] font-black tracking-wide mb-0.5">M79 LAUNCHER BAN ❌</Text>
-            <Text className="text-white text-[7.5px] font-black tracking-wide mb-0.5">TEAMUP NOT ALLOWED ❌</Text>
-            <Text className="text-white text-[7.5px] font-black tracking-wide mb-0.5">HACKERS BAN ❌</Text>
-            <Text className="text-white text-[7.5px] font-black tracking-wide">DOUBLE VECTOR BAN ❌</Text>
+          {/* Preset overlay badges */}
+          <View className="absolute top-3 right-4 bg-black/85 border border-rose-500/50 rounded-xl p-2 z-10">
+            <Text className="text-white text-[7.5px] font-black uppercase mb-0.5">LEVEL 40+ REQUIRED ✅</Text>
+            <Text className="text-white text-[7.5px] font-black uppercase mb-0.5">NO CHEATING/HACKING ❌</Text>
+            <Text className="text-white text-[7.5px] font-black uppercase">TEAMUP SUSPENSION ❌</Text>
           </View>
 
-          {/* Map Overlay Text */}
           <Text 
-            className="text-yellow-400 font-black text-2xl italic tracking-widest uppercase absolute bottom-2 right-6 z-10"
+            className="text-rose-500 font-black text-2xl italic tracking-widest uppercase absolute bottom-2 right-6 z-10"
             style={{
               textShadowColor: '#000',
               textShadowOffset: { width: 1.5, height: 1.5 },
               textShadowRadius: 1,
             }}
           >
-            {tournament.map || 'Bermuda'}
+            {tournament.mapType || tournament.map || 'CS Arena'}
           </Text>
         </View>
 
         <View className="px-4 pb-2">
-          {/* Title Header */}
-          <Text className="text-sky-600 dark:text-[#00E5FF] text-lg font-black uppercase mb-4 tracking-wide">
-            {tournament.title.toUpperCase().startsWith('FREE FIRE') 
-              ? tournament.title.toUpperCase() 
-              : `${tournament.game.replace('_', ' ').toUpperCase()} #${tournament._id.slice(-6).toUpperCase()}`}
+          {/* Title */}
+          <Text className="text-slate-900 dark:text-white text-lg font-black uppercase mb-4 tracking-wide">
+            {tournament.title}
           </Text>
 
-          {/* Stat Badges Row 1: Type, Version, Map */}
-          <View className="flex-row space-x-2.5 mb-3">
-            <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 flex-1 items-center justify-center shadow-sm">
-              <Text className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-                Type: <Text className="font-extrabold text-slate-900 dark:text-white capitalize">{tournament.tournamentType || 'Solo'}</Text>
-              </Text>
+          {/* Sub-tab segment selector (if CS/LW and has generated bracket) */}
+          {isCSLW && hasBracket && (
+            <View className="flex-row bg-slate-200 dark:bg-slate-950 border border-slate-350 dark:border-slate-800 rounded-xl p-1 mb-5">
+              <Pressable
+                onPress={() => setActiveSubTab('details')}
+                className={`flex-1 py-2 rounded-lg items-center ${activeSubTab === 'details' ? 'bg-rose-600' : ''}`}
+              >
+                <Text className={`text-[10px] font-extrabold uppercase tracking-wide ${activeSubTab === 'details' ? 'text-white' : 'text-slate-500'}`}>
+                  Lobby Details
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setActiveSubTab('bracket')}
+                className={`flex-1 py-2 rounded-lg items-center ${activeSubTab === 'bracket' ? 'bg-rose-600' : ''}`}
+              >
+                <Text className={`text-[10px] font-extrabold uppercase tracking-wide ${activeSubTab === 'bracket' ? 'text-white' : 'text-slate-500'}`}>
+                  Bracket Tree
+                </Text>
+              </Pressable>
             </View>
-            <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 flex-1 items-center justify-center shadow-sm">
-              <Text className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-                Version: <Text className="font-extrabold text-slate-900 dark:text-white uppercase">{tournament.version || 'TPP'}</Text>
-              </Text>
-            </View>
-            <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 flex-1 items-center justify-center shadow-sm">
-              <Text className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-                Map: <Text className="font-extrabold text-slate-900 dark:text-white capitalize">{tournament.map || 'Bermuda'}</Text>
-              </Text>
-            </View>
-          </View>
+          )}
 
-          {/* Stat Badges Row 2: Match Type, Entry Fee */}
-          <View className="flex-row space-x-2.5 mb-3">
-            <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 flex-1 items-center justify-center shadow-sm">
-              <Text className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-                Match Type: <Text className="font-extrabold text-slate-900 dark:text-white">{tournament.entryFee === 0 ? 'Free' : 'Paid'}</Text>
-              </Text>
-            </View>
-            <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 flex-1 flex-row items-center justify-center shadow-sm">
-              <Text className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Entry Fee: </Text>
-              <GoldCoin size={12} />
-              <Text className="font-extrabold text-slate-900 dark:text-white text-[10px] ml-1.5">{tournament.entryFee} Coins</Text>
-            </View>
-          </View>
-
-          {/* Stat Badges Row 3: Match Schedule */}
-          <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 mb-5 items-center justify-center shadow-sm">
-            <Text className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-              Match Schedule: <Text className="font-extrabold text-slate-900 dark:text-white">{formatDate(tournament.scheduledAt)}</Text>
-            </Text>
-          </View>
-
-          {/* Prize Details Section */}
-          <Text className="text-[#0284C7] dark:text-[#38BDF8] font-black text-sm uppercase tracking-wide mb-3 px-0.5">Prize Details</Text>
-          <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 mb-5 shadow-sm">
-            <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold mb-2">
-              .WINNER - {Math.round(tournament.prizePool * 0.6)} COINS + KILLS COINS
-            </Text>
-            <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold">
-              #2 - {Math.round(tournament.prizePool * 0.4)} COINS + KILLS COINS
-            </Text>
-          </View>
-
-          {/* About this Match Section */}
-          <Text className="text-[#0284C7] dark:text-[#38BDF8] font-black text-sm uppercase tracking-wide mb-3 px-0.5">About this Match</Text>
-          <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 mb-5 shadow-sm">
-            <Pressable onPress={() => Alert.alert('How to Join 📖', '1. Wait for registration window.\n2. Click "MY ENTRIES" to double check your UID.\n3. Access match room 10-15 mins before match starts to copy Room ID & Password.\n4. Open Free Fire, find the Custom Match screen, search the Room ID, enter the Password, and sit in your slot!')}>
-              <Text className="text-sky-600 dark:text-sky-400 font-bold text-xs underline mb-3.5">
-                How To Join Free Fire Custom Room
-              </Text>
-            </Pressable>
-            
-            <Text className="text-slate-800 dark:text-slate-200 text-xs font-black mb-2">Restrictions:</Text>
-            <Text className="text-slate-600 dark:text-slate-400 text-xs font-semibold mb-1.5">- Double Vector not allowed (Single Vector allowed)</Text>
-            <Text className="text-slate-600 dark:text-slate-400 text-xs font-semibold mb-1.5">- M79 Launcher Ban</Text>
-            <Text className="text-slate-600 dark:text-slate-400 text-xs font-semibold mb-4">- Gun Attributes On</Text>
-
-            <Text className="text-slate-800 dark:text-slate-200 text-xs font-black mb-2">Tournament Rules:--</Text>
-            <Text className="text-slate-600 dark:text-slate-400 text-xs font-semibold leading-relaxed">
-              Ensure to play fair. Hacking or teaming up results in immediate lobby disqualification. You must submit score screen proofs within the Match lobby channel post-game.
-            </Text>
-          </View>
-
-          {/* Slots Availability Section */}
-          <Text className="text-[#0284C7] dark:text-[#38BDF8] font-black text-sm uppercase tracking-wide mb-3 px-0.5">Tournament Slots</Text>
-          <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 mb-5 shadow-sm">
-            <View className="flex-row justify-between mb-2 px-0.5">
-              <Text className="text-slate-800 dark:text-slate-200 font-extrabold text-[10px] uppercase tracking-wider">Filled Status</Text>
-              <Text className="text-cyan-500 dark:text-cyan-400 font-extrabold text-[10px]">
-                {tournament.filledSlots}/{tournament.totalSlots} Slots ({spotsLeft} left)
-              </Text>
-            </View>
-            <View className="h-2 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-900 rounded-full overflow-hidden">
-              <View 
-                style={{ width: `${progress}%`, height: '100%', backgroundColor: '#7C3AED' }} 
-                className="rounded-full"
-              />
-            </View>
-          </View>
-
-          {/* Players Joined Section */}
-          <Text className="text-[#0284C7] dark:text-[#38BDF8] font-black text-sm uppercase tracking-wide mb-3 px-0.5">Players Joined ({participants.length})</Text>
-          <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
-            {participants.length === 0 ? (
-              <Text className="text-slate-400 text-xs font-semibold text-center py-4">Be the first warrior to enter the tournament!</Text>
-            ) : (
-              participants.map((player) => (
-                <View 
-                  key={player._id} 
-                  className="flex-row justify-between items-center py-2.5 border-b border-slate-100 dark:border-slate-800/60"
-                >
-                  <Text className="text-slate-800 dark:text-slate-200 font-bold text-xs">{player.userId?.username || 'Gamer'}</Text>
-                  <Text className="text-slate-400 text-[9px] font-bold uppercase">Slot #{player.slotNumber}</Text>
+          {/* VIEW TAB 1: DETAILS */}
+          {(!isCSLW || !hasBracket || activeSubTab === 'details') && (
+            <View className="space-y-4">
+              {/* Stats Grid */}
+              <View className="flex-row space-x-2.5 mb-1" style={{ gap: 8 }}>
+                <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 flex-1 items-center justify-center shadow-sm">
+                  <Text className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Mode</Text>
+                  <Text className="font-extrabold text-slate-900 dark:text-white capitalize text-xs mt-0.5">{tournament.gameMode?.replace('_', ' ')}</Text>
                 </View>
-              ))
-            )}
-          </View>
+                <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 flex-1 items-center justify-center shadow-sm">
+                  <Text className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Format</Text>
+                  <Text className="font-extrabold text-slate-900 dark:text-white uppercase text-xs mt-0.5">{tournament.format || tournament.tournamentType}</Text>
+                </View>
+                <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 flex-1 items-center justify-center shadow-sm">
+                  <Text className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Map/Rules</Text>
+                  <Text className="font-extrabold text-slate-900 dark:text-white capitalize text-xs mt-0.5">{tournament.mode || tournament.mapType || 'Bermuda'}</Text>
+                </View>
+              </View>
+
+              <View className="flex-row space-x-2.5 mb-1" style={{ gap: 8 }}>
+                <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 flex-1 items-center justify-center shadow-sm">
+                  <Text className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Schedule</Text>
+                  <Text className="font-extrabold text-slate-900 dark:text-white text-[11px] mt-0.5">{formatDate(tournament.scheduledAt)}</Text>
+                </View>
+                <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 flex-1 flex-row items-center justify-center shadow-sm">
+                  <Text className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Fee: </Text>
+                  <GoldCoin size={12} />
+                  <Text className="font-extrabold text-slate-900 dark:text-white text-xs ml-1">{tournament.entryFee} Coins</Text>
+                </View>
+              </View>
+
+              {/* Prize Details Section */}
+              <Text className="text-slate-500 dark:text-slate-400 font-black text-xs uppercase tracking-wide mb-1.5 px-0.5">Prize Pools Distribution</Text>
+              <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+                {isCSLW ? (
+                  <Text className="text-emerald-500 font-black text-sm text-center">
+                    🏆 Winner Champion Prize: ₹{tournament.winnerPrize || tournament.prizePool} Coins!
+                  </Text>
+                ) : (
+                  <View className="space-y-1">
+                    <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold">🥇 Rank #1: ₹{tournament.firstPrize || Math.round(tournament.prizePool * 0.5)} Coins</Text>
+                    <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold">🥈 Rank #2: ₹{tournament.secondPrize || Math.round(tournament.prizePool * 0.3)} Coins</Text>
+                    <Text className="text-slate-700 dark:text-slate-300 text-xs font-bold">🥉 Rank #3: ₹{tournament.thirdPrize || Math.round(tournament.prizePool * 0.2)} Coins</Text>
+                    <Text className="text-rose-500 text-[10px] font-extrabold mt-1.5">💀 Per Kill Bounty Reward: ₹{tournament.perKillReward || 0} Coins per elimination</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Match description */}
+              <Text className="text-slate-500 dark:text-slate-400 font-black text-xs uppercase tracking-wide mb-1.5 px-0.5">Match Information</Text>
+              <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+                <Text className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed mb-3">
+                  {tournament.description || 'Welcome to BattleZone custom matches lobby.'}
+                </Text>
+
+                <Text className="text-slate-950 dark:text-white font-extrabold text-xs mb-2">Rules & Restrictions:</Text>
+                {tournament.rules && tournament.rules.length > 0 ? (
+                  tournament.rules.map((rule, idx) => (
+                    <Text key={idx} className="text-slate-500 text-xs mb-1.5">• {rule}</Text>
+                  ))
+                ) : (
+                  <Text className="text-slate-500 text-xs">• Normal Free Fire custom match rules govern play.</Text>
+                )}
+              </View>
+
+              {/* Slots progress */}
+              <Text className="text-slate-500 dark:text-slate-400 font-black text-xs uppercase tracking-wide mb-1.5 px-0.5">Lobby Slot Progress</Text>
+              <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+                <View className="flex-row justify-between mb-2 px-0.5">
+                  <Text className="text-slate-800 dark:text-slate-200 font-bold text-[10px] uppercase">Filled</Text>
+                  <Text className="text-rose-500 font-bold text-[10px]">
+                    {tournament.filledSlots}/{tournament.totalSlots} Slots ({spotsLeft} left)
+                  </Text>
+                </View>
+                <View className="h-2 bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-900 rounded-full overflow-hidden">
+                  <View style={{ width: `${progress}%`, height: '100%', backgroundColor: '#EF4444' }} className="rounded-full" />
+                </View>
+              </View>
+
+              {/* Players Joined list */}
+              <Text className="text-slate-500 dark:text-slate-400 font-black text-xs uppercase tracking-wide mb-1.5 px-0.5">Registered Players ({participants.length})</Text>
+              <View className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-sm">
+                {participants.length === 0 ? (
+                  <Text className="text-slate-450 text-xs font-semibold text-center py-4">Lobby is currently empty.</Text>
+                ) : (
+                  participants.map((player) => (
+                    <View key={player.slotNumber} className="flex-row justify-between items-center py-2.5 border-b border-slate-100 dark:border-slate-800/60 last:border-b-0">
+                      <Text className="text-slate-800 dark:text-slate-200 font-bold text-xs">{player.displayName}</Text>
+                      <Text className="text-slate-400 text-[9px] font-bold">Slot #{player.slotNumber}</Text>
+                    </View>
+                  ))
+                )}
+              </View>
+            </View>
+          )}
+
+          {/* VIEW TAB 2: BRACKETS */}
+          {isCSLW && hasBracket && activeSubTab === 'bracket' && (
+            <View className="space-y-4">
+              <ScrollView horizontal showsHorizontalScrollIndicator={true} contentContainerStyle={{ paddingVertical: 10 }}>
+                <View className="flex-row py-4" style={{ gap: 40 }}>
+                  
+                  {/* Map rounds just like the web admin visualizer */}
+                  {Array.from({ length: Math.log2(tournament.bracket.length + 1) }).map((_, rIdx) => {
+                    const roundNum = rIdx + 1;
+                    const roundMatches = tournament.bracket.filter(m => m.roundIndex === roundNum);
+                    
+                    return (
+                      <View key={roundNum} className="flex flex-col justify-around gap-6 select-none shrink-0 w-56">
+                        <View className="text-center pb-2 border-b border-slate-800">
+                          <Text className="text-[10px] uppercase font-black tracking-widest text-rose-500 text-center">
+                            {roundMatches[0]?.roundName || `Round ${roundNum}`}
+                          </Text>
+                        </View>
+
+                        {roundMatches.map(match => {
+                          const isCompleted = match.winner !== null;
+                          return (
+                            <View 
+                              key={match.matchId}
+                              className={`p-3 border rounded-xl flex flex-col gap-1.5 relative ${
+                                isCompleted 
+                                  ? 'bg-emerald-500/5 border-emerald-500/20' 
+                                  : 'bg-slate-900 border-slate-800'
+                              }`}
+                            >
+                              <Text className="absolute -top-2 left-3 px-1.5 py-0.5 rounded text-[8px] bg-slate-950 border border-slate-800 font-mono text-slate-400">
+                                {match.matchId}
+                              </Text>
+
+                              {/* Player 1 details */}
+                              <View className="flex-row justify-between items-center py-1 mt-1">
+                                <Text className={`text-[11px] truncate max-w-[130px] ${match.winner === 'p1' ? 'font-bold text-white' : 'text-slate-500'}`}>
+                                  {match.p1?.name || 'TBD'}
+                                </Text>
+                                {match.winner === 'p1' && <Text className="text-[8px] bg-emerald-500/10 text-emerald-500 px-1 py-0.5 rounded font-black">WIN</Text>}
+                              </View>
+
+                              {/* Divider */}
+                              <View className="h-[0.5px] bg-slate-800 w-full" />
+
+                              {/* Player 2 details */}
+                              <View className="flex-row justify-between items-center py-1">
+                                <Text className={`text-[11px] truncate max-w-[130px] ${match.winner === 'p2' ? 'font-bold text-white' : 'text-slate-500'}`}>
+                                  {match.p2?.name || 'TBD'}
+                                </Text>
+                                {match.winner === 'p2' && <Text className="text-[8px] bg-emerald-500/10 text-emerald-500 px-1 py-0.5 rounded font-black">WIN</Text>}
+                              </View>
+
+                              {match.score && (
+                                <Text className="text-[8px] font-mono text-cyan-400 text-center bg-cyan-400/5 py-0.5 rounded">
+                                  Score: {match.score}
+                                </Text>
+                              )}
+                            </View>
+                          );
+                        })}
+                      </View>
+                    );
+                  })}
+                </View>
+              </ScrollView>
+            </View>
+          )}
+
         </View>
       </ScrollView>
 

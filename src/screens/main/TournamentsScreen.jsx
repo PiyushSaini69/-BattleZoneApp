@@ -192,31 +192,46 @@ export default function TournamentsScreen({ navigation, route }) {
           </View>
 
           {/* Stats Grid: Row 1 */}
-          <View className="flex-row justify-between mb-4">
-            <View className="items-center flex-1">
-              <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Prize Pool</Text>
-              <View className="flex-row items-center justify-center">
-                <GoldCoin size={14} />
-                <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">{item.prizePool}</Text>
+          {(() => {
+            const isCSLW = item.gameMode === 'clash_squad' || item.gameMode === 'lone_wolf';
+            return (
+              <View className="flex-row justify-between mb-4">
+                <View className="items-center flex-1">
+                  <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">
+                    {isCSLW ? 'Winner Prize' : 'Prize Pool'}
+                  </Text>
+                  <View className="flex-row items-center justify-center">
+                    <GoldCoin size={14} />
+                    <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">
+                      {isCSLW ? (item.winnerPrize || item.prizePool) : item.prizePool}
+                    </Text>
+                  </View>
+                </View>
+                <View className="items-center flex-1">
+                  <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">
+                    {isCSLW ? 'Rule Mode' : 'Per Kill'}
+                  </Text>
+                  {isCSLW ? (
+                    <Text className="text-slate-905 dark:text-white text-xs font-black uppercase mt-0.5">{item.mode || 'Normal'}</Text>
+                  ) : (
+                    <View className="flex-row items-center justify-center">
+                      <GoldCoin size={14} />
+                      <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">
+                        {item.perKillReward || item.perKill || 0}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <View className="items-center flex-1">
+                  <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Entry Fee</Text>
+                  <View className="flex-row items-center justify-center">
+                    <GoldCoin size={14} />
+                    <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">{item.entryFee}</Text>
+                  </View>
+                </View>
               </View>
-            </View>
-            <View className="items-center flex-1">
-              <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Per Kill</Text>
-              <View className="flex-row items-center justify-center">
-                <GoldCoin size={14} />
-                <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">
-                  {item.perKill || Math.round(item.entryFee * 0.4) || 8}
-                </Text>
-              </View>
-            </View>
-            <View className="items-center flex-1">
-              <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Entry Fee</Text>
-              <View className="flex-row items-center justify-center">
-                <GoldCoin size={14} />
-                <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">{item.entryFee}</Text>
-              </View>
-            </View>
-          </View>
+            );
+          })()}
 
           {/* Stats Grid: Row 2 */}
           <View className="flex-row justify-between mb-4">

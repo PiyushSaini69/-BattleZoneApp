@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { ScrollView, View, Text, Pressable, RefreshControl, Alert, TextInput, KeyboardAvoidingView, Platform, Modal } from 'react-native';
+import { ScrollView, View, Text, Pressable, RefreshControl, Alert, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { request } from '../../services/api';
 import GlassCard from '../../components/ui/GlassCard';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
-import { ArrowLeft, CheckCircle, Pencil, Wallet } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,26 +28,6 @@ const GoldCoin = ({ size = 14 }) => (
   </Svg>
 );
 
-const formatDate = (dateStr) => {
-  try {
-    const date = new Date(dateStr);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    
-    let hours = date.getHours();
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const strTime = String(hours).padStart(2, '0') + ':' + minutes + ' ' + ampm;
-    
-    return `${day}/${month}/${year} at ${strTime}`;
-  } catch (e) {
-    return dateStr;
-  }
-};
-
 export default function RegisterTournamentScreen({ route, navigation }) {
   const { slug, tournamentId } = route.params;
   const { user } = useContext(AuthContext);
@@ -60,12 +40,20 @@ export default function RegisterTournamentScreen({ route, navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [registrationStep, setRegistrationStep] = useState(1); // 1 = Choose Slot, 2 = Enter UID
+  const [registrationStep, setRegistrationStep] = useState(1); // 1 = Slot, 2 = Details Form
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [gameUID, setGameUID] = useState('');
+  
+  // Registration Form States
+  const [gameUID, setGameUID] = useState(''); // standard BR/fallback Character UID
+  const [teamName, setTeamName] = useState('');
+  const [p1Name, setP1Name] = useState('');
+  const [p1UID, setP1UID] = useState('');
+  const [p1Mobile, setP1Mobile] = useState('');
+  const [p2UID, setP2UID] = useState('');
+  const [p3UID, setP3UID] = useState('');
+  const [p4UID, setP4UID] = useState('');
+
   const [wallet, setWallet] = useState({ depositBalance: 0, winningBalance: 0, bonusBalance: 0, totalBalance: 0 });
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [tempUsername, setTempUsername] = useState('');
 
   const loadData = async () => {
     try {
@@ -86,8 +74,13 @@ export default function RegisterTournamentScreen({ route, navigation }) {
 
   useEffect(() => {
     loadData();
-    if (user && user.gameUIDs) {
-      setGameUID(user.gameUIDs.freeFire || '');
+    if (user) {
+      setP1Name(user.displayName || user.username || '');
+      setP1Mobile(user.phone || '');
+      if (user.gameUIDs) {
+        setGameUID(user.gameUIDs.freeFire || '');
+        setP1UID(user.gameUIDs.freeFire || '');
+      }
     }
   }, [slug, user]);
 
@@ -98,25 +91,67 @@ export default function RegisterTournamentScreen({ route, navigation }) {
   };
 
   const handleConfirmRegistration = async () => {
-    if (!gameUID.trim()) {
-      Alert.alert('UID Required ⚠️', 'Please enter your gaming character UID to proceed.');
-      return;
-    }
     if (selectedSlot === null) {
       Alert.alert('Slot Required ⚠️', 'Please select a slot before registering.');
       return;
+    }
+
+    const isBR = tournament.gameMode === 'battle_royale';
+    const isCS = tournament.gameMode === 'clash_squad';
+    const isLW = tournament.gameMode === 'lone_wolf';
+    const format = tournament.format || '1v1';
+
+    const payload = { slotNumber: selectedSlot };
+
+    if (isBR) {
+      if (!gameUID.trim()) {
+        Alert.alert('UID Required ⚠️', 'Please enter your character UID.');
+        return;
+      }
+      payload.gameUID = gameUID;
+    } else {
+      // CS or LW Forms Validation
+      if (format === '1v1') {
+        if (!p1Name.trim() || !p1UID.trim() || !p1Mobile.trim()) {
+          Alert.alert('Validation Error ⚠️', 'Player Name, Character UID, and Mobile Number are required.');
+          return;
+        }
+        payload.p1Name = p1Name;
+        payload.p1UID = p1UID;
+        payload.p1Mobile = p1Mobile;
+        payload.gameUID = p1UID;
+      } else if (format === '2v2') {
+        if (!teamName.trim() || !p1UID.trim() || !p2UID.trim()) {
+          Alert.alert('Validation Error ⚠️', 'Team Name and both Player UIDs are required.');
+          return;
+        }
+        payload.teamName = teamName;
+        payload.p1UID = p1UID;
+        payload.p2UID = p2UID;
+        payload.gameUID = p1UID;
+      } else if (format === '4v4') {
+        if (!teamName.trim() || !p1UID.trim() || !p2UID.trim() || !p3UID.trim() || !p4UID.trim()) {
+          Alert.alert('Validation Error ⚠️', 'Team Name and all 4 Player UIDs are required.');
+          return;
+        }
+        payload.teamName = teamName;
+        payload.p1UID = p1UID;
+        payload.p2UID = p2UID;
+        payload.teamMembersUIDs = [p1UID, p2UID, p3UID, p4UID];
+        payload.gameUID = p1UID;
+      }
     }
 
     setLoading(true);
     try {
       const res = await request(`/tournaments/${tournament._id}/register`, {
         method: 'POST',
-        body: JSON.stringify({ gameUID, slotNumber: selectedSlot })
+        body: JSON.stringify(payload)
       });
       if (res.success) {
         Alert.alert(
           'Registration Successful! 🎉', 
-          `Slot #${selectedSlot} assigned successfully! Your match UID is verified.`
+          `Registered successfully in Slot #${selectedSlot}!`
         );
         navigation.navigate('TournamentDetail', { slug });
       }
@@ -131,9 +166,9 @@ export default function RegisterTournamentScreen({ route, navigation }) {
     return (
       <LinearGradient
         colors={isDark ? ['#060A13', '#0D1321'] : ['#F8FAFC', '#E2E8F0']}
-        style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+        style={{ flex: 1, justify: 'center', align: 'center' }}
       >
-        <Text className="text-slate-400 text-sm font-semibold">Loading match lobby details...</Text>
+        <Text className="text-slate-400 text-sm font-semibold">Loading match details...</Text>
       </LinearGradient>
     );
   }
@@ -155,16 +190,9 @@ export default function RegisterTournamentScreen({ route, navigation }) {
             isOccupied
               ? 'bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-950 opacity-40'
               : isSelected
-                ? 'bg-violet-600 border-violet-500'
+                ? 'bg-rose-600 border-rose-500'
                 : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800'
           }`}
-          style={isSelected ? {
-            shadowColor: '#8B5CF6',
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.4,
-            shadowRadius: 4,
-            elevation: 2
-          } : {}}
         >
           <Text className={`text-xs font-black ${isOccupied ? 'text-slate-400 dark:text-slate-600 line-through' : isSelected ? 'text-white' : 'text-slate-800 dark:text-slate-300'}`}>
             {i}
@@ -175,12 +203,14 @@ export default function RegisterTournamentScreen({ route, navigation }) {
     return slots;
   };
 
+  const format = tournament.format || '1v1';
+
   return (
     <LinearGradient
       colors={isDark ? ['#060A13', '#0D1321'] : ['#F8FAFC', '#E2E8F0']}
       className="flex-1"
     >
-      {/* Header bar */}
+      {/* Header */}
       <View 
         className="flex-row items-center justify-between p-4 border-b bg-white dark:bg-[#0A0F1A]"
         style={{
@@ -196,13 +226,12 @@ export default function RegisterTournamentScreen({ route, navigation }) {
               navigation.goBack();
             }
           }}
-          className="p-2 bg-slate-100 dark:bg-slate-900 rounded-full border"
-          style={{ borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)' }}
+          className="p-2 bg-slate-100 dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800"
         >
           <ArrowLeft size={18} color={isDark ? '#FFFFFF' : '#0F172A'} />
         </Pressable>
         <Text className="text-slate-900 dark:text-white font-extrabold text-sm uppercase tracking-wider flex-1 text-center mr-6" numberOfLines={1}>
-          {registrationStep === 1 ? 'Slot Selection' : 'Confirm Registration'}
+          {registrationStep === 1 ? 'Slot Selection' : 'Enter Registration Details'}
         </Text>
       </View>
 
@@ -210,60 +239,48 @@ export default function RegisterTournamentScreen({ route, navigation }) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
         style={{ flex: 1 }}
       >
-        <View 
-          className="flex-1 px-4 pt-4"
-          style={{ paddingBottom: insets.bottom > 0 ? insets.bottom + 4 : 8 }}
-        >
+        <View className="flex-1 px-4 pt-4" style={{ paddingBottom: insets.bottom > 0 ? insets.bottom + 4 : 8 }}>
+          
           {/* Step Indicator */}
-          <View className="flex-row items-center justify-center mb-6 mt-2">
-            <View className={`w-8 h-8 rounded-full items-center justify-center ${registrationStep >= 1 ? 'bg-violet-600' : 'bg-slate-200 dark:bg-slate-800'}`}>
+          <View className="flex-row items-center justify-center mb-4 mt-2">
+            <View className={`w-8 h-8 rounded-full items-center justify-center ${registrationStep >= 1 ? 'bg-rose-600' : 'bg-slate-200 dark:bg-slate-800'}`}>
               <Text className="text-white font-extrabold text-xs">1</Text>
             </View>
-            <View className={`h-1 w-12 ${registrationStep >= 2 ? 'bg-violet-600' : 'bg-slate-200 dark:bg-slate-800'}`} />
-            <View className={`w-8 h-8 rounded-full items-center justify-center ${registrationStep >= 2 ? 'bg-violet-600' : 'bg-slate-200 dark:bg-slate-800'}`}>
+            <View className={`h-1 w-12 ${registrationStep >= 2 ? 'bg-rose-600' : 'bg-slate-200 dark:bg-slate-800'}`} />
+            <View className={`w-8 h-8 rounded-full items-center justify-center ${registrationStep >= 2 ? 'bg-rose-600' : 'bg-slate-200 dark:bg-slate-800'}`}>
               <Text className="text-white font-extrabold text-xs">2</Text>
             </View>
           </View>
 
           {registrationStep === 1 ? (
-            // STEP 1 Layout
+            // STEP 1: Slot Grid Selection
             <View className="flex-1">
               <ScrollView 
                 className="flex-1 mb-4"
                 showsVerticalScrollIndicator={false}
-                refreshControl={
-                  <RefreshControl 
-                    refreshing={refreshing} 
-                    onRefresh={onRefresh} 
-                    tintColor={isDark ? "#00E5FF" : "#7C3AED"} 
-                    colors={[isDark ? "#00E5FF" : "#7C3AED"]} 
-                    progressBackgroundColor={isDark ? "#0A0E1A" : "#FFFFFF"}
-                  />
-                }
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#EF4444" />}
               >
-                <GlassCard className="p-5" glowColor="purple">
-                  <Text className="text-slate-900 dark:text-white text-base font-black uppercase mb-1.5 px-0.5">Choose Your Slot</Text>
+                <GlassCard className="p-5" glowColor="red">
+                  <Text className="text-slate-900 dark:text-white text-base font-black uppercase mb-1.5 px-0.5">Select a Slot</Text>
                   <Text className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed mb-5 px-0.5">
-                    Please select any available slot number from the grid below. Crossed-out numbers are occupied by other warriors.
+                    Choose an open slot from the match grid. Crossed-out numbers are already registered.
                   </Text>
-
-                  <View className="flex-row flex-wrap justify-center py-2.5">
+                  <View className="flex-row flex-wrap justify-center py-2">
                     {renderSlots()}
                   </View>
                 </GlassCard>
               </ScrollView>
 
-              {/* Fixed Bottom Section */}
               <View>
-                <GlassCard className="p-4 mb-4 flex-row justify-between items-center" glowColor="purple">
+                <GlassCard className="p-4 mb-4 flex-row justify-between items-center" glowColor="red">
                   <View>
-                    <Text className="text-slate-400 text-[9px] font-extrabold uppercase tracking-wide">Selected Slot</Text>
+                    <Text className="text-slate-400 text-[9px] font-extrabold uppercase">Selected Slot</Text>
                     <Text className="text-slate-900 dark:text-white text-sm font-black mt-0.5">
-                      {selectedSlot ? `#${selectedSlot}` : 'None Chosen'}
+                      {selectedSlot ? `#${selectedSlot}` : 'None'}
                     </Text>
                   </View>
                   <View className="items-end">
-                    <Text className="text-slate-400 text-[9px] font-extrabold uppercase tracking-wide">Entry Cost</Text>
+                    <Text className="text-slate-400 text-[9px] font-extrabold uppercase">Entry Fee</Text>
                     <View className="flex-row items-center mt-0.5">
                       <GoldCoin size={12} />
                       <Text className="text-slate-900 dark:text-white text-sm font-black ml-1">
@@ -274,160 +291,171 @@ export default function RegisterTournamentScreen({ route, navigation }) {
                 </GlassCard>
 
                 <Button 
-                  title="Next"
+                  title="Proceed to Details"
                   disabled={selectedSlot === null}
                   onPress={() => setRegistrationStep(2)}
-                  variant="primary"
+                  className="bg-rose-600 border-rose-500"
                 />
               </View>
             </View>
           ) : (
-            // STEP 2 Layout
+            // STEP 2: Details input dependent on Game Mode & Format
             <View className="flex-1">
-              {/* Wallet Balance Header */}
-              <View className="bg-violet-600 dark:bg-violet-850 p-5 rounded-3xl items-center mb-6 shadow-md border border-violet-500/20">
-                {/* Total Balance */}
-                <Text className="text-violet-200 text-[10px] font-extrabold uppercase tracking-widest mb-1">Total Balance</Text>
-                <View className="flex-row items-center mb-5 justify-center">
-                  <GoldCoin size={22} />
-                  <Text className="text-white text-3xl font-black ml-2">
-                    {wallet.totalBalance.toFixed(0)}
+              <ScrollView className="flex-1 mb-4" showsVerticalScrollIndicator={false}>
+                
+                {/* Wallet Info header */}
+                <View className="bg-slate-900 border border-slate-800 rounded-3xl p-5 mb-5 items-center">
+                  <Text className="text-slate-400 text-[9px] font-extrabold uppercase">Available Coins Balance</Text>
+                  <View className="flex-row items-center mt-1">
+                    <GoldCoin size={18} />
+                    <Text className="text-white text-2xl font-black ml-1.5">{wallet.totalBalance.toFixed(0)}</Text>
+                  </View>
+                </View>
+
+                {/* Sub Forms */}
+                <GlassCard className="p-5" glowColor="red">
+                  <Text className="text-slate-900 dark:text-white font-extrabold text-sm uppercase tracking-wide mb-4">
+                    Register Details Form
                   </Text>
-                </View>
 
-                {/* Coin Breakdown Cards */}
-                <View className="flex-row justify-between w-full">
-                  <View className="bg-white rounded-2xl py-3 px-1 flex-1 items-center justify-center mx-1 shadow-sm">
-                    <View className="flex-row items-center justify-center">
-                      <GoldCoin size={10} />
-                      <Text className="text-slate-900 font-extrabold text-xs ml-1">
-                        {wallet.depositBalance.toFixed(0)}
-                      </Text>
-                    </View>
-                    <Text className="text-slate-500 text-[9px] font-extrabold mt-1">Deposited</Text>
-                  </View>
+                  {/* BR Form */}
+                  {tournament.gameMode === 'battle_royale' && (
+                    <Input
+                      label="Game Character UID"
+                      value={gameUID}
+                      onChangeText={setGameUID}
+                      placeholder="Enter Free Fire UID"
+                    />
+                  )}
 
-                  <View className="bg-white rounded-2xl py-3 px-1 flex-1 items-center justify-center mx-1 shadow-sm">
-                    <View className="flex-row items-center justify-center">
-                      <GoldCoin size={10} />
-                      <Text className="text-slate-900 font-extrabold text-xs ml-1">
-                        {wallet.winningBalance.toFixed(0)}
-                      </Text>
+                  {/* CS / LW 1v1 Form */}
+                  {(tournament.gameMode === 'clash_squad' || tournament.gameMode === 'lone_wolf') && format === '1v1' && (
+                    <View className="space-y-4">
+                      <Input
+                        label="Player Name (IGN)"
+                        value={p1Name}
+                        onChangeText={setP1Name}
+                        placeholder="Enter Game Name"
+                      />
+                      <Input
+                        label="Character UID"
+                        value={p1UID}
+                        onChangeText={setP1UID}
+                        placeholder="Enter Free Fire UID"
+                      />
+                      <Input
+                        label="Mobile Number"
+                        value={p1Mobile}
+                        onChangeText={setP1Mobile}
+                        placeholder="Enter Contact Number"
+                        keyboardType="phone-pad"
+                      />
                     </View>
-                    <Text className="text-slate-500 text-[9px] font-extrabold mt-1">Winning</Text>
-                  </View>
+                  )}
 
-                  <View className="bg-white rounded-2xl py-3 px-1 flex-1 items-center justify-center mx-1 shadow-sm">
-                    <View className="flex-row items-center justify-center">
-                      <GoldCoin size={10} />
-                      <Text className="text-slate-900 font-extrabold text-xs ml-1">
-                        {wallet.bonusBalance.toFixed(0)}
-                      </Text>
+                  {/* CS / LW 2v2 Form */}
+                  {(tournament.gameMode === 'clash_squad' || tournament.gameMode === 'lone_wolf') && format === '2v2' && (
+                    <View className="space-y-4">
+                      <Input
+                        label="Team Name"
+                        value={teamName}
+                        onChangeText={setTeamName}
+                        placeholder="Enter Team Name"
+                      />
+                      <Input
+                        label="Player 1 UID (Captain)"
+                        value={p1UID}
+                        onChangeText={setP1UID}
+                        placeholder="Enter Captain UID"
+                      />
+                      <Input
+                        label="Player 2 UID"
+                        value={p2UID}
+                        onChangeText={setP2UID}
+                        placeholder="Enter Partner UID"
+                      />
                     </View>
-                    <Text className="text-slate-500 text-[9px] font-extrabold mt-1">Bonus</Text>
-                  </View>
-                </View>
-              </View>
+                  )}
 
-              {/* Scrollable details */}
-              <ScrollView 
-                className="flex-1 mb-4"
-                showsVerticalScrollIndicator={false}
-              >
-                {/* Player Details Card */}
-                <View className="bg-violet-600 dark:bg-violet-850 p-5 rounded-2xl shadow-md mb-4 border border-violet-500/20">
-                  <Text className="text-white text-sm font-black text-center mb-4 uppercase tracking-wider">
-                    Enter Player Details
-                  </Text>
-                  <View className="flex-row justify-between items-center">
-                    <View className="items-center flex-1">
-                      <Text className="text-violet-200 text-[9px] font-extrabold uppercase">Team</Text>
-                      <Text className="text-white text-xs font-black mt-1">Team {selectedSlot}</Text>
+                  {/* CS 4v4 Form */}
+                  {tournament.gameMode === 'clash_squad' && format === '4v4' && (
+                    <View className="space-y-4">
+                      <Input
+                        label="Team Name"
+                        value={teamName}
+                        onChangeText={setTeamName}
+                        placeholder="Enter Team Name"
+                      />
+                      <Input
+                        label="Player 1 UID (Captain)"
+                        value={p1UID}
+                        onChangeText={setP1UID}
+                        placeholder="Enter Captain UID"
+                      />
+                      <Input
+                        label="Player 2 UID"
+                        value={p2UID}
+                        onChangeText={setP2UID}
+                        placeholder="Enter Player 2 UID"
+                      />
+                      <Input
+                        label="Player 3 UID"
+                        value={p3UID}
+                        onChangeText={setP3UID}
+                        placeholder="Enter Player 3 UID"
+                      />
+                      <Input
+                        label="Player 4 UID"
+                        value={p4UID}
+                        onChangeText={setP4UID}
+                        placeholder="Enter Player 4 UID"
+                      />
                     </View>
-                    <View className="items-center flex-1">
-                      <Text className="text-violet-200 text-[9px] font-extrabold uppercase">Position</Text>
-                      <Text className="text-white text-xs font-black mt-1">A</Text>
-                    </View>
-                    <Pressable 
-                      onPress={() => {
-                        setTempUsername(gameUID || '');
-                        setShowEditModal(true);
-                      }}
-                      className="items-center flex-1"
-                    >
-                      <Text className="text-violet-200 text-[9px] font-extrabold uppercase mb-1">Player Details</Text>
-                      <View className="flex-row items-center justify-center border-b border-white/30 pb-0.5 w-full max-w-[95px]">
-                        <Text className="text-white text-xs font-black text-center flex-1" numberOfLines={1}>
-                          {gameUID || 'Player 1'}
-                        </Text>
-                        <Pencil size={10} color="rgba(255, 255, 255, 0.6)" style={{ marginLeft: 3 }} />
-                      </View>
-                    </Pressable>
-                  </View>
-                </View>
+                  )}
+                </GlassCard>
               </ScrollView>
 
-              {/* Bottom Payment Actions */}
-              <View className="pb-2 bg-white/40 dark:bg-slate-950/40 p-4 rounded-2xl border border-slate-200 dark:border-slate-800/60">
-                <View className="flex-row items-center justify-center mb-1">
-                  <Text className="text-slate-700 dark:text-slate-300 font-extrabold text-xs">
-                    Match Entry Fee Per Player: 
-                  </Text>
-                  <View className="flex-row items-center ml-1">
-                    <GoldCoin size={12} />
-                    <Text className="text-slate-900 dark:text-white font-black text-xs ml-0.5">
-                      {tournament.entryFee}
-                    </Text>
-                  </View>
-                </View>
-
+              {/* Action Buttons */}
+              <View className="p-4 rounded-2xl bg-white/40 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60">
                 <View className="flex-row items-center justify-center mb-3">
-                  <Text className="text-slate-900 dark:text-white font-extrabold text-xs">
-                    Total payable = 
-                  </Text>
-                  <View className="flex-row items-center ml-1">
-                    <GoldCoin size={12} />
-                    <Text className="text-slate-900 dark:text-white font-black text-xs ml-0.5">
-                      {tournament.entryFee}
-                    </Text>
-                  </View>
+                  <Text className="text-slate-800 dark:text-slate-200 font-extrabold text-xs">Payable Entry Cost: </Text>
+                  <GoldCoin size={12} />
+                  <Text className="text-slate-950 dark:text-white font-black text-xs ml-0.5">{tournament.entryFee} Coins</Text>
                 </View>
 
-                {(wallet?.totalBalance || 0) < tournament.entryFee ? (
+                {wallet.totalBalance < tournament.entryFee ? (
                   <>
-                    <Text className="text-rose-500 text-center font-bold text-xs mb-4">
-                      You don't have sufficient PlayCoin
-                    </Text>
-                    <View className="flex-row justify-between">
+                    <Text className="text-red-500 text-center font-bold text-xs mb-3">Insufficient Coins balance.</Text>
+                    <View className="flex-row" style={{ gap: 10 }}>
                       <Pressable 
                         onPress={() => setRegistrationStep(1)}
-                        className="bg-slate-400 dark:bg-slate-700 rounded-xl py-3.5 flex-1 mr-2 items-center justify-center"
+                        className="bg-slate-500 rounded-xl py-3 flex-1 items-center"
                       >
-                        <Text className="text-white text-center font-black text-xs uppercase tracking-wider">Cancel</Text>
+                        <Text className="text-white font-black text-xs">Back</Text>
                       </Pressable>
                       <Pressable 
                         onPress={() => navigation.navigate('AddCoin')}
-                        className="bg-[#1E1B4B] rounded-xl py-3.5 flex-1 ml-2 border border-[#312E81] items-center justify-center"
+                        className="bg-rose-600 rounded-xl py-3 flex-1 items-center border border-rose-500"
                       >
-                        <Text className="text-white text-center font-black text-xs uppercase tracking-wider">Add Money</Text>
+                        <Text className="text-white font-black text-xs">Add Money</Text>
                       </Pressable>
                     </View>
                   </>
                 ) : (
-                  <View className="flex-row justify-between">
+                  <View className="flex-row" style={{ gap: 10 }}>
                     <Pressable 
                       onPress={() => setRegistrationStep(1)}
-                      className="bg-slate-400 dark:bg-slate-700 rounded-xl py-3.5 flex-1 mr-2 items-center justify-center"
+                      className="bg-slate-500 rounded-xl py-3.5 flex-1 items-center"
                     >
-                      <Text className="text-white text-center font-black text-xs uppercase tracking-wider">Cancel</Text>
+                      <Text className="text-white font-black text-xs uppercase">Back</Text>
                     </Pressable>
                     <Pressable 
                       onPress={handleConfirmRegistration}
                       disabled={loading}
-                      className="bg-[#7C3AED] border border-[#8B5CF6] rounded-xl py-3.5 flex-1 ml-2 items-center justify-center"
+                      className="bg-rose-600 border border-rose-500 rounded-xl py-3.5 flex-1 items-center"
                     >
-                      <Text className="text-white text-center font-black text-xs uppercase tracking-wider">
-                        {loading ? 'Joining...' : 'Pay & Join'}
+                      <Text className="text-white font-black text-xs uppercase">
+                        {loading ? 'Processing...' : 'Pay & Register'}
                       </Text>
                     </Pressable>
                   </View>
@@ -435,71 +463,9 @@ export default function RegisterTournamentScreen({ route, navigation }) {
               </View>
             </View>
           )}
+
         </View>
       </KeyboardAvoidingView>
-
-      {/* Edit Game Username Modal */}
-      <Modal
-        visible={showEditModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowEditModal(false)}
-      >
-        <View 
-          className="flex-1 justify-center items-center p-6"
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)' }}
-        >
-          <View className="bg-white rounded-3xl overflow-hidden w-full max-w-[300px] shadow-2xl">
-            {/* Modal Header */}
-            <View className="bg-[#38BDF8] py-4 px-6 items-center">
-              <Text className="text-white text-base font-black uppercase tracking-wider text-center">
-                Register Your Game
-              </Text>
-            </View>
-
-            {/* Modal Body */}
-            <View className="p-6">
-              <TextInput
-                value={tempUsername}
-                onChangeText={setTempUsername}
-                placeholder="Game Username"
-                placeholderTextColor="#94A3B8"
-                className="border-b border-slate-300 py-2 text-slate-800 text-sm font-extrabold mb-3.5 w-full"
-                autoFocus={true}
-              />
-
-              <Text className="text-slate-500 text-[10px] leading-relaxed mb-6 font-semibold">
-                Note: Make sure you enter your Game Username (IGN) and not Character ID.
-              </Text>
-
-              {/* Action Buttons */}
-              <View className="flex-row justify-between">
-                <Pressable
-                  onPress={() => setShowEditModal(false)}
-                  className="bg-slate-450 dark:bg-slate-500 rounded-xl py-3 flex-1 mr-2 items-center justify-center"
-                  style={{ backgroundColor: '#808080' }}
-                >
-                  <Text className="text-white text-center font-black text-xs uppercase tracking-wider">
-                    Cancel
-                  </Text>
-                </Pressable>
-                
-                <Pressable
-                  onPress={() => {
-                    setGameUID(tempUsername);
-                    setShowEditModal(false);
-                  }}
-                  className="bg-[#38BDF8] rounded-xl py-3 flex-1 ml-2 items-center justify-center"
-                >
-                  <Text className="text-white text-center font-black text-xs uppercase tracking-wider">
-                    Next
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </LinearGradient>
   );
 }
