@@ -126,11 +126,7 @@ export default function TournamentsScreen({ navigation }) {
     const isFull = spotsLeft <= 0;
 
     return (
-      <Pressable 
-        onPress={() => navigation.navigate('TournamentDetail', { slug: item.slug })}
-        style={({ pressed }) => [{ opacity: pressed ? 0.96 : 1 }]}
-      >
-        <GlassCard className="mb-5 overflow-hidden p-0" glowColor="purple">
+      <GlassCard className="mb-5 overflow-hidden p-0" glowColor="purple">
           <View className="relative">
           <Image 
             source={getGameBannerSource(item)}
@@ -275,7 +271,6 @@ export default function TournamentsScreen({ navigation }) {
           </View>
         </View>
       </GlassCard>
-    </Pressable>
     );
   };
 
