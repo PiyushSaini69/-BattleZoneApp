@@ -16,6 +16,9 @@ import CreateTournamentScreen from '../screens/admin/CreateTournamentScreen';
 import TermsScreen from '../screens/support/TermsScreen';
 import PrivacyScreen from '../screens/support/PrivacyScreen';
 import NotificationScreen from '../screens/main/NotificationScreen';
+import AddCoinScreen from '../screens/main/AddCoinScreen';
+import RedeemCoinScreen from '../screens/main/RedeemCoinScreen';
+import TransactionsScreen from '../screens/main/TransactionsScreen';
 import { ActivityIndicator } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -63,6 +66,10 @@ export default function AppNavigator() {
           <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
           <Stack.Screen name="CreateTournament" component={CreateTournamentScreen} />
           <Stack.Screen name="Notification" component={NotificationScreen} />
+          
+          <Stack.Screen name="AddCoin" component={AddCoinScreen} />
+          <Stack.Screen name="RedeemCoin" component={RedeemCoinScreen} />
+          <Stack.Screen name="Transactions" component={TransactionsScreen} />
         </>
       )}
       <Stack.Screen name="Terms" component={TermsScreen} />

@@ -99,29 +99,6 @@ export default function ProfileScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* Avatar Section */}
-        <View className="items-center mb-6">
-          <View 
-            className="w-20 h-20 rounded-full border-2 justify-center items-center bg-slate-100 dark:bg-[#0A0E1A]"
-            style={{ 
-              borderColor: isDark ? '#00E5FF' : '#7C3AED',
-              shadowColor: isDark ? '#00E5FF' : '#7C3AED',
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: isDark ? 0.6 : 0.2,
-              shadowRadius: 8,
-              elevation: 4
-            }}
-          >
-            <Text className="text-slate-950 dark:text-white text-3xl font-black">
-              {user ? user.username.slice(0, 2).toUpperCase() : 'W'}
-            </Text>
-          </View>
-
-          <Text className="text-slate-950 dark:text-white text-lg font-black mt-2.5 uppercase tracking-wide">
-            {user ? (user.displayName || user.username) : 'Warrior'}
-          </Text>
-          <Text className="text-emerald-500 text-xs font-black mt-0.5">Kyc Verified</Text>
-        </View>
 
         {/* Stats Column Card */}
         <View className="bg-white dark:bg-slate-900 rounded-2xl py-4 px-3 flex-row items-center justify-between shadow-sm border border-slate-200/50 dark:border-slate-800/60 mb-5">

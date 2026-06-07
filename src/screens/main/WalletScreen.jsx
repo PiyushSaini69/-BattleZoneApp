@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
-// Header import for consistent top bar
-import { ScrollView, View, Text, TextInput, Pressable, RefreshControl, Alert, Modal, ActivityIndicator, useColorScheme as useRNColorScheme } from 'react-native';
+import { ScrollView, View, Text, TextInput, Pressable, RefreshControl, Alert, Modal, Animated, useColorScheme as useRNColorScheme } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { request } from '../../services/api';
 import GlassCard from '../../components/ui/GlassCard';
 import Badge from '../../components/ui/Badge';
-import { Wallet, Plus, ArrowUpRight, History } from 'lucide-react-native';
+import { Wallet, Plus, ArrowUpRight, History, ArrowDownLeft, ChevronRight } from 'lucide-react-native';
 import Header from '../../components/ui/Header';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -34,23 +33,12 @@ export default function WalletScreen({ navigation }) {
   const systemScheme = useRNColorScheme();
   const isDark = colorScheme === 'system' ? systemScheme === 'dark' : colorScheme === 'dark';
   const [wallet, setWallet] = useState({ depositBalance: 0, winningBalance: 0, bonusBalance: 0, totalBalance: 0 });
-  const [transactions, setTransactions] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-
-  const [depositAmount, setDepositAmount] = useState('100');
-  const [withdrawAmount, setWithdrawAmount] = useState('100');
-  const [withdrawUpi, setWithdrawUpi] = useState('');
-  const [showSimulator, setShowSimulator] = useState(false);
-  const [pendingTx, setPendingTx] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   const loadWalletData = async () => {
     try {
       const res = await request('/wallet');
       if (res.success) setWallet(res.data);
-      
-      const txRes = await request('/wallet/transactions');
-      if (txRes.success) setTransactions(txRes.data.transactions);
     } catch (err) {
       console.log('Error loading wallet details:', err.message);
     }
@@ -58,7 +46,11 @@ export default function WalletScreen({ navigation }) {
 
   useEffect(() => {
     loadWalletData();
-  }, []);
+    const unsubscribe = navigation?.addListener('focus', () => {
+      loadWalletData();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -66,111 +58,42 @@ export default function WalletScreen({ navigation }) {
     setRefreshing(false);
   };
 
-  const handleDeposit = async () => {
-    const amount = parseFloat(depositAmount);
-    if (isNaN(amount) || amount < 10) {
-      Alert.alert('Invalid Amount ⚠️', 'Minimum deposit is 10 Coins.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const res = await request('/wallet/deposit', {
-        method: 'POST',
-        body: JSON.stringify({ amount })
-      });
-      if (res.success) {
-        setPendingTx(res.data);
-        setShowSimulator(true);
-      }
-    } catch (err) {
-      Alert.alert('Error', err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const completeMockDeposit = async (status) => {
-    setShowSimulator(false);
-    if (status === 'fail') {
-      Alert.alert('Payment Failed ❌', 'Your mock transaction was cancelled.');
-      return;
-    }
-
-    try {
-      const res = await request('/wallet/deposit/verify', {
-        method: 'POST',
-        body: JSON.stringify({
-          razorpay_order_id: pendingTx.orderId,
-          razorpay_payment_id: `pay_${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
-          razorpay_signature: 'mock_signature'
-        })
-      });
-      if (res.success) {
-        Alert.alert('Success 🎉', `${pendingTx.amount} Coins deposited successfully!`);
-        await loadWalletData();
-      }
-    } catch (err) {
-      Alert.alert('Verification Error', err.message);
-    }
-  };
-
-  const handleWithdrawal = async () => {
-    const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount < 100) {
-      Alert.alert('Invalid Amount ⚠️', 'Minimum withdrawal is 100 Coins.');
-      return;
-    }
-    if (!withdrawUpi || !withdrawUpi.includes('@')) {
-      Alert.alert('Invalid UPI ID ⚠️', 'Please enter a valid UPI address (e.g. name@upi).');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const res = await request('/wallet/withdraw', {
-        method: 'POST',
-        body: JSON.stringify({
-          amount,
-          method: 'upi',
-          upiId: withdrawUpi
-        })
-      });
-      if (res.success) {
-        Alert.alert('Request Submitted 💸', res.message);
-        setWithdrawUpi('');
-        await loadWalletData();
-      }
-    } catch (err) {
-      Alert.alert('Withdrawal Failed ❌', err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getTxTypeBadgeColor = (type) => {
-    switch (type) {
-      case 'deposit': return 'success';
-      case 'prize_credit': return 'purple';
-      case 'referral_bonus': return 'cyan';
-      case 'entry_fee': return 'danger';
-      case 'withdrawal': return 'warning';
-      default: return 'info';
-    }
-  };
-
-  const inputStyle = {
-    backgroundColor: isDark ? '#0A0E1A' : '#FFFFFF',
-    color: isDark ? '#ffffff' : '#0F172A',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 12,
-    fontWeight: 'bold',
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(139, 92, 246, 0.2)' : 'rgba(124, 58, 237, 0.3)',
-    fontSize: 12
-  };
+  // Action button config
+  const actionButtons = [
+    {
+      key: 'add',
+      label: 'Add Coin',
+      subtitle: 'Deposit funds to wallet',
+      icon: Plus,
+      accentColor: isDark ? '#A78BFA' : '#7C3AED',
+      iconBgColor: isDark ? 'rgba(139, 92, 246, 0.12)' : 'rgba(139, 92, 246, 0.08)',
+      iconBorderColor: isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(139, 92, 246, 0.2)',
+      glowColor: '#8B5CF6',
+      onPress: () => navigation.navigate('AddCoin'),
+    },
+    {
+      key: 'redeem',
+      label: 'Redeem Coin',
+      subtitle: 'Withdraw to your UPI',
+      icon: ArrowDownLeft,
+      accentColor: isDark ? '#34D399' : '#059669',
+      iconBgColor: isDark ? 'rgba(16, 185, 129, 0.12)' : 'rgba(16, 185, 129, 0.08)',
+      iconBorderColor: isDark ? 'rgba(16, 185, 129, 0.25)' : 'rgba(16, 185, 129, 0.2)',
+      glowColor: '#10B981',
+      onPress: () => navigation.navigate('RedeemCoin'),
+    },
+    {
+      key: 'transactions',
+      label: 'Transaction',
+      subtitle: 'View all activity',
+      icon: History,
+      accentColor: isDark ? '#22D3EE' : '#0891B2',
+      iconBgColor: isDark ? 'rgba(6, 182, 212, 0.12)' : 'rgba(6, 182, 212, 0.08)',
+      iconBorderColor: isDark ? 'rgba(6, 182, 212, 0.25)' : 'rgba(6, 182, 212, 0.2)',
+      glowColor: '#06B6D4',
+      onPress: () => navigation.navigate('Transactions'),
+    },
+  ];
 
   return (
     <LinearGradient
@@ -194,6 +117,7 @@ export default function WalletScreen({ navigation }) {
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
       >
 
+        {/* ─── Balance Card ─── */}
         <GlassCard 
           className="p-6 mb-6 items-center"
           glowColor="cyan"
@@ -248,175 +172,98 @@ export default function WalletScreen({ navigation }) {
           </View>
         </GlassCard>
 
-        <View className="mb-6 flex-row justify-between">
-          <GlassCard className="w-[48%] p-4" glowColor="purple">
-            <Text className="text-slate-900 dark:text-white font-extrabold text-[10px] uppercase tracking-wider mb-3 px-0.5">Add Cash</Text>
-            <TextInput
-              value={depositAmount}
-              onChangeText={setDepositAmount}
-              placeholder="Coins Amount"
-              placeholderTextColor="#475569"
-              keyboardType="number-pad"
-              style={inputStyle}
-            />
-            <Pressable 
-              onPress={handleDeposit}
-              disabled={loading}
-              className="bg-violet-600 rounded-xl py-3 flex-row justify-center items-center"
-              style={({ pressed }) => [{
-                opacity: pressed ? 0.8 : 1,
-                shadowColor: '#8B5CF6',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 3
-              }]}
-            >
-              <Plus size={14} color="#fff" style={{ marginRight: 4 }} />
-              <Text className="text-white text-[10px] font-black uppercase tracking-wider">Deposit</Text>
-            </Pressable>
-          </GlassCard>
+        {/* ─── Action Buttons ─── */}
+        <View style={{ marginBottom: 20, gap: 10 }}>
+          {actionButtons.map((btn) => {
+            const IconComp = btn.icon;
+            return (
+              <Pressable
+                key={btn.key}
+                onPress={btn.onPress}
+                style={({ pressed }) => [{
+                  borderRadius: 16,
+                  overflow: 'hidden',
+                  opacity: pressed ? 0.88 : 1,
+                  transform: [{ scale: pressed ? 0.985 : 1 }],
+                }]}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                    borderRadius: 16,
+                    paddingVertical: 14,
+                    paddingHorizontal: 16,
+                    borderWidth: 1,
+                    borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                    borderLeftWidth: 1,
+                    borderLeftColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                  }}
+                >
+                  {/* Icon Circle */}
+                  <View
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 14,
+                      backgroundColor: btn.iconBgColor,
+                      borderWidth: 1,
+                      borderColor: btn.iconBorderColor,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      shadowColor: btn.glowColor,
+                      shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: 0.15,
+                      shadowRadius: 4,
+                    }}
+                  >
+                    <IconComp size={20} color={btn.accentColor} />
+                  </View>
 
-          <GlassCard className="w-[48%] p-4" glowColor="purple">
-            <Text className="text-slate-900 dark:text-white font-extrabold text-[10px] uppercase tracking-wider mb-3 px-0.5">Withdraw</Text>
-            <TextInput
-              value={withdrawAmount}
-              onChangeText={setWithdrawAmount}
-              placeholder="Coins Amount"
-              placeholderTextColor="#475569"
-              keyboardType="number-pad"
-              style={inputStyle}
-            />
-            <TextInput
-              value={withdrawUpi}
-              onChangeText={setWithdrawUpi}
-              placeholder="UPI Address"
-              placeholderTextColor="#475569"
-              style={{ ...inputStyle, fontSize: 10, paddingVertical: 8 }}
-              autoCapitalize="none"
-            />
-            <Pressable 
-              onPress={handleWithdrawal}
-              disabled={loading}
-              className="bg-emerald-600 rounded-xl py-3 flex-row justify-center items-center"
-              style={({ pressed }) => [{
-                opacity: pressed ? 0.8 : 1,
-                shadowColor: '#10B981',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 3
-              }]}
-            >
-              <ArrowUpRight size={14} color="#fff" style={{ marginRight: 4 }} />
-              <Text className="text-white text-[10px] font-black uppercase tracking-wider">Withdraw</Text>
-            </Pressable>
-          </GlassCard>
+                  {/* Label + Subtitle */}
+                  <View style={{ flex: 1, marginLeft: 14 }}>
+                    <Text
+                      style={{
+                        color: isDark ? '#F1F5F9' : '#0F172A',
+                        fontSize: 13,
+                        fontWeight: '800',
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      {btn.label}
+                    </Text>
+                    <Text
+                      style={{
+                        color: isDark ? '#64748B' : '#94A3B8',
+                        fontSize: 10,
+                        fontWeight: '600',
+                        marginTop: 2,
+                      }}
+                    >
+                      {btn.subtitle}
+                    </Text>
+                  </View>
+
+                  {/* Right chevron */}
+                  <View
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 8,
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <ChevronRight size={16} color={isDark ? '#475569' : '#94A3B8'} />
+                  </View>
+                </View>
+              </Pressable>
+            );
+          })}
         </View>
 
-        <View className="mb-4 flex-row items-center px-1">
-          <History size={16} color="#94A3B8" style={{ marginRight: 6 }} />
-          <Text className="text-slate-900 dark:text-white font-extrabold text-xs uppercase tracking-widest">Transaction History</Text>
-        </View>
-
-        {transactions.length === 0 ? (
-          <GlassCard className="py-8 items-center">
-            <Text className="text-slate-500 dark:text-slate-400 text-xs font-semibold">No transactions recorded yet.</Text>
-          </GlassCard>
-        ) : (
-          transactions.map((tx) => (
-            <GlassCard 
-              key={tx._id} 
-              className="mb-3 py-3 px-4 flex-row justify-between items-center"
-              glowColor="purple"
-            >
-              <View className="flex-1 mr-3">
-                <View className="flex-row items-center mb-1">
-                  <Badge text={tx.type.replace('_', ' ')} variant={getTxTypeBadgeColor(tx.type)} />
-                  <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-bold uppercase ml-2">
-                    {new Date(tx.createdAt).toLocaleDateString()}
-                  </Text>
-                </View>
-                <Text className="text-slate-500 dark:text-slate-400 text-[9px]" numberOfLines={1}>
-                  {tx.description || `Transaction Ref: ${tx._id.slice(-6)}`}
-                </Text>
-              </View>
-              <View className="items-end">
-                <View className="flex-row items-center">
-                  <Text className={`text-base font-black mr-1 ${
-                    ['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) 
-                      ? 'text-emerald-600 dark:text-emerald-400' 
-                      : 'text-slate-900 dark:text-white'
-                  }`}>
-                    {['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) ? '+' : '-'}
-                  </Text>
-                  <GoldCoin size={14} />
-                  <Text className={`text-base font-black ml-1 ${
-                    ['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) 
-                      ? 'text-emerald-600 dark:text-emerald-400' 
-                      : 'text-slate-900 dark:text-white'
-                  }`}>
-                    {tx.amount}
-                  </Text>
-                </View>
-                <Text className={`text-[8px] font-extrabold uppercase mt-0.5 ${
-                  tx.status === 'completed' 
-                    ? 'text-emerald-600 dark:text-emerald-400' 
-                    : tx.status === 'pending' 
-                      ? 'text-amber-500 dark:text-amber-400' 
-                      : 'text-rose-500 dark:text-rose-450'
-                }`}>
-                  {tx.status}
-                </Text>
-              </View>
-            </GlassCard>
-          ))
-        )}
-
-        <Modal transparent visible={showSimulator} animationType="slide">
-          <View 
-            className="flex-1 justify-center items-center p-6"
-            style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
-          >
-            <GlassCard 
-              className="w-full max-w-sm p-6 bg-white dark:bg-[#060A13]"
-              glowColor="purple"
-            >
-              <Text className="text-slate-500 text-[10px] font-extrabold text-center uppercase tracking-widest mb-1">RAZORPAY</Text>
-              <Text className="text-violet-600 dark:text-[#C084FC] text-base font-black text-center mb-4 uppercase tracking-wider">GATEWAY SIMULATOR</Text>
-              
-              <View className="bg-slate-100 dark:bg-slate-950 rounded-xl p-4 mb-6 border border-slate-200 dark:border-slate-900">
-                <Text className="text-slate-500 text-[10px] font-extrabold text-center uppercase tracking-wider">Deposit Amount</Text>
-                <View className="flex-row items-center justify-center mt-1">
-                  <GoldCoin size={24} />
-                  <Text className="text-slate-900 dark:text-white text-3xl font-black ml-2">{pendingTx?.amount}</Text>
-                </View>
-                <Text className="text-slate-500 text-[9px] text-center mt-3">
-                  Order ID: {pendingTx?.orderId}
-                </Text>
-              </View>
-
-              <Text className="text-slate-600 dark:text-slate-400 text-[10px] text-center mb-6 leading-relaxed px-2">
-                This is a sandbox mock payment container. Confirming below simulates a successful API bank verification.
-              </Text>
-
-              <View className="flex-row justify-between">
-                <Pressable 
-                  onPress={() => completeMockDeposit('fail')}
-                  style={{ flex: 1, marginRight: 8, backgroundColor: 'rgba(244, 63, 94, 0.1)', borderColor: 'rgba(244, 63, 94, 0.4)', borderWidth: 1, borderRadius: 12, paddingVertical: 12 }}
-                >
-                  <Text className="text-rose-400 text-center font-extrabold text-xs uppercase tracking-wider">Decline</Text>
-                </Pressable>
-                <Pressable 
-                  onPress={() => completeMockDeposit('success')}
-                  style={{ flex: 1, marginLeft: 8, backgroundColor: '#8B5CF6', borderColor: '#A78BFA', borderWidth: 1, borderRadius: 12, paddingVertical: 12 }}
-                >
-                  <Text className="text-white text-center font-extrabold text-xs uppercase tracking-wider">Pay Secure</Text>
-                </Pressable>
-              </View>
-            </GlassCard>
-          </View>
-        </Modal>
       </ScrollView>
     </LinearGradient>
   );
