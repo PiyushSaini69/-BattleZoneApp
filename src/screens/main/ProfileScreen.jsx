@@ -6,8 +6,8 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Header from '../../components/ui/Header';
 import { 
-  User, Wallet, BarChart3, Trophy, Bell, Headphones, HelpCircle, 
-  LogOut, ChevronRight, Shield, CheckCircle2, Settings
+  User, Wallet, BarChart3, Trophy, Bell, Headphones, 
+  LogOut, ChevronRight, Shield, CheckCircle2, Settings, FileText
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -192,19 +192,6 @@ export default function ProfileScreen({ navigation }) {
             <ChevronRight size={16} color="#94A3B8" />
           </Pressable>
 
-          {/* Contact Us */}
-          <Pressable
-            onPress={() => navigation.navigate('Support')}
-            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
-            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
-          >
-            <View className="flex-row items-center">
-              <Headphones size={18} color="#0EA5E9" />
-              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">Contact Us</Text>
-            </View>
-            <ChevronRight size={16} color="#94A3B8" />
-          </Pressable>
-
           {/* Importance Notice */}
           <View
             className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
@@ -237,15 +224,41 @@ export default function ProfileScreen({ navigation }) {
             </View>
           </Pressable>
 
-          {/* FAQ */}
+          {/* Contact Us */}
+          <Pressable
+            onPress={() => navigation.navigate('Support')}
+            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View className="flex-row items-center">
+              <Headphones size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">Contact Us</Text>
+            </View>
+            <ChevronRight size={16} color="#94A3B8" />
+          </Pressable>
+
+          {/* Terms & Conditions */}
           <Pressable
             onPress={() => navigation.navigate('Terms')}
             className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
             style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
           >
             <View className="flex-row items-center">
-              <HelpCircle size={18} color="#0EA5E9" />
-              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">FAQ</Text>
+              <FileText size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">Terms & Conditions</Text>
+            </View>
+            <ChevronRight size={16} color="#94A3B8" />
+          </Pressable>
+
+          {/* Privacy Policy */}
+          <Pressable
+            onPress={() => navigation.navigate('Privacy')}
+            className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
+            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+          >
+            <View className="flex-row items-center">
+              <Shield size={18} color="#0EA5E9" />
+              <Text className="text-slate-800 dark:text-slate-200 text-sm font-black ml-3.5">Privacy Policy</Text>
             </View>
             <ChevronRight size={16} color="#94A3B8" />
           </Pressable>
