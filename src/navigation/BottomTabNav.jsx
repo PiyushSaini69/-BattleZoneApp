@@ -114,7 +114,7 @@ export default function BottomTabNav() {
       <Tab.Screen 
         name="TournamentsTab" 
         component={TournamentsScreen} 
-        options={{ title: 'Arenas', headerTitle: 'Arenas Catalog' }} 
+        options={{ title: 'Tournaments', headerTitle: 'Tournaments' }} 
       />
       <Tab.Screen 
         name="WalletTab" 

@@ -97,7 +97,7 @@ export default function CreateTournamentScreen({ navigation }) {
             label="Tournament Title"
             value={title}
             onChangeText={setTitle}
-            placeholder="E.g., Free Fire Neon Cup - Solo Arena"
+            placeholder="E.g., Free Fire Neon Cup - Solo Tournament"
           />
 
           <View className="mb-5 px-0.5">

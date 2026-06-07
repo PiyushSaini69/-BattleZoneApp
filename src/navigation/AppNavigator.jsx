@@ -8,6 +8,7 @@ import RegisterScreen from '../screens/auth/RegisterScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import VerifyEmailScreen from '../screens/auth/VerifyEmailScreen';
 import TournamentDetailScreen from '../screens/tournament/TournamentDetailScreen';
+import RegisterTournamentScreen from '../screens/tournament/RegisterTournamentScreen';
 import MatchRoomScreen from '../screens/tournament/MatchRoomScreen';
 import SupportScreen from '../screens/support/SupportScreen';
 import TicketDetailScreen from '../screens/support/TicketDetailScreen';
@@ -58,6 +59,7 @@ export default function AppNavigator() {
           <Stack.Screen name="MainTabs" component={BottomTabNav} />
           
           <Stack.Screen name="TournamentDetail" component={TournamentDetailScreen} />
+          <Stack.Screen name="RegisterTournament" component={RegisterTournamentScreen} />
           <Stack.Screen name="MatchRoom" component={MatchRoomScreen} />
           
           <Stack.Screen name="Support" component={SupportScreen} />

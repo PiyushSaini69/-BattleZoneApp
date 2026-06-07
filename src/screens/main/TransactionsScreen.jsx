@@ -167,7 +167,7 @@ export default function TransactionsScreen({ navigation }) {
                     ? 'text-emerald-600 dark:text-emerald-400' 
                     : tx.status === 'pending' 
                       ? 'text-amber-500 dark:text-amber-400' 
-                      : 'text-rose-500 dark:text-rose-450'
+                      : 'text-rose-500 dark:text-rose-400'
                 }`}>
                   {tx.status}
                 </Text>

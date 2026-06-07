@@ -91,7 +91,7 @@ export default function Header({ navigation }) {
         {/* Notification Bell */}
         <Pressable
           onPress={() => navigation.navigate('Notification')}
-          className="p-2.5 bg-slate-200 dark:bg-slate-950 rounded-full border border-slate-350 dark:border-slate-800"
+          className="p-2.5 bg-slate-200 dark:bg-slate-950 rounded-full border border-slate-300 dark:border-slate-800"
           style={{ marginRight: 10 }}
         >
           <Bell size={16} color={isDark ? '#FFFFFF' : '#0F172A'} />

@@ -30,7 +30,7 @@ export default function NotificationScreen({ navigation }) {
     },
     {
       id: '3',
-      title: '⚔️ New Free Fire Arena Open',
+      title: '⚔️ New Free Fire Tournament Open',
       content: 'Register for the FF-Solo Clash Squad premium league. Spots are filling up fast!',
       time: '1 day ago',
       type: 'game',

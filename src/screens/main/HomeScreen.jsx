@@ -93,7 +93,7 @@ export default function HomeScreen({ navigation }) {
             Compete against players across India for real prize money pools!
           </Text>
           <Button 
-            title="Explore Arenas"
+            title="Explore Tournaments"
             onPress={() => navigation.navigate('TournamentsTab')}
             variant="primary"
             className="w-full"
