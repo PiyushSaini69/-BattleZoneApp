@@ -20,6 +20,8 @@ import NotificationScreen from '../screens/main/NotificationScreen';
 import AddCoinScreen from '../screens/main/AddCoinScreen';
 import RedeemCoinScreen from '../screens/main/RedeemCoinScreen';
 import TransactionsScreen from '../screens/main/TransactionsScreen';
+import EditProfileScreen from '../screens/main/EditProfileScreen';
+import MyStatisticsScreen from '../screens/main/MyStatisticsScreen';
 import { ActivityIndicator } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -72,6 +74,8 @@ export default function AppNavigator() {
           <Stack.Screen name="AddCoin" component={AddCoinScreen} />
           <Stack.Screen name="RedeemCoin" component={RedeemCoinScreen} />
           <Stack.Screen name="Transactions" component={TransactionsScreen} />
+          <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+          <Stack.Screen name="MyStatistics" component={MyStatisticsScreen} />
         </>
       )}
       <Stack.Screen name="Terms" component={TermsScreen} />

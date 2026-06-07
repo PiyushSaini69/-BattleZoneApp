@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { ScrollView, View, Text, Pressable, Alert, Switch, Modal, useColorScheme as useRNColorScheme } from 'react-native';
+import { ScrollView, View, Text, Pressable, Alert, Switch, Modal, Clipboard, useColorScheme as useRNColorScheme } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import { request } from '../../services/api';
 import Button from '../../components/ui/Button';
@@ -7,7 +7,7 @@ import Input from '../../components/ui/Input';
 import Header from '../../components/ui/Header';
 import { 
   User, Wallet, BarChart3, Trophy, Bell, Headphones, 
-  LogOut, ChevronRight, Shield, CheckCircle2, Settings, FileText
+  LogOut, ChevronRight, Shield, CheckCircle2, Settings, FileText, Copy
 } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -37,43 +37,10 @@ export default function ProfileScreen({ navigation }) {
   const systemScheme = useRNColorScheme();
   const isDark = colorScheme === 'system' ? systemScheme === 'dark' : colorScheme === 'dark';
   
-  const [freeFire, setFreeFire] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
   const [importanceNotice, setImportanceNotice] = useState(true);
 
   // Modals state
-  const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showStatsModal, setShowStatsModal] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
-
-  useEffect(() => {
-    if (user && user.gameUIDs) {
-      setFreeFire(user.gameUIDs.freeFire || '');
-    }
-  }, [user]);
-
-  const handleUpdateUIDs = async () => {
-    setLoading(true);
-    setSuccessMsg('');
-    try {
-      const res = await request('/user/game-uids', {
-        method: 'PUT',
-        body: JSON.stringify({
-          freeFire: freeFire || null,
-        })
-      });
-      if (res.success) {
-        setUser(res.data);
-        setSuccessMsg('Gaming UIDs successfully updated! 🎉');
-        setTimeout(() => setSuccessMsg(''), 4000);
-      }
-    } catch (err) {
-      Alert.alert('Update Failed', err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleLogoutPress = () => {
     Alert.alert('Logout 🔌', 'Are you sure you want to disconnect from BattleZone?', [
@@ -101,27 +68,63 @@ export default function ProfileScreen({ navigation }) {
 
 
         {/* Stats Column Card */}
-        <View className="bg-white dark:bg-slate-900 rounded-2xl py-4 px-3 flex-row items-center justify-between shadow-sm border border-slate-200/50 dark:border-slate-800/60 mb-5">
+        <View className="bg-white dark:bg-slate-900 rounded-2xl py-4 px-2 flex-row items-center justify-between shadow-sm border border-slate-200/50 dark:border-slate-800/60 mb-4">
           <View className="flex-1 items-center">
-            <Text className="text-sky-600 dark:text-sky-400 text-lg font-black">{stats.tournamentsPlayed}</Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold mt-1 uppercase tracking-wide">Matches Played</Text>
+            <Text className="text-sky-600 dark:text-sky-400 text-base font-black">{stats.tournamentsPlayed}</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold mt-1 uppercase tracking-wide text-center">Matches</Text>
           </View>
 
-          <View className="w-[1px] h-9 bg-slate-200 dark:bg-slate-800" />
+          <View className="w-[1px] h-8 bg-slate-200 dark:bg-slate-800" />
 
           <View className="flex-1 items-center">
-            <Text className="text-sky-600 dark:text-sky-400 text-lg font-black">{stats.totalKills}</Text>
-            <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold mt-1 uppercase tracking-wide">Total Kills</Text>
+            <Text className="text-emerald-600 dark:text-emerald-400 text-base font-black">{stats.tournamentsWon}</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold mt-1 uppercase tracking-wide text-center">Won</Text>
           </View>
 
-          <View className="w-[1px] h-9 bg-slate-200 dark:bg-slate-800" />
+          <View className="w-[1px] h-8 bg-slate-200 dark:bg-slate-800" />
 
           <View className="flex-1 items-center">
-            <View className="flex-row items-center">
-              <GoldCoin size={15} />
-              <Text className="text-sky-600 dark:text-sky-400 text-lg font-black ml-1.5">{stats.points}</Text>
+            <Text className="text-sky-600 dark:text-sky-400 text-base font-black">{stats.totalKills}</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold mt-1 uppercase tracking-wide text-center">Kills</Text>
+          </View>
+
+          <View className="w-[1px] h-8 bg-slate-200 dark:bg-slate-800" />
+
+          <View className="flex-1 items-center">
+            <View className="flex-row items-center justify-center">
+              <GoldCoin size={13} />
+              <Text className="text-sky-600 dark:text-sky-400 text-base font-black ml-1">{stats.points}</Text>
             </View>
-            <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold mt-1 uppercase tracking-wide">PlayCoin Won</Text>
+            <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold mt-1 uppercase tracking-wide text-center">Coins Won</Text>
+          </View>
+        </View>
+
+        {/* Referral Code & Referred Users Card */}
+        <View className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row items-center justify-between shadow-sm border border-slate-200/50 dark:border-slate-800/60 mb-5">
+          <View className="flex-1">
+            <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Referral Code</Text>
+            <View className="flex-row items-center">
+              <Text className="text-slate-800 dark:text-white text-sm font-black uppercase tracking-wider">{user?.referralCode || 'N/A'}</Text>
+              {user?.referralCode && (
+                <Pressable 
+                  onPress={() => {
+                    Clipboard.setString(user.referralCode);
+                    Alert.alert('Copied! 📋', 'Referral code copied to clipboard.');
+                  }}
+                  className="ml-2 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg"
+                  style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+                >
+                  <Copy size={12} color={isDark ? '#38BDF8' : '#0EA5E9'} />
+                </Pressable>
+              )}
+            </View>
+          </View>
+          
+          <View className="w-[1px] h-9 bg-slate-200 dark:bg-slate-800 mx-3" />
+          
+          <View className="flex-1 items-end">
+            <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Referred Users</Text>
+            <Text className="text-sky-600 dark:text-sky-400 text-sm font-black">{user?.referralCount || 0}</Text>
           </View>
         </View>
 
@@ -129,7 +132,7 @@ export default function ProfileScreen({ navigation }) {
         <View>
           {/* My Profile */}
           <Pressable
-            onPress={() => setShowProfileModal(true)}
+            onPress={() => navigation.navigate('EditProfile')}
             className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
             style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
           >
@@ -155,7 +158,7 @@ export default function ProfileScreen({ navigation }) {
 
           {/* My Statistics */}
           <Pressable
-            onPress={() => setShowStatsModal(true)}
+            onPress={() => navigation.navigate('MyStatistics')}
             className="bg-white dark:bg-slate-900 rounded-2xl p-4 flex-row justify-between items-center mb-3 shadow-sm border border-slate-200/50 dark:border-slate-800/60"
             style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
           >
@@ -293,86 +296,9 @@ export default function ProfileScreen({ navigation }) {
         </View>
       </ScrollView>
 
-      {/* Edit Profile Modal */}
-      <Modal visible={showProfileModal} animationType="slide" transparent>
-        <View className="flex-1 justify-end" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <View className="bg-white dark:bg-slate-900 rounded-t-3xl p-6 border-t border-slate-200 dark:border-slate-800 shadow-xl">
-            <View className="flex-row justify-between items-center mb-5">
-              <Text className="text-slate-900 dark:text-white text-base font-black uppercase tracking-wider">Edit Profile</Text>
-              <Pressable 
-                onPress={() => setShowProfileModal(false)}
-                className="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full"
-              >
-                <Text className="text-slate-500 dark:text-slate-400 font-extrabold text-[10px] uppercase">Close</Text>
-              </Pressable>
-            </View>
 
-            {successMsg !== '' && (
-              <View className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3.5 mb-4">
-                <Text className="text-emerald-600 dark:text-emerald-400 text-xs font-bold">{successMsg}</Text>
-              </View>
-            )}
 
-            <Input
-              label="Free Fire Player ID / UID"
-              value={freeFire}
-              onChangeText={setFreeFire}
-              placeholder="E.g., 901844781"
-            />
 
-            <Button
-              title="Save Gaming UIDs"
-              onPress={handleUpdateUIDs}
-              loading={loading}
-              className="mt-4 w-full"
-            />
-          </View>
-        </View>
-      </Modal>
-
-      {/* Statistics Modal */}
-      <Modal visible={showStatsModal} animationType="slide" transparent>
-        <View className="flex-1 justify-end" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <View className="bg-white dark:bg-slate-900 rounded-t-3xl p-6 border-t border-slate-200 dark:border-slate-800 shadow-xl">
-            <View className="flex-row justify-between items-center mb-5">
-              <Text className="text-slate-900 dark:text-white text-base font-black uppercase tracking-wider">My Statistics & Referrals</Text>
-              <Pressable 
-                onPress={() => setShowStatsModal(false)}
-                className="bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-full"
-              >
-                <Text className="text-slate-500 dark:text-slate-400 font-extrabold text-[10px] uppercase">Close</Text>
-              </Pressable>
-            </View>
-
-            <View className="bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-900 rounded-2xl p-4">
-              <View className="flex-row justify-between items-center border-b border-slate-100 dark:border-slate-900 pb-3 mb-3">
-                <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold">Matches Played</Text>
-                <Text className="text-slate-900 dark:text-white text-xs font-black">{stats.tournamentsPlayed}</Text>
-              </View>
-              <View className="flex-row justify-between items-center border-b border-slate-100 dark:border-slate-900 pb-3 mb-3">
-                <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold">Tournaments Won</Text>
-                <Text className="text-slate-900 dark:text-white text-xs font-black">{stats.tournamentsWon}</Text>
-              </View>
-              <View className="flex-row justify-between items-center border-b border-slate-100 dark:border-slate-900 pb-3 mb-3">
-                <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold">Total Kills</Text>
-                <Text className="text-slate-900 dark:text-white text-xs font-black">{stats.totalKills}</Text>
-              </View>
-              <View className="flex-row justify-between items-center border-b border-slate-100 dark:border-slate-900 pb-3 mb-3">
-                <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold">PlayCoin Earned</Text>
-                <Text className="text-slate-900 dark:text-white text-xs font-black">{stats.points}</Text>
-              </View>
-              <View className="flex-row justify-between items-center border-b border-slate-100 dark:border-slate-900 pb-3 mb-3">
-                <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold">Referral Code</Text>
-                <Text className="text-sky-600 dark:text-sky-400 text-xs font-black uppercase">{user?.referralCode || 'N/A'}</Text>
-              </View>
-              <View className="flex-row justify-between items-center">
-                <Text className="text-slate-500 dark:text-slate-400 text-xs font-bold">Referred Users</Text>
-                <Text className="text-slate-900 dark:text-white text-xs font-black">{user?.referralCount || 0}</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* App Theme Modal */}
       <Modal visible={showThemeModal} animationType="slide" transparent>
