@@ -61,6 +61,13 @@ export default function TournamentsScreen({ navigation, route }) {
     }
   }, [route?.params?.activeTab]);
 
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('blur', () => {
+      navigation.setParams({ myMatchesOnly: undefined });
+    });
+    return unsubscribe;
+  }, [navigation]);
+
   const { colorScheme } = useColorScheme();
   const systemScheme = useRNColorScheme();
   const isDark = colorScheme === 'system' ? systemScheme === 'dark' : colorScheme === 'dark';

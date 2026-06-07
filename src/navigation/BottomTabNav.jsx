@@ -115,6 +115,11 @@ export default function BottomTabNav() {
         name="TournamentsTab" 
         component={TournamentsScreen} 
         options={{ title: 'Tournaments', headerTitle: 'Tournaments' }} 
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            navigation.setParams({ myMatchesOnly: undefined });
+          },
+        })}
       />
       <Tab.Screen 
         name="WalletTab" 
