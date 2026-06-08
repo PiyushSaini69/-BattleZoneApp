@@ -38,7 +38,7 @@ export default function TransactionsScreen({ navigation }) {
 
   const loadTransactions = async () => {
     try {
-      const txRes = await request('/wallet/transactions');
+      const txRes = await request('/wallet/transactions?limit=50');
       if (txRes.success) {
         setTransactions(txRes.data.transactions);
       }
