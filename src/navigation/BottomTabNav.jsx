@@ -4,10 +4,9 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/main/HomeScreen';
 import TournamentsScreen from '../screens/main/TournamentsScreen';
 import WalletScreen from '../screens/main/WalletScreen';
-import LeaderboardScreen from '../screens/main/LeaderboardScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
-import { Home, Trophy, Wallet as WalletIcon, Award, User, Shield } from 'lucide-react-native';
+import { Home, Trophy, Wallet as WalletIcon, User, Shield } from 'lucide-react-native';
 import { AuthContext } from '../context/AuthContext';
 import { useColorScheme } from 'nativewind';
 
@@ -17,7 +16,7 @@ export default function BottomTabNav() {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const { user } = useContext(AuthContext);
-  const isAdmin = user && ['admin', 'superadmin', 'moderator'].includes(user.role);
+  const isAdmin = user && ['admin', 'superadmin'].includes(user.role);
 
   return (
     <Tab.Navigator
@@ -35,9 +34,6 @@ export default function BottomTabNav() {
               break;
             case 'WalletTab':
               iconComponent = <WalletIcon size={iconSize} color={color} />;
-              break;
-            case 'LeaderboardTab':
-              iconComponent = <Award size={iconSize} color={color} />;
               break;
             case 'ProfileTab':
               iconComponent = <User size={iconSize} color={color} />;
@@ -125,11 +121,6 @@ export default function BottomTabNav() {
         name="WalletTab" 
         component={WalletScreen} 
         options={{ title: 'Wallet', headerTitle: 'Gamer Wallet' }} 
-      />
-      <Tab.Screen 
-        name="LeaderboardTab" 
-        component={LeaderboardScreen} 
-        options={{ title: 'Leaderboard', headerTitle: 'Global Ranks' }} 
       />
       <Tab.Screen 
         name="ProfileTab" 
