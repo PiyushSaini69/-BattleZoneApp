@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { ScrollView, View, Text, Pressable, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { ScrollView, View, Text, Pressable, Alert, ActivityIndicator, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { AuthContext } from '../../context/AuthContext';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
@@ -7,6 +7,8 @@ import GlassCard from '../../components/ui/GlassCard';
 import { useColorScheme } from 'nativewind';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { ArrowLeft } from 'lucide-react-native';
+import * as SecureStore from 'expo-secure-store';
 
 export default function VerifyEmailScreen({ route, navigation }) {
   const { verifyEmailOtp, resendVerificationOtp, authError, setAuthError } = useContext(AuthContext);
@@ -20,12 +22,30 @@ export default function VerifyEmailScreen({ route, navigation }) {
   const [email, setEmail] = useState(initialEmail);
   const [otp, setOtp] = useState('');
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes (300 seconds)
-  const [isTimerActive, setIsTimerActive] = useState(true);
+  const [isTimerActive, setIsTimerActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [localError, setLocalError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [devOtp, setDevOtp] = useState(initialDevOtp);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const scrollViewRef = useRef(null);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => setIsKeyboardVisible(true)
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => setIsKeyboardVisible(false)
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
+    };
+  }, []);
 
   // Sync email from params if it changes
   useEffect(() => {
@@ -36,6 +56,45 @@ export default function VerifyEmailScreen({ route, navigation }) {
       setDevOtp(route.params.devOtp);
     }
   }, [route.params]);
+
+  // Handle remaining OTP expiry time using SecureStore
+  useEffect(() => {
+    const initializeTimer = async () => {
+      if (!email) return;
+      
+      const storageKey = `otp_sent_at_${email.toLowerCase()}`;
+      let sentTimeStr = null;
+
+      // If navigation params has otpSentAt, use it and save it in SecureStore
+      if (route.params?.otpSentAt) {
+        sentTimeStr = route.params.otpSentAt.toString();
+        await SecureStore.setItemAsync(storageKey, sentTimeStr);
+      } else {
+        // Otherwise try to get it from SecureStore
+        sentTimeStr = await SecureStore.getItemAsync(storageKey);
+      }
+
+      if (sentTimeStr) {
+        const sentTime = Number(sentTimeStr);
+        const elapsed = Math.floor((Date.now() - sentTime) / 1000);
+        const remaining = 300 - elapsed; // 5 minutes = 300 seconds
+
+        if (remaining > 0) {
+          setTimeLeft(remaining);
+          setIsTimerActive(true);
+        } else {
+          setTimeLeft(0);
+          setIsTimerActive(false);
+        }
+      } else {
+        // No saved timestamp: assume expired / needs resend
+        setTimeLeft(0);
+        setIsTimerActive(false);
+      }
+    };
+
+    initializeTimer();
+  }, [route.params?.otpSentAt, email]);
 
   // Countdown timer hook
   useEffect(() => {
@@ -77,6 +136,12 @@ export default function VerifyEmailScreen({ route, navigation }) {
       if (res && res.success) {
         setSuccessMsg(res.message || 'Email verified successfully!');
         
+        // Clean up SecureStore key on success
+        if (email) {
+          const storageKey = `otp_sent_at_${email.toLowerCase()}`;
+          await SecureStore.deleteItemAsync(storageKey).catch(() => {});
+        }
+        
         // Auto-login succeeds, which updates AuthContext user state and triggers navigation automatically via AppNavigator.
         Alert.alert('Success 🎉', 'Email verified successfully! Logging you in...', [
           { text: 'OK' }
@@ -99,6 +164,12 @@ export default function VerifyEmailScreen({ route, navigation }) {
       const res = await resendVerificationOtp(email);
       if (res && res.success) {
         setSuccessMsg(res.message || 'Verification code resent successfully.');
+        
+        // Save new timestamp on resend
+        const nowStr = Date.now().toString();
+        const storageKey = `otp_sent_at_${email.toLowerCase()}`;
+        await SecureStore.setItemAsync(storageKey, nowStr);
+
         setTimeLeft(300); // Reset timer to 5 mins
         setIsTimerActive(true);
 
@@ -124,26 +195,40 @@ export default function VerifyEmailScreen({ route, navigation }) {
         style={{ flex: 1 }}
       >
         <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+          {/* Header remains fixed at the top */}
+          <View className="flex-row items-center justify-between w-full mb-4 mt-2 px-5">
+            <Pressable 
+              onPress={() => navigation.navigate('Login')} 
+              className="w-10 h-10 rounded-full border flex items-center justify-center"
+              style={({ pressed }) => [
+                {
+                  backgroundColor: isDark 
+                    ? (pressed ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.05)')
+                    : (pressed ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)'),
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                }
+              ]}
+            >
+              <ArrowLeft size={18} color={isDark ? '#FFFFFF' : '#0F172A'} />
+            </Pressable>
+            
+            <View className="flex-1 items-center justify-center">
+              <Text className="text-slate-900 dark:text-white font-black text-sm uppercase tracking-widest text-center">
+                CONFIRM REGISTRATION
+              </Text>
+            </View>
+
+            <View className="w-10" />
+          </View>
+
           <ScrollView 
+            ref={scrollViewRef}
             className="flex-1" 
-            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}
+            contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingBottom: 20 }}
             keyboardShouldPersistTaps="handled"
+            alwaysBounceVertical={true}
           >
-        <View className="items-center mb-8 mt-8">
-          <Text 
-            className="text-3xl font-black text-slate-900 dark:text-white tracking-widest text-center"
-            style={isDark ? {
-              textShadowColor: 'rgba(0, 229, 255, 0.4)',
-              textShadowOffset: { width: 0, height: 0 },
-              textShadowRadius: 8,
-            } : {}}
-          >
-            VERIFY <Text className="text-cyan-400">ACCOUNT</Text>
-          </Text>
-          <Text className="text-slate-500 dark:text-slate-400 text-[10px] mt-2 text-center uppercase tracking-widest font-extrabold">
-            Confirm Email Ownership
-          </Text>
-        </View>
+            {!isKeyboardVisible && <View className="flex-1" />}
 
         <GlassCard className="mb-6" glowColor="purple">
           {(localError || authError) && (
@@ -249,9 +334,8 @@ export default function VerifyEmailScreen({ route, navigation }) {
           </Pressable>
         </GlassCard>
 
-        <Pressable onPress={() => navigation.navigate('Login')} className="self-center py-4 mb-4">
-          <Text className="text-cyan-400 font-extrabold text-sm uppercase tracking-wide">Back to Login</Text>
-        </Pressable>
+            {!isKeyboardVisible && <View className="flex-1" />}
+            {isKeyboardVisible && <View style={{ height: 280 }} />}
           </ScrollView>
         </SafeAreaView>
       </KeyboardAvoidingView>

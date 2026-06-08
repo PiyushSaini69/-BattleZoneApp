@@ -175,7 +175,8 @@ export default function RegisterScreen({ navigation }) {
               text: 'Verify Now', 
               onPress: () => navigation.navigate('VerifyEmail', { 
                 email: email, 
-                devOtp: res.data?.otpValue || '' 
+                devOtp: res.data?.otpValue || '',
+                otpSentAt: Date.now()
               }) 
             }
           ]
