@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, View, Text, Pressable, RefreshControl, Alert, useColorScheme as useRNColorScheme, TextInput, Modal, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, Pressable, RefreshControl, Alert, useColorScheme as useRNColorScheme, TextInput, Modal, ActivityIndicator, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { request } from '../../services/api';
 import GlassCard from '../../components/ui/GlassCard';
 import Badge from '../../components/ui/Badge';
+import Countdown from '../../components/ui/Countdown';
 import { Plus, ArrowLeft, Check, X, Search, Trash2, ShieldAlert, Award, UserPlus, CreditCard, DollarSign, Activity } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
+import { CONFIG } from '../../config';
 
 const GoldCoin = ({ size = 14 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24">
@@ -25,6 +27,86 @@ const GoldCoin = ({ size = 14 }) => (
     </SvgText>
   </Svg>
 );
+
+const formatDate = (dateStr) => {
+  try {
+    const date = new Date(dateStr);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const strTime = String(hours).padStart(2, '0') + ':' + minutes + ' ' + ampm;
+    
+    return `${day}/${month}/${year} at ${strTime}`;
+  } catch (e) {
+    return dateStr;
+  }
+};
+
+const getGameBannerSource = (item) => {
+  if (item.game === 'free_fire') {
+    if (item.gameMode === 'clash_squad') {
+      const banner = item.bannerImage || '';
+      const format = item.format || '';
+      const rule = item.mode || '';
+      const isOneTap = banner.includes('onetap') || rule === 'onetap';
+      const isHS = banner.includes('headshot') || rule === 'headshot';
+      if (banner.includes('1v1') || format === '1v1' || item.tournamentType === 'solo') {
+        if (isOneTap) return require('../../../assets/cs_1v1_onetap.jpg');
+        if (isHS) return require('../../../assets/cs_1v1_headshot.jpg');
+        return require('../../../assets/cs_1v1_normal.jpg');
+      }
+      if (banner.includes('2v2') || format === '2v2' || item.tournamentType === 'duo') {
+        if (isOneTap) return require('../../../assets/cs_2v2_onetap.jpg');
+        if (isHS) return require('../../../assets/cs_2v2_headshot.jpg');
+        return require('../../../assets/cs_2v2_normal.jpg');
+      }
+      if (banner.includes('4v4') || format === '4v4' || item.tournamentType === 'squad') {
+        if (isOneTap) return require('../../../assets/cs_4v4_onetap.jpg');
+        if (isHS) return require('../../../assets/cs_4v4_headshot.jpg');
+        return require('../../../assets/cs_4v4_normal.jpg');
+      }
+      return require('../../../assets/clash_squad.jpg');
+    } else if (item.gameMode === 'lone_wolf') {
+      const banner = item.bannerImage || '';
+      const format = item.format || '';
+      const rule = item.mode || '';
+      if (banner.includes('2v2') || format === '2v2' || item.tournamentType === 'duo') {
+        if (banner.includes('headshot') || banner.includes('onetap') || rule === 'headshot' || rule === 'onetap') {
+          return require('../../../assets/lw_2v2_headshot.jpg');
+        }
+        return require('../../../assets/lw_2v2_normal.jpg');
+      }
+      if (banner.includes('headshot') || banner.includes('onetap') || rule === 'headshot' || rule === 'onetap') {
+        return require('../../../assets/lw_1v1_headshot.jpg');
+      }
+      return require('../../../assets/lw_1v1_normal.jpg');
+    } else if (item.gameMode === 'battle_royale') {
+      const banner = item.bannerImage || '';
+      if (banner.includes('squad') || item.tournamentType === 'squad') {
+        return require('../../../assets/br_squad.jpg');
+      }
+      if (banner.includes('duo') || item.tournamentType === 'duo') {
+        return require('../../../assets/br_duo.jpg');
+      }
+      if (banner.includes('solo') || item.tournamentType === 'solo') {
+        return require('../../../assets/br_solo.jpg');
+      }
+    }
+    return require('../../../assets/free_fire_banner.jpg');
+  }
+  switch (item.game) {
+    case 'bgmi': return { uri: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=300' };
+    case 'valorant': return { uri: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=300' };
+    case 'cod_mobile': return { uri: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=300' };
+    default: return { uri: CONFIG.DEFAULT_BANNER };
+  }
+};
 
 export default function AdminDashboardScreen({ navigation }) {
   const { colorScheme } = useColorScheme();
@@ -46,8 +128,7 @@ export default function AdminDashboardScreen({ navigation }) {
 
   // Filters & Searches
   const [userSearch, setUserSearch] = useState('');
-  const [selectedBracketT, setSelectedBracketT] = useState(null);
-  const [selectedBracketTId, setSelectedBracketTId] = useState('');
+
 
   // Modals state
   const [roomModalVisible, setRoomModalVisible] = useState(false);
@@ -64,17 +145,14 @@ export default function AdminDashboardScreen({ navigation }) {
   const [adjAction, setAdjAction] = useState('credit'); // credit, debit
   const [adjDesc, setAdjDesc] = useState('Admin adjustment');
 
-  const [scoreModalVisible, setScoreModalVisible] = useState(false);
-  const [selectedBracketMatch, setSelectedBracketMatch] = useState(null);
-  const [bracketWinnerKey, setBracketWinnerKey] = useState('p1'); // p1, p2
-  const [bracketScore, setBracketScore] = useState('');
+
 
   const loadAdminData = async () => {
     try {
       const statsRes = await request('/admin/dashboard');
       if (statsRes.success) setStats(statsRes.data);
 
-      const tourneysRes = await request('/tournaments?includeDrafts=true');
+      const tourneysRes = await request('/tournaments?includeDrafts=true&limit=200');
       if (tourneysRes.success) setTournaments(tourneysRes.data.tournaments);
 
       const wdRes = await request('/admin/withdrawals');
@@ -129,6 +207,7 @@ export default function AdminDashboardScreen({ navigation }) {
         Alert.alert('Success', 'Room credentials published to players!');
         setRoomModalVisible(false);
         setSelectedRoomT(null);
+        setMatchesSubTab('ongoing');
         await loadAdminData();
       }
     } catch (e) {
@@ -172,39 +251,7 @@ export default function AdminDashboardScreen({ navigation }) {
 
   // Results declared via separate DeclareResultsScreen
 
-  const handleGenerateBracket = async (tId) => {
-    try {
-      const res = await request(`/admin/tournaments/${tId}/bracket/generate`, { method: 'POST' });
-      if (res.success) {
-        Alert.alert('Success 🎉', 'Tournament bracket successfully generated!');
-        await loadAdminData();
-      }
-    } catch (e) {
-      Alert.alert('Error', e.message);
-    }
-  };
 
-  // 2. Bracket Node Winner Submission
-  const submitBracketWinner = async () => {
-    try {
-      const res = await request(`/admin/tournaments/${selectedBracketT._id}/bracket/match/${selectedBracketMatch.matchId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ winner: bracketWinnerKey, score: bracketScore })
-      });
-      if (res.success) {
-        Alert.alert('Success', 'Match node updated. Winner advanced!');
-        setScoreModalVisible(false);
-        setSelectedBracketMatch(null);
-        
-        // Refresh selected bracket data
-        const freshRes = await request(`/tournaments/${selectedBracketT.slug}`);
-        if (freshRes.success) setSelectedBracketT(freshRes.data.tournament);
-        await loadAdminData();
-      }
-    } catch (e) {
-      Alert.alert('Error', e.message);
-    }
-  };
 
   // 3. User adjustments & ban
   const handleToggleBan = async (user) => {
@@ -346,7 +393,6 @@ export default function AdminDashboardScreen({ navigation }) {
           {[
             { id: 'stats', label: 'Dashboard' },
             { id: 'matches', label: 'Matches' },
-            { id: 'brackets', label: 'Brackets' },
             { id: 'payouts', label: 'Payouts' }
           ].map(tab => (
             <Pressable
@@ -450,7 +496,7 @@ export default function AdminDashboardScreen({ navigation }) {
             </View>
 
             {(() => {
-              const filtered = tournaments.filter((t) => {
+              let filtered = tournaments.filter((t) => {
                 if (matchesSubTab === 'ongoing') {
                   return t.status === 'live' || t.status === 'ongoing';
                 } else if (matchesSubTab === 'upcoming') {
@@ -460,6 +506,14 @@ export default function AdminDashboardScreen({ navigation }) {
                 }
                 return true;
               });
+
+              if (matchesSubTab === 'results') {
+                filtered = filtered.sort((a, b) => {
+                  const dateA = a.completedAt ? new Date(a.completedAt) : new Date(a.scheduledAt);
+                  const dateB = b.completedAt ? new Date(b.completedAt) : new Date(b.scheduledAt);
+                  return dateB - dateA;
+                });
+              }
 
               if (filtered.length === 0) {
                 return (
@@ -471,176 +525,257 @@ export default function AdminDashboardScreen({ navigation }) {
                 );
               }
 
-              return filtered.map((t) => (
-                <GlassCard key={t._id} className="p-4 mb-4" glowColor="red">
-                  <View className="flex-row justify-between items-start mb-2">
-                    <View className="flex-1 mr-2">
-                      <Text className="text-rose-500 text-[9px] uppercase font-mono font-bold">{t.gameMode?.replace('_', ' ')} • {t.format || t.tournamentType}</Text>
-                      <Text className="text-slate-950 dark:text-white font-black text-sm mt-0.5">{t.title}</Text>
-                    </View>
-                    <Badge variant={t.status === 'completed' ? 'success' : t.status === 'live' ? 'indigo' : 'warning'}>
-                      {t.status}
-                    </Badge>
-                  </View>
+              return filtered.map((t) => {
+                const progress = Math.min((t.filledSlots / t.totalSlots) * 100, 100);
+                const spotsLeft = t.totalSlots - t.filledSlots;
+                const isFull = spotsLeft <= 0;
+                const isCSLW = t.gameMode === 'clash_squad' || t.gameMode === 'lone_wolf';
 
-                  <View className="grid grid-cols-2 flex-row flex-wrap border-t border-slate-200 dark:border-slate-800 pt-3 mt-1 pb-2" style={{ gap: 8 }}>
-                    <View className="flex-row items-center w-[45%]">
-                      <Text className="text-slate-500 text-[10px] mr-1">Fee:</Text>
-                      <GoldCoin size={10} />
-                      <Text className="text-slate-950 dark:text-white font-bold text-[10px] ml-0.5">{t.entryFee}</Text>
-                    </View>
-                    <View className="flex-row items-center w-[45%]">
-                      <Text className="text-slate-500 text-[10px] mr-1">Pool:</Text>
-                      <GoldCoin size={10} />
-                      <Text className="text-emerald-500 font-bold text-[10px] ml-0.5">{t.prizePool}</Text>
-                    </View>
-                    <Text className="text-slate-500 text-[10px] w-[45%]">Slots: <Text className="text-slate-950 dark:text-white font-bold">{t.filledSlots} / {t.totalSlots}</Text></Text>
-                    <Text className="text-slate-500 text-[9px] w-[45%] truncate text-right">Map: {t.mapType || 'CS Arena'}</Text>
-                  </View>
+                return (
+                  <GlassCard key={t._id} className="mb-5 overflow-hidden p-0" glowColor="red">
+                    <Image 
+                      source={getGameBannerSource(t)}
+                      style={{ width: '100%', height: 160 }}
+                      resizeMode="stretch"
+                    />
 
-                  <View className="flex-row flex-wrap gap-2 pt-2 border-t border-slate-200 dark:border-slate-800 mt-2">
-                    {t.status === 'draft' && (
-                      <Pressable
-                        onPress={() => handlePublishTournament(t._id)}
-                        className="bg-cyan-500 px-3 py-1.5 rounded-lg"
-                      >
-                        <Text className="text-black text-[9px] font-black uppercase">Publish</Text>
-                      </Pressable>
-                    )}
+                    <View className="p-4 bg-white/95 dark:bg-[#0A0F1A]/95">
+                      {/* Header Row: Title, Time */}
+                      <View className="mb-4 flex-row justify-between items-center">
+                        <View className="flex-1 mr-2">
+                          <Text className="text-slate-900 dark:text-white text-sm font-black uppercase" numberOfLines={1}>
+                            {t.title}
+                          </Text>
+                          <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-bold mt-1">
+                            Time: {formatDate(t.scheduledAt)}
+                          </Text>
+                        </View>
+                        <Badge 
+                          text={t.status}
+                          variant={
+                            t.status === 'completed' 
+                              ? 'success' 
+                              : t.status === 'cancelled' 
+                              ? 'danger' 
+                              : (t.status === 'live' || t.status === 'ongoing') 
+                              ? 'purple' 
+                              : 'warning'
+                          }
+                        />
+                      </View>
 
-                    {t.status !== 'completed' && t.status !== 'cancelled' && (
-                      <>
-                        <Pressable
-                          onPress={() => navigation.navigate('CreateTournament', { tournament: t })}
-                          className="bg-amber-500 px-3 py-1.5 rounded-lg border border-amber-600 shadow-sm"
-                          style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
-                        >
-                          <Text className="text-black text-[9px] font-black uppercase">Edit</Text>
-                        </Pressable>
+                      {/* Stats Grid: Row 1 */}
+                      <View className="flex-row justify-between mb-4">
+                        <View className="items-start flex-1">
+                          <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">
+                            {isCSLW ? 'Winner Prize' : 'Prize Pool'}
+                          </Text>
+                          <View className="flex-row items-center">
+                            <GoldCoin size={14} />
+                            <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">
+                              {isCSLW ? (t.winnerPrize || t.prizePool) : t.prizePool}
+                            </Text>
+                          </View>
+                        </View>
+                        <View className="items-start flex-1">
+                          <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">
+                            {isCSLW ? 'Rule Mode' : 'Per Kill'}
+                          </Text>
+                          {isCSLW ? (
+                            <Text className="text-slate-950 dark:text-white text-xs font-black uppercase mt-0.5">{t.mode || 'Normal'}</Text>
+                          ) : (
+                            <View className="flex-row items-center">
+                              <GoldCoin size={14} />
+                              <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">
+                                {t.perKillReward || t.perKill || 0}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                        <View className="items-start flex-1">
+                          <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Entry Fee</Text>
+                          <View className="flex-row items-center">
+                            <GoldCoin size={14} />
+                            <Text className="text-slate-900 dark:text-white text-xs font-black ml-1">{t.entryFee}</Text>
+                          </View>
+                        </View>
+                      </View>
 
-                        <Pressable
-                          onPress={() => {
-                            setSelectedRoomT(t);
-                            setRoomIdInput(t.roomId || '');
-                            setRoomPasswordInput(t.roomPassword || '');
-                            setRoomModalVisible(true);
-                          }}
-                          className="bg-slate-700/60 px-3 py-1.5 rounded-lg border border-slate-600"
-                        >
-                          <Text className="text-white text-[9px] font-black uppercase">Room Details</Text>
-                        </Pressable>
+                      {/* Stats Grid: Row 2 */}
+                      <View className="flex-row justify-between mb-4">
+                        <View className="items-start flex-1">
+                          <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Type</Text>
+                          <Text className="text-slate-900 dark:text-white text-xs font-bold capitalize">{t.tournamentType || 'Solo'}</Text>
+                        </View>
+                        <View className="items-start flex-1">
+                          <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Map</Text>
+                          <Text className="text-slate-900 dark:text-white text-xs font-bold capitalize">{t.map || t.mapType || 'Bermuda'}</Text>
+                        </View>
+                        <View className="items-start flex-1">
+                          <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase tracking-wider mb-1">Mode</Text>
+                          <Text className="text-slate-900 dark:text-white text-xs font-bold capitalize">{t.gameMode?.replace('_', ' ') || 'Classic'}</Text>
+                        </View>
+                      </View>
 
-                        {(t.gameMode === 'clash_squad' || t.gameMode === 'lone_wolf') && !t.bracket?.length && (
+                      {/* Progress Bar & Countdown Row */}
+                      {!(t.status === 'completed' || t.status === 'ended' || t.status === 'results' || t.status === 'cancelled') && (
+                        <View className="mb-4 border-t border-slate-200 dark:border-slate-800/60 pt-3 flex-row justify-between items-center" style={{ gap: 12 }}>
+                          {/* Slots Progress (Left) */}
+                          <View className="flex-1">
+                            <View className="h-1.5 bg-slate-200 dark:bg-slate-950 rounded-full overflow-hidden mb-1.5 border border-slate-300/40 dark:border-slate-900">
+                              <View 
+                                style={{ width: `${progress}%`, height: '100%', backgroundColor: '#EF4444' }} 
+                                className="rounded-full"
+                              />
+                            </View>
+                            <View className="flex-row justify-between items-center">
+                              <Text className={`text-[9px] font-bold ${isFull ? 'text-rose-500 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                                {isFull ? 'Full!' : `Only ${spotsLeft} left!`}
+                              </Text>
+                              <Text className="text-slate-900 dark:text-white text-[10px] font-black">{t.filledSlots}/{t.totalSlots}</Text>
+                            </View>
+                          </View>
+
+                          {/* Countdown Timer (Right) */}
+                          {t.status !== 'draft' && (
+                            <View className="items-end">
+                              <Countdown targetDate={t.scheduledAt} isDark={isDark} className="py-1 px-2 rounded-lg" />
+                            </View>
+                          )}
+                        </View>
+                      )}
+
+                      {/* Admin Actions Container */}
+                      <View className="pt-3 border-t border-slate-200 dark:border-slate-800/60 mt-1">
+                        {t.status === 'draft' && (
                           <Pressable
-                            onPress={() => handleGenerateBracket(t._id)}
-                            className="bg-violet-600 px-3 py-1.5 rounded-lg"
+                            onPress={() => handlePublishTournament(t._id)}
+                            className="w-full py-3 rounded-xl items-center justify-center bg-emerald-500 dark:bg-emerald-600 mb-2"
+                            style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
                           >
-                            <Text className="text-white text-[9px] font-black uppercase">Generate Bracket</Text>
+                            <Text className="text-white font-extrabold text-[11px] uppercase tracking-wider">Publish</Text>
                           </Pressable>
                         )}
 
-                        <Pressable
-                          onPress={() => handleCancelTournament(t._id)}
-                          className="bg-red-500/10 border border-red-500/30 px-3 py-1.5 rounded-lg"
-                        >
-                          <Text className="text-red-500 text-[9px] font-black uppercase">Cancel</Text>
-                        </Pressable>
-
-                        {t.status !== 'draft' && (
-                          <View className="flex-row gap-2 flex-wrap mt-1">
+                        {t.status === 'completed' && (
+                          t.resultsDeclared ? (
                             <Pressable
-                              onPress={() => handleCompleteTournament(t._id)}
-                              className="bg-red-500/10 border border-red-500/30 px-2.5 py-1.5 rounded-lg"
-                            >
-                              <Text className="text-red-500 text-[9px] font-black uppercase">Complete Only</Text>
-                            </Pressable>
-
-                            <Pressable
-                              onPress={() => navigation.navigate('DeclareResults', { tournamentId: t._id, title: t.title })}
-                              className="bg-emerald-600 px-2.5 py-1.5 rounded-lg border border-emerald-500 shadow-sm"
+                              onPress={() => navigation.navigate('DeclareResults', { tournamentId: t._id, title: t.title, slug: t.slug, resultsDeclared: t.resultsDeclared })}
+                              className="w-full py-3 rounded-xl items-center justify-center bg-violet-600 dark:bg-violet-500"
                               style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
                             >
-                              <Text className="text-white text-[9px] font-black uppercase">Post Results</Text>
+                              <Text className="text-white font-extrabold text-[11px] uppercase tracking-wider">View Results</Text>
                             </Pressable>
-                          </View>
+                          ) : (
+                            <View className="flex-row gap-2 w-full">
+                              <Pressable
+                                onPress={() => navigation.navigate('DeclareResults', { tournamentId: t._id, title: t.title, slug: t.slug, resultsDeclared: t.resultsDeclared })}
+                                className="flex-1 py-3 rounded-xl items-center justify-center bg-emerald-500 dark:bg-emerald-600"
+                                style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+                              >
+                                <Text className="text-white font-extrabold text-[11px] uppercase tracking-wider">Post Results</Text>
+                              </Pressable>
+
+                              <Pressable
+                                onPress={() => handleCancelTournament(t._id)}
+                                className="flex-1 py-3 rounded-xl items-center justify-center bg-rose-600 dark:bg-rose-500"
+                                style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+                              >
+                                <Text className="text-white font-extrabold text-[11px] uppercase tracking-wider">Cancel</Text>
+                              </Pressable>
+                            </View>
+                          )
                         )}
-                      </>
-                    )}
-                  </View>
-                </GlassCard>
-              ))
+
+                        {t.status === 'cancelled' && (
+                          <Pressable
+                            disabled
+                            className="w-full py-3 rounded-xl items-center justify-center bg-slate-500 dark:bg-slate-600 opacity-60"
+                          >
+                            <Text className="text-white font-extrabold text-[11px] uppercase tracking-wider">Cancelled / Refunded</Text>
+                          </Pressable>
+                        )}
+
+                        {t.status !== 'completed' && t.status !== 'cancelled' && (
+                          <>
+                            {t.status === 'live' || t.status === 'ongoing' ? (
+                              <View className="w-full space-y-2">
+                                <Pressable
+                                  onPress={() => {
+                                    setSelectedRoomT(t);
+                                    setRoomIdInput(t.roomId || '');
+                                    setRoomPasswordInput(t.roomPassword || '');
+                                    setRoomModalVisible(true);
+                                  }}
+                                  className="w-full py-3 rounded-xl items-center justify-center bg-indigo-600 dark:bg-indigo-500"
+                                  style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+                                >
+                                  <Text className="text-white font-extrabold text-[11px] uppercase tracking-wider">Edit Room Details</Text>
+                                </Pressable>
+
+                                <View className="flex-row gap-2 w-full mt-2">
+                                  <Pressable
+                                    onPress={() => handleCompleteTournament(t._id)}
+                                    className="flex-1 py-3 rounded-xl items-center justify-center bg-slate-700 dark:bg-slate-800"
+                                    style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+                                  >
+                                    <Text className="text-white font-extrabold text-[11px] uppercase tracking-wider">Complete Only</Text>
+                                  </Pressable>
+
+                                  <Pressable
+                                    onPress={() => handleCancelTournament(t._id)}
+                                    className="flex-1 py-3 rounded-xl items-center justify-center bg-rose-600 dark:bg-rose-500"
+                                    style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+                                  >
+                                    <Text className="text-white font-extrabold text-[11px] uppercase tracking-wider text-center">Cancel</Text>
+                                  </Pressable>
+                                </View>
+                              </View>
+                            ) : (
+                              <View className="flex-row gap-2 w-full">
+                                <Pressable
+                                  onPress={() => navigation.navigate('CreateTournament', { tournament: t })}
+                                  className="flex-1 py-3 rounded-xl items-center justify-center bg-amber-500 dark:bg-amber-600"
+                                  style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+                                >
+                                  <Text className="text-white font-extrabold text-[11px] uppercase tracking-wider text-center">Edit</Text>
+                                </Pressable>
+
+                                <Pressable
+                                  onPress={() => {
+                                    setSelectedRoomT(t);
+                                    setRoomIdInput(t.roomId || '');
+                                    setRoomPasswordInput(t.roomPassword || '');
+                                    setRoomModalVisible(true);
+                                  }}
+                                  className="flex-1 py-3 rounded-xl items-center justify-center bg-indigo-600 dark:bg-indigo-500"
+                                  style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+                                >
+                                  <Text className="text-white font-extrabold text-[11px] uppercase tracking-wider text-center">Enter Room Detail</Text>
+                                </Pressable>
+
+                                <Pressable
+                                  onPress={() => handleCancelTournament(t._id)}
+                                  className="flex-1 py-3 rounded-xl items-center justify-center bg-rose-600 dark:bg-rose-500"
+                                  style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
+                                >
+                                  <Text className="text-white font-extrabold text-[11px] uppercase tracking-wider text-center">Cancel</Text>
+                                </Pressable>
+                              </View>
+                            )}
+                          </>
+                        )}
+                      </View>
+
+                    </View>
+                  </GlassCard>
+                );
+              })
             })()}
           </View>
         )}
 
-        {/* VIEW 3: BRACKETS */}
-        {activeTab === 'brackets' && (
-          <View className="space-y-4">
-            <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-widest px-0.5 mb-2">Select Bracket Tournament</Text>
-            <View className="mb-4">
-              {tournaments.filter(t => (t.gameMode === 'clash_squad' || t.gameMode === 'lone_wolf') && t.bracket?.length > 0).map(t => (
-                <Pressable
-                  key={t._id}
-                  onPress={async () => {
-                    setSelectedBracketTId(t._id);
-                    const res = await request(`/tournaments/${t.slug}`);
-                    if (res.success) setSelectedBracketT(res.data.tournament);
-                  }}
-                  className={`p-3 rounded-xl border mb-2 flex-row justify-between items-center ${
-                    selectedBracketTId === t._id ? 'border-rose-500 bg-rose-500/5' : 'border-slate-800 bg-slate-900/20'
-                  }`}
-                >
-                  <Text className="text-slate-950 dark:text-white text-xs font-semibold">{t.title}</Text>
-                  <Text className="text-slate-500 text-[9px] font-bold uppercase">{t.status}</Text>
-                </Pressable>
-              ))}
-            </View>
 
-            {selectedBracketT ? (
-              <View className="space-y-3">
-                <Text className="text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-widest px-0.5 mb-2">Bracket Matches</Text>
-                {selectedBracketT.bracket.map((match) => (
-                  <Pressable
-                    key={match.matchId}
-                    onPress={() => {
-                      if (selectedBracketT.status === 'completed') return;
-                      setSelectedBracketMatch(match);
-                      setBracketWinnerKey(match.winner || 'p1');
-                      setBracketScore(match.score || '');
-                      setScoreModalVisible(true);
-                    }}
-                    className={`p-3 border rounded-xl bg-slate-900/30 border-slate-800 ${match.winner ? 'border-emerald-500/20' : ''}`}
-                  >
-                    <View className="flex-row justify-between items-center mb-2">
-                      <Text className="text-rose-500 font-mono text-[9px] font-bold">{match.matchId} ({match.roundName})</Text>
-                      {match.score && <Text className="text-cyan-400 font-mono text-[9px]">Score: {match.score}</Text>}
-                    </View>
-                    
-                    <View className="flex-row justify-between items-center py-1">
-                      <Text className={`text-xs ${match.winner === 'p1' ? 'text-emerald-500 font-bold' : 'text-slate-400'}`}>
-                        {match.p1?.name || 'TBD'}
-                      </Text>
-                      {match.winner === 'p1' && <Text className="text-[9px] text-emerald-500 font-bold">Winner</Text>}
-                    </View>
-                    
-                    <View className="h-[0.5px] bg-slate-800 my-1 w-full" />
-                    
-                    <View className="flex-row justify-between items-center py-1">
-                      <Text className={`text-xs ${match.winner === 'p2' ? 'text-emerald-500 font-bold' : 'text-slate-400'}`}>
-                        {match.p2?.name || 'TBD'}
-                      </Text>
-                      {match.winner === 'p2' && <Text className="text-[9px] text-emerald-500 font-bold">Winner</Text>}
-                    </View>
-                  </Pressable>
-                ))}
-              </View>
-            ) : (
-              <GlassCard className="py-12 items-center">
-                <Text className="text-slate-500 text-xs font-semibold">Select an active bracket tournament from above.</Text>
-              </GlassCard>
-            )}
-          </View>
-        )}
 
 
 
@@ -688,89 +823,43 @@ export default function AdminDashboardScreen({ navigation }) {
 
       {/* MODAL 1: EDIT ROOM LOBBY DETAILS */}
       <Modal animationType="slide" transparent visible={roomModalVisible} onRequestClose={() => setRoomModalVisible(false)}>
-        <View className="flex-1 justify-end bg-black/70">
-          <View className="bg-slate-900 border-t border-slate-800 rounded-t-3xl p-6 space-y-4 pb-10">
+        <View className="flex-1 justify-end bg-black/60">
+          <View className="bg-white dark:bg-[#0D1321] border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-6 space-y-4 pb-10">
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-white font-extrabold text-sm uppercase tracking-wide">Publish Room Details</Text>
-              <Pressable onPress={() => setRoomModalVisible(false)} className="p-1"><X size={20} color="#64748B" /></Pressable>
+              <Text className="text-slate-900 dark:text-white font-extrabold text-sm uppercase tracking-wide">Publish Room Details</Text>
+              <Pressable onPress={() => setRoomModalVisible(false)} className="p-1">
+                <X size={20} color={isDark ? '#94A3B8' : '#64748B'} />
+              </Pressable>
             </View>
 
             <TextInput
               placeholder="Enter Room ID"
               value={roomIdInput}
               onChangeText={setRoomIdInput}
-              placeholderTextColor="#64748B"
-              className="p-3 border rounded-xl bg-slate-950 border-slate-800 text-white text-xs"
+              placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
+              className="p-3 border rounded-xl bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs"
             />
 
             <TextInput
               placeholder="Enter Room Password"
               value={roomPasswordInput}
               onChangeText={setRoomPasswordInput}
-              placeholderTextColor="#64748B"
-              className="p-3 border rounded-xl bg-slate-950 border-slate-800 text-white text-xs"
+              placeholderTextColor={isDark ? '#64748B' : '#94A3B8'}
+              className="p-3 border rounded-xl bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs"
             />
 
             <Pressable
               onPress={submitRoomDetails}
-              className="bg-cyan-500 py-3 rounded-xl items-center shadow-lg"
+              className="bg-rose-600 dark:bg-rose-500 py-3.5 rounded-xl items-center shadow-lg shadow-rose-500/20"
+              style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}
             >
-              <Text className="text-black text-xs font-black uppercase tracking-wider">Publish Room Credentials</Text>
+              <Text className="text-white text-xs font-black uppercase tracking-wider">Publish Room Credentials</Text>
             </Pressable>
           </View>
         </View>
       </Modal>
 
-      {/* MODAL 2: SUBMIT BRACKET SCORE & WINNER */}
-      <Modal animationType="slide" transparent visible={scoreModalVisible} onRequestClose={() => setScoreModalVisible(false)}>
-        <View className="flex-1 justify-end bg-black/70">
-          <View className="bg-slate-900 border-t border-slate-800 rounded-t-3xl p-6 space-y-4 pb-10">
-            <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-white font-extrabold text-sm uppercase tracking-wide">Submit Bracket Score</Text>
-              <Pressable onPress={() => setScoreModalVisible(false)} className="p-1"><X size={20} color="#64748B" /></Pressable>
-            </View>
 
-            {selectedBracketMatch && (
-              <>
-                <Text className="text-slate-400 text-xs font-semibold mb-2">Choose Winner:</Text>
-                <View className="flex-row justify-between bg-slate-950 p-1 border border-slate-800 rounded-xl mb-2">
-                  <Pressable
-                    onPress={() => setBracketWinnerKey('p1')}
-                    className={`flex-1 py-2.5 rounded-lg items-center ${bracketWinnerKey === 'p1' ? 'bg-slate-800' : ''}`}
-                  >
-                    <Text className={`text-xs font-bold ${bracketWinnerKey === 'p1' ? 'text-rose-500' : 'text-slate-400'}`}>
-                      {selectedBracketMatch.p1?.name || 'Player 1'}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => setBracketWinnerKey('p2')}
-                    className={`flex-1 py-2.5 rounded-lg items-center ${bracketWinnerKey === 'p2' ? 'bg-slate-800' : ''}`}
-                  >
-                    <Text className={`text-xs font-bold ${bracketWinnerKey === 'p2' ? 'text-rose-500' : 'text-slate-400'}`}>
-                      {selectedBracketMatch.p2?.name || 'Player 2'}
-                    </Text>
-                  </Pressable>
-                </View>
-
-                <TextInput
-                  placeholder="Enter Score / round points (e.g. 7-5)"
-                  value={bracketScore}
-                  onChangeText={setBracketScore}
-                  placeholderTextColor="#64748B"
-                  className="p-3 border rounded-xl bg-slate-950 border-slate-800 text-white text-xs"
-                />
-
-                <Pressable
-                  onPress={submitBracketWinner}
-                  className="bg-emerald-500 py-3 rounded-xl items-center shadow-lg"
-                >
-                  <Text className="text-black text-xs font-black uppercase tracking-wider">End Match & Advance Winner</Text>
-                </Pressable>
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
 
       {/* MODAL 3: ADJUST USER WALLET */}
       <Modal animationType="slide" transparent visible={walletModalVisible} onRequestClose={() => setWalletModalVisible(false)}>

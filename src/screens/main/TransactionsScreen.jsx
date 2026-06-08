@@ -64,6 +64,8 @@ export default function TransactionsScreen({ navigation }) {
       case 'deposit': return 'success';
       case 'prize_credit': return 'purple';
       case 'referral_bonus': return 'cyan';
+      case 'refund': return 'success';
+      case 'bonus': return 'success';
       case 'entry_fee': return 'danger';
       case 'withdrawal': return 'warning';
       default: return 'info';
@@ -147,15 +149,15 @@ export default function TransactionsScreen({ navigation }) {
               <View className="items-end">
                 <View className="flex-row items-center">
                   <Text className={`text-base font-black mr-1 ${
-                    ['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) 
+                    ['deposit', 'prize_credit', 'referral_bonus', 'refund', 'bonus'].includes(tx.type) 
                       ? 'text-emerald-600 dark:text-emerald-400' 
                       : 'text-slate-900 dark:text-white'
                   }`}>
-                    {['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) ? '+' : '-'}
+                    {['deposit', 'prize_credit', 'referral_bonus', 'refund', 'bonus'].includes(tx.type) ? '+' : '-'}
                   </Text>
                   <GoldCoin size={14} />
                   <Text className={`text-base font-black ml-1 ${
-                    ['deposit', 'prize_credit', 'referral_bonus'].includes(tx.type) 
+                    ['deposit', 'prize_credit', 'referral_bonus', 'refund', 'bonus'].includes(tx.type) 
                       ? 'text-emerald-600 dark:text-emerald-400' 
                       : 'text-slate-900 dark:text-white'
                   }`}>

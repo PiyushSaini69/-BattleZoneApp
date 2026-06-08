@@ -47,7 +47,7 @@ export default function MatchRoomScreen({ route, navigation }) {
         setRoomDetails(res.data);
       }
 
-      const tournsRes = await request(`/tournaments`);
+      const tournsRes = await request(`/tournaments?limit=200`);
       if (tournsRes.success) {
         const found = tournsRes.data.tournaments.find(x => x._id === tournamentId);
         if (found) setTournament(found);

@@ -8,7 +8,7 @@ import { useColorScheme } from 'nativewind';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function DeclareResultsScreen({ route, navigation }) {
-  const { tournamentId, title } = route.params;
+  const { tournamentId, title, slug, resultsDeclared: initialResultsDeclared } = route.params;
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
@@ -17,10 +17,17 @@ export default function DeclareResultsScreen({ route, navigation }) {
   const [resultsInputs, setResultsInputs] = useState({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [resultsDeclared, setResultsDeclared] = useState(initialResultsDeclared || false);
 
   const loadParticipants = async () => {
     try {
       setLoading(true);
+      if (slug) {
+        const tournRes = await request(`/tournaments/${slug}`);
+        if (tournRes.success && tournRes.data?.tournament) {
+          setResultsDeclared(tournRes.data.tournament.resultsDeclared);
+        }
+      }
       const res = await request(`/tournaments/${tournamentId}/participants`);
       if (res.success) {
         setParticipants(res.data);
@@ -46,7 +53,7 @@ export default function DeclareResultsScreen({ route, navigation }) {
 
   useEffect(() => {
     loadParticipants();
-  }, [tournamentId]);
+  }, [tournamentId, slug]);
 
   const submitTournamentResults = async () => {
     const playerResults = [];
@@ -81,24 +88,36 @@ export default function DeclareResultsScreen({ route, navigation }) {
       return;
     }
 
-    try {
-      setSubmitting(true);
-      const res = await request(`/admin/tournaments/${tournamentId}/results`, {
-        method: 'POST',
-        body: JSON.stringify({ playerResults })
-      });
-      if (res.success) {
-        Alert.alert('Success 🎉', 'Match results submitted and prizes credited successfully!', [
-          { text: 'OK', onPress: () => navigation.goBack() }
-        ]);
-      } else {
-        Alert.alert('Error', res.message || 'Failed to submit results.');
-      }
-    } catch (e) {
-      Alert.alert('Error', e.message);
-    } finally {
-      setSubmitting(false);
-    }
+    Alert.alert(
+      'Confirm Results 🏆',
+      'Are you sure you want to declare these results and credit prizes to all winners? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Yes, Credit Prizes',
+          onPress: async () => {
+            try {
+              setSubmitting(true);
+              const res = await request(`/admin/tournaments/${tournamentId}/results`, {
+                method: 'POST',
+                body: JSON.stringify({ playerResults })
+              });
+              if (res.success) {
+                Alert.alert('Success 🎉', 'Match results submitted and prizes credited successfully!', [
+                  { text: 'OK', onPress: () => navigation.goBack() }
+                ]);
+              } else {
+                Alert.alert('Error', res.message || 'Failed to submit results.');
+              }
+            } catch (e) {
+              Alert.alert('Error', e.message);
+            } finally {
+              setSubmitting(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -166,6 +185,7 @@ export default function DeclareResultsScreen({ route, navigation }) {
                           <View className="flex-1">
                             <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase mb-1.5">Rank Position</Text>
                             <TextInput
+                              editable={!resultsDeclared}
                               placeholder="e.g. 1, 2, 12"
                               value={input.rank}
                               onChangeText={(text) => {
@@ -191,6 +211,7 @@ export default function DeclareResultsScreen({ route, navigation }) {
                           <View className="flex-1">
                             <Text className="text-slate-500 dark:text-slate-400 text-[9px] font-extrabold uppercase mb-1.5">Total Kills</Text>
                             <TextInput
+                              editable={!resultsDeclared}
                               placeholder="0"
                               value={input.kills}
                               onChangeText={(text) => {
@@ -219,7 +240,7 @@ export default function DeclareResultsScreen({ route, navigation }) {
                   })}
                 </View>
 
-                {submitting ? (
+                {resultsDeclared ? null : submitting ? (
                   <View className="py-4 items-center justify-center">
                     <ActivityIndicator size="small" color="#EF4444" />
                     <Text className="text-slate-500 text-[10px] uppercase font-bold mt-2">Crediting prizes & completing match...</Text>

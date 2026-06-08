@@ -336,8 +336,7 @@ export default function TournamentDetailScreen({ route, navigation }) {
   const [participants, setParticipants] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   
-  // Tab states for CS / LW
-  const [activeSubTab, setActiveSubTab] = useState('details'); // details, bracket
+
   const [showAllPrizes, setShowAllPrizes] = useState(false);
 
   const loadData = async () => {
@@ -538,31 +537,8 @@ export default function TournamentDetailScreen({ route, navigation }) {
             {tournament.title}
           </Text>
 
-          {/* Sub-tab segment selector (if CS/LW and has generated bracket) */}
-          {isCSLW && hasBracket && (
-            <View className="flex-row bg-slate-200 dark:bg-slate-950 border border-slate-350 dark:border-slate-800 rounded-xl p-1 mb-5">
-              <Pressable
-                onPress={() => setActiveSubTab('details')}
-                className={`flex-1 py-2 rounded-lg items-center ${activeSubTab === 'details' ? 'bg-rose-600' : ''}`}
-              >
-                <Text className={`text-[10px] font-extrabold uppercase tracking-wide ${activeSubTab === 'details' ? 'text-white' : 'text-slate-500'}`}>
-                  Lobby Details
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => setActiveSubTab('bracket')}
-                className={`flex-1 py-2 rounded-lg items-center ${activeSubTab === 'bracket' ? 'bg-rose-600' : ''}`}
-              >
-                <Text className={`text-[10px] font-extrabold uppercase tracking-wide ${activeSubTab === 'bracket' ? 'text-white' : 'text-slate-500'}`}>
-                  Bracket Tree
-                </Text>
-              </Pressable>
-            </View>
-          )}
-
           {/* VIEW TAB 1: DETAILS */}
-          {(!isCSLW || !hasBracket || activeSubTab === 'details') && (
-            <View>
+          <View>
               {/* Stats Grid */}
               <View className="mb-6">
                 <View className="flex-row mb-3" style={{ gap: 12 }}>
@@ -766,76 +742,6 @@ export default function TournamentDetailScreen({ route, navigation }) {
                 </View>
               </View>
             </View>
-          )}
-
-          {/* VIEW TAB 2: BRACKETS */}
-          {isCSLW && hasBracket && activeSubTab === 'bracket' && (
-            <View className="space-y-4">
-              <ScrollView horizontal showsHorizontalScrollIndicator={true} contentContainerStyle={{ paddingVertical: 10 }}>
-                <View className="flex-row py-4" style={{ gap: 40 }}>
-                  
-                  {/* Map rounds just like the web admin visualizer */}
-                  {Array.from({ length: Math.log2(tournament.bracket.length + 1) }).map((_, rIdx) => {
-                    const roundNum = rIdx + 1;
-                    const roundMatches = tournament.bracket.filter(m => m.roundIndex === roundNum);
-                    
-                    return (
-                      <View key={roundNum} className="flex flex-col justify-around gap-6 select-none shrink-0 w-56">
-                        <View className="text-center pb-2 border-b border-slate-800">
-                          <Text className="text-[10px] uppercase font-black tracking-widest text-rose-500 text-center">
-                            {roundMatches[0]?.roundName || `Round ${roundNum}`}
-                          </Text>
-                        </View>
-
-                        {roundMatches.map(match => {
-                          const isCompleted = match.winner !== null;
-                          return (
-                            <View 
-                              key={match.matchId}
-                              className={`p-3 border rounded-xl flex flex-col gap-1.5 relative ${
-                                isCompleted 
-                                  ? 'bg-emerald-500/5 border-emerald-500/20' 
-                                  : 'bg-slate-900 border-slate-800'
-                              }`}
-                            >
-                              <Text className="absolute -top-2 left-3 px-1.5 py-0.5 rounded text-[8px] bg-slate-950 border border-slate-800 font-mono text-slate-400">
-                                {match.matchId}
-                              </Text>
-
-                              {/* Player 1 details */}
-                              <View className="flex-row justify-between items-center py-1 mt-1">
-                                <Text className={`text-[11px] truncate max-w-[130px] ${match.winner === 'p1' ? 'font-bold text-white' : 'text-slate-500'}`}>
-                                  {match.p1?.name || 'TBD'}
-                                </Text>
-                                {match.winner === 'p1' && <Text className="text-[8px] bg-emerald-500/10 text-emerald-500 px-1 py-0.5 rounded font-black">WIN</Text>}
-                              </View>
-
-                              {/* Divider */}
-                              <View className="h-[0.5px] bg-slate-800 w-full" />
-
-                              {/* Player 2 details */}
-                              <View className="flex-row justify-between items-center py-1">
-                                <Text className={`text-[11px] truncate max-w-[130px] ${match.winner === 'p2' ? 'font-bold text-white' : 'text-slate-500'}`}>
-                                  {match.p2?.name || 'TBD'}
-                                </Text>
-                                {match.winner === 'p2' && <Text className="text-[8px] bg-emerald-500/10 text-emerald-500 px-1 py-0.5 rounded font-black">WIN</Text>}
-                              </View>
-
-                              {match.score && (
-                                <Text className="text-[8px] font-mono text-cyan-400 text-center bg-cyan-400/5 py-0.5 rounded">
-                                  Score: {match.score}
-                                </Text>
-                              )}
-                            </View>
-                          );
-                        })}
-                      </View>
-                    );
-                  })}
-                </View>
-              </ScrollView>
-            </View>
-          )}
 
           {/* Spacing below the last card to clear bottom bar */}
           <View style={{ height: 40 }} />

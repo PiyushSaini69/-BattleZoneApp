@@ -146,6 +146,9 @@ export default function ViewResultsScreen({ route, navigation }) {
                     <Trophy size={22} color="#94A3B8" />
                     <Text className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase mt-1">2ND RANK</Text>
                     <Text className="text-slate-900 dark:text-white font-extrabold text-xs mt-1 text-center" numberOfLines={1}>{rank2.displayName || rank2.username}</Text>
+                    {rank2.gameUID ? (
+                      <Text className="text-cyan-500 dark:text-cyan-400 font-mono text-[8px] uppercase mt-0.5" numberOfLines={1}>UID: {rank2.gameUID}</Text>
+                    ) : null}
                     {rank2.prizeWon > 0 && (
                       <View className="flex-row items-center mt-1">
                         <GoldCoin size={10} />
@@ -166,6 +169,9 @@ export default function ViewResultsScreen({ route, navigation }) {
                     <Trophy size={30} color="#F59E0B" />
                     <Text className="text-[10px] font-black text-yellow-500 uppercase mt-1">CHAMPION</Text>
                     <Text className="text-slate-900 dark:text-white font-extrabold text-sm mt-1 text-center" numberOfLines={1}>{rank1.displayName || rank1.username}</Text>
+                    {rank1.gameUID ? (
+                      <Text className="text-cyan-500 dark:text-cyan-400 font-mono text-[9px] uppercase mt-0.5" numberOfLines={1}>UID: {rank1.gameUID}</Text>
+                    ) : null}
                     {rank1.prizeWon > 0 && (
                       <View className="flex-row items-center mt-1">
                         <GoldCoin size={11} />
@@ -186,6 +192,9 @@ export default function ViewResultsScreen({ route, navigation }) {
                     <Trophy size={22} color="#B45309" />
                     <Text className="text-[10px] font-black text-amber-700 dark:text-amber-600 uppercase mt-1">3RD RANK</Text>
                     <Text className="text-slate-900 dark:text-white font-extrabold text-xs mt-1 text-center" numberOfLines={1}>{rank3.displayName || rank3.username}</Text>
+                    {rank3.gameUID ? (
+                      <Text className="text-cyan-500 dark:text-cyan-400 font-mono text-[8px] uppercase mt-0.5" numberOfLines={1}>UID: {rank3.gameUID}</Text>
+                    ) : null}
                     {rank3.prizeWon > 0 && (
                       <View className="flex-row items-center mt-1">
                         <GoldCoin size={10} />
@@ -217,8 +226,12 @@ export default function ViewResultsScreen({ route, navigation }) {
                   <View className="flex-row items-center flex-1 mr-2">
                     <Text className="text-rose-500 dark:text-cyan-400 font-black text-xs w-6">#{player.rank || '-'}</Text>
                     <View>
-                      <Text className="text-slate-800 dark:text-slate-200 font-black text-sm">{player.displayName}</Text>
-                      <Text className="text-slate-400 text-[9px] font-bold uppercase mt-0.5">Slot #{player.slotNumber}</Text>
+                      <Text className="text-slate-800 dark:text-slate-200 font-black text-sm">{player.displayName || player.username || 'Player'}</Text>
+                      <View className="flex-row items-center mt-0.5" style={{ gap: 6 }}>
+                        <Text className="text-slate-400 text-[9px] font-bold uppercase">Slot #{player.slotNumber}</Text>
+                        <Text className="text-slate-400 text-[9px] font-bold">•</Text>
+                        <Text className="text-cyan-500 dark:text-cyan-400 font-mono text-[9px] uppercase">UID: {player.gameUID || 'N/A'}</Text>
+                      </View>
                     </View>
                   </View>
                   <View className="flex-row items-center" style={{ gap: 12 }}>
